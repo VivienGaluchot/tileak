@@ -1,0 +1,95 @@
+* {
+    box-sizing: border-box;
+}
+
+html {
+    font-family: 'Roboto', sans-serif;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    margin: 2.5rem 0 1rem;
+}
+
+ul li, ol li {
+    margin-top: 0.5rem;
+}
+
+img {
+    max-width: 100%;
+}
+
+pre {
+    font-family: 'Roboto Mono', monospace;
+    border: 1px solid lightgrey;
+    overflow: auto;
+}
+
+code {
+    font-family: 'Roboto Mono', monospace;
+    color: orangered;
+    font-weight: 500;
+    display: inline-block;
+    background-color: rgba(255, 68, 0, 0.1);
+    padding: 0 .2rem;
+}
+
+pre code {
+    padding: 1rem;
+}
+
+blockquote {
+    border-left: 5px solid lightgrey;
+    font-size: 120%;
+    font-style: italic;
+    margin: 2rem 0;
+    padding: 1rem;
+}
+
+table {
+    border-collapse: collapse;
+    margin: .5rem 0;
+    text-align: left;
+    width: 100%;
+}
+
+tbody>tr {
+    border-top: 1px solid lightgrey;
+}
+
+th, td {
+    padding: 0.5rem;
+}
+
+hr {
+    background: lightgrey;
+    border: 0;
+    height: 1px;
+    margin: 2rem 0;
+}
+
+/* specific page design */
+
+body {
+    text-align: center;
+}
+
+header, content, footer {
+    text-align: initial;
+    padding: 1rem;
+    margin: 0 auto;
+    max-width: 700px;
+    border: 1px solid lightblue;
+    display: block;
+}
+
+header, footer {
+    background-color: lightblue;
+}
+
+h1 {
+    margin: 0;
+}
+
+h1>* {
+    vertical-align: middle;
+}
