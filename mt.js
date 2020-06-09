@@ -6,6 +6,12 @@ const mt = function () {
             throw Error("not a number");
     }
 
+    function assertVect(v) {
+        if (!v instanceof Vect)
+            throw Error("not a Vect");
+        return v;
+    }
+
     class Vect {
         constructor(x = 0, y = 0) {
             checkNumber(x);
@@ -77,6 +83,7 @@ const mt = function () {
     }
 
     return {
-        Vect: Vect
+        Vect: Vect,
+        assertVect: assertVect
     }
 }();

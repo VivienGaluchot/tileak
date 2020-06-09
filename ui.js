@@ -1,8 +1,15 @@
 const ui = function () {
     class Widget {
-        constructor() {
+        constructor(father) {
+            if (father == null)
+                throw Error("father expected");
+            this.father = father;
             this.onClicked = null;
             this.onMouseMoved = null;
+        }
+
+        schedulePaint() {
+            this.father.schedulePaint();
         }
 
         paint(sandbox) { }
@@ -21,9 +28,9 @@ const ui = function () {
     }
 
     class LabelWidget extends Widget {
-        constructor(pos, text) {
-            super();
-            this.pos = pos;
+        constructor(father, pos, text) {
+            super(father);
+            this.pos = mt.assertVect(pos);
             this.text = text;
 
             this.fillStyle = "#FFF";
@@ -54,30 +61,29 @@ const ui = function () {
     }
 
     class BoxWidget extends Widget {
-        constructor(x, y, w, h) {
-            super();
-            this.x = x;
-            this.y = y;
+        constructor(father, pos, w, h) {
+            super(father);
+            this.pos = mt.assertVect(pos);
             this.w = w;
             this.h = h;
 
-            this.onned = false;
-            this.hoverred = false;
+            this.isOn = false;
+            this.hovered = false;
         }
 
         contains(pos) {
-            return this.x <= pos.x
-                && (this.x + this.w) >= pos.x
-                && this.y <= pos.y
-                && (this.y + this.h) >= pos.y;
+            return this.pos.x <= pos.x
+                && (this.pos.x + this.w) >= pos.x
+                && this.pos.y <= pos.y
+                && (this.pos.y + this.h) >= pos.y;
         }
 
         paint(sandbox) {
             sandbox.ctx.save();
 
             sandbox.ctx.lineWidth = .03;
-            if (this.hoverred) {
-                if (this.onned) {
+            if (this.hovered) {
+                if (this.isOn) {
                     sandbox.ctx.strokeStyle = "#F0F";
                     sandbox.ctx.fillStyle = "#F0F8";
                 } else {
@@ -89,11 +95,11 @@ const ui = function () {
                 sandbox.ctx.fillStyle = "#FFF";
             }
             sandbox.ctx.beginPath();
-            sandbox.ctx.rect(this.x, this.y, this.w, this.h);
+            sandbox.ctx.rect(this.pos.x, this.pos.y, this.w, this.h);
             sandbox.ctx.stroke();
 
-            if (this.onned) {
-                sandbox.ctx.fillRect(this.x, this.y, this.w, this.h);
+            if (this.isOn) {
+                sandbox.ctx.fillRect(this.pos.x, this.pos.y, this.w, this.h);
             }
 
             sandbox.ctx.restore();
@@ -102,19 +108,24 @@ const ui = function () {
         clicked(pos) {
             super.clicked(pos);
             if (this.contains(pos)) {
-                this.onned = !this.onned;
+                this.isOn = !this.isOn;
+                this.schedulePaint();
             }
         }
 
         mouseMoved(pos) {
             super.mouseMoved(pos);
-            this.hoverred = this.contains(pos);
+            let contains = this.contains(pos);
+            if (contains != this.hovered) {
+                this.hovered = contains;
+                this.schedulePaint();
+            }
         }
     }
 
     class WorldWidget extends Widget {
-        constructor(paintAxis) {
-            super();
+        constructor(father, paintAxis) {
+            super(father);
             this.paintAxis = paintAxis;
             this.children = [];
         }
@@ -163,17 +174,16 @@ const ui = function () {
     }
 
     class Sandbox {
-        constructor(element, mainWidget) {
+        constructor(element) {
             this.canvas = element;
-            this.mainWidget = mainWidget;
+            this.world = new WorldWidget(this, false);
 
             this.ctx = this.canvas.getContext("2d");
+            this.isPaintScheduled = false;
 
             this.dpr = 1;
             this.pixelPerUnit = 1;
             this.resized();
-
-            console.debug("setup events");
 
             window.addEventListener('resize', evt => this.resized(evt));
             element.addEventListener("click", event => this.clicked(event));
@@ -197,17 +207,19 @@ const ui = function () {
             this.ctx.restore();
         }
 
+        schedulePaint() {
+            this.isPaintScheduled = true;
+        }
+
         paint() {
+            this.isPaintScheduled = false;
             this.ctx.save();
             this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-
             // default style
             this.ctx.fillStyle = "#FFF";
             this.ctx.strokeStyle = "#FFF";
             this.ctx.lineWidth = 1 / this.pixelPerUnit;
-
-            this.withRescale(sandbox => sandbox.mainWidget.paint(sandbox));
-
+            this.withRescale(sandbox => sandbox.world.paint(sandbox));
             this.ctx.restore();
         }
 
@@ -245,13 +257,17 @@ const ui = function () {
         }
 
         clicked(evt) {
-            this.handleRescaledMouseEvent(evt, transformedMouse => this.mainWidget.clicked(transformedMouse));
-            this.paint();
+            this.handleRescaledMouseEvent(evt, transformedMouse => this.world.clicked(transformedMouse));
+            if (this.isPaintScheduled) {
+                this.paint();
+            }
         }
 
         mouseMoved(evt) {
-            this.handleRescaledMouseEvent(evt, transformedMouse => this.mainWidget.mouseMoved(transformedMouse));
-            this.paint();
+            this.handleRescaledMouseEvent(evt, transformedMouse => this.world.mouseMoved(transformedMouse));
+            if (this.isPaintScheduled) {
+                this.paint();
+            }
         }
     }
 

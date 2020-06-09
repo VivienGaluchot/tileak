@@ -5,8 +5,8 @@ function makeGrid(world) {
     let halfSide = (1 - space) / 2;
 
     function makeLabel(x, y, i) {
-        let label = new ui.LabelWidget(new mt.Vect(x, y), `${i}`);
-        label.fillStyle = "#FFF6";
+        let label = new ui.LabelWidget(world, new mt.Vect(x, y), `${i}`);
+        label.fillStyle = "#FFF2";
         label.fontSize = .4;
         label.textAlign = "center";
         return label;
@@ -18,7 +18,7 @@ function makeGrid(world) {
     }
     for (let j = 0; j < height; j++) {
         let y = height / 2 - j - .5;
-        world.addWidget(makeLabel(-1 * width / 2 - .3, y, j));
+        world.addWidget(makeLabel(-1 * width / 2 - .35, y - .1, j));
     }
 
 
@@ -26,8 +26,8 @@ function makeGrid(world) {
         let x = i - width / 2 + .5;
         for (let j = 0; j < height; j++) {
             let y = height / 2 - j - .5;
-            let center = new mt.Vect(x, y);
-            world.addWidget(new ui.BoxWidget(center.x - halfSide, center.y - halfSide, 2 * halfSide, 2 * halfSide));
+            let pos = new mt.Vect(x - halfSide, y - halfSide);
+            world.addWidget(new ui.BoxWidget(world, pos, 2 * halfSide, 2 * halfSide));
         }
     }
 }
@@ -35,10 +35,9 @@ function makeGrid(world) {
 function main() {
     console.debug("init tileak application");
 
-    let world = new ui.WorldWidget(false);
-    makeGrid(world);
-
-    let sandbox = new ui.Sandbox(document.getElementById("sandbox"), world);
+    let sandbox = new ui.Sandbox(document.getElementById("sandbox"));
+    makeGrid(sandbox.world);
+    sandbox.paint();
 }
 
 
