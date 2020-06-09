@@ -4,8 +4,6 @@ const ui = function () {
             if (father == null)
                 throw Error("father expected");
             this.father = father;
-            this.onClicked = null;
-            this.onMouseMoved = null;
         }
 
         schedulePaint() {
@@ -14,24 +12,17 @@ const ui = function () {
 
         paint(sandbox) { }
 
-        clicked(pos) {
-            if (this.onClicked != null) {
-                this.onClicked(this);
-            }
-        }
+        clicked(pos) { }
 
-        mouseMoved(pos) {
-            if (this.onMouseMoved != null) {
-                this.onMouseMoved(this);
-            }
-        }
+        mouseMoved(pos) { }
     }
 
     class LabelWidget extends Widget {
-        constructor(father, pos, text) {
+        constructor(father, pos, text, makeText) {
             super(father);
             this.pos = mt.assertVect(pos);
             this.text = text;
+            this.makeText = makeText;
 
             this.fillStyle = "#FFF";
             this.font = "Verdana";
@@ -53,8 +44,14 @@ const ui = function () {
             sandbox.ctx.fillStyle = this.fillStyle;
             sandbox.ctx.font = `${this.fontSize * sandbox.pixelPerUnit * sandbox.dpr}px ${this.font}`;
             sandbox.ctx.textAlign = this.textAlign;
-            sandbox.ctx.fillText(this.text, transformedPos.x, transformedPos.y);
-            sandbox.ctx.rect(transformedPos.x, transformedPos.y, 5, 5);
+
+            let txt;
+            if (this.text != null) {
+                txt = this.text;
+            } else {
+                txt = this.makeText(this);
+            }
+            sandbox.ctx.fillText(txt, transformedPos.x, transformedPos.y);
 
             sandbox.ctx.restore();
         }
@@ -66,9 +63,6 @@ const ui = function () {
             this.pos = mt.assertVect(pos);
             this.w = w;
             this.h = h;
-
-            this.isOn = false;
-            this.hovered = false;
         }
 
         contains(pos) {
@@ -80,46 +74,10 @@ const ui = function () {
 
         paint(sandbox) {
             sandbox.ctx.save();
-
-            sandbox.ctx.lineWidth = .03;
-            if (this.hovered) {
-                if (this.isOn) {
-                    sandbox.ctx.strokeStyle = "#F0F";
-                    sandbox.ctx.fillStyle = "#F0F8";
-                } else {
-                    sandbox.ctx.strokeStyle = "#F0F8";
-                    sandbox.ctx.fillStyle = "#F0F4";
-                }
-            } else {
-                sandbox.ctx.strokeStyle = "#FFF8";
-                sandbox.ctx.fillStyle = "#FFF";
-            }
             sandbox.ctx.beginPath();
             sandbox.ctx.rect(this.pos.x, this.pos.y, this.w, this.h);
             sandbox.ctx.stroke();
-
-            if (this.isOn) {
-                sandbox.ctx.fillRect(this.pos.x, this.pos.y, this.w, this.h);
-            }
-
             sandbox.ctx.restore();
-        }
-
-        clicked(pos) {
-            super.clicked(pos);
-            if (this.contains(pos)) {
-                this.isOn = !this.isOn;
-                this.schedulePaint();
-            }
-        }
-
-        mouseMoved(pos) {
-            super.mouseMoved(pos);
-            let contains = this.contains(pos);
-            if (contains != this.hovered) {
-                this.hovered = contains;
-                this.schedulePaint();
-            }
         }
     }
 
@@ -159,14 +117,12 @@ const ui = function () {
         }
 
         clicked(pos) {
-            super.clicked(pos);
             for (let child of this.children) {
                 child.clicked(pos);
             }
         }
 
         mouseMoved(pos) {
-            super.mouseMoved(pos);
             for (let child of this.children) {
                 child.mouseMoved(pos);
             }

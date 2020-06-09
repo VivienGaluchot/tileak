@@ -1,14 +1,14 @@
 const mt = function () {
     function checkNumber(a) {
         if (typeof a != "number")
-            throw Error("number expected");
+            throw new Error(`${a} is not a number`);
         if (isNaN(a))
-            throw Error("not a number");
+            throw new Error(`${a} is not accepted`);
     }
 
     function assertVect(v) {
-        if (!v instanceof Vect)
-            throw Error("not a Vect");
+        if (!(v instanceof Vect))
+            throw new Error(`${v} is not a Vect`);
         return v;
     }
 
