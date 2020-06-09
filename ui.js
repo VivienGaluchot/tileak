@@ -1,12 +1,56 @@
 const ui = function () {
     class Widget {
-        constructor() { }
+        constructor() {
+            this.onClicked = null;
+            this.onMouseMoved = null;
+        }
 
         paint(sandbox) { }
 
-        clicked(pos) { }
+        clicked(pos) {
+            if (this.onClicked != null) {
+                this.onClicked(this);
+            }
+        }
 
-        mousemoved(pos) { }
+        mouseMoved(pos) {
+            if (this.onMouseMoved != null) {
+                this.onMouseMoved(this);
+            }
+        }
+    }
+
+    class LabelWidget extends Widget {
+        constructor(pos, text) {
+            super();
+            this.pos = pos;
+            this.text = text;
+
+            this.fillStyle = "#FFF";
+            this.font = "Verdana";
+            this.textAlign = "left";
+            this.fontSize = .5;
+        }
+
+        paint(sandbox) {
+            sandbox.ctx.save();
+
+            // reverse current transform to draw font in standard pixel size
+            var matrix = sandbox.ctx.getTransform();
+            var transformedPos = new mt.Vect(
+                this.pos.x * matrix.a + this.pos.y * matrix.c + matrix.e,
+                this.pos.x * matrix.b + this.pos.y * matrix.d + matrix.f
+            );
+            sandbox.ctx.resetTransform();
+
+            sandbox.ctx.fillStyle = this.fillStyle;
+            sandbox.ctx.font = `${this.fontSize * sandbox.pixelPerUnit * sandbox.dpr}px ${this.font}`;
+            sandbox.ctx.textAlign = this.textAlign;
+            sandbox.ctx.fillText(this.text, transformedPos.x, transformedPos.y);
+            sandbox.ctx.rect(transformedPos.x, transformedPos.y, 5, 5);
+
+            sandbox.ctx.restore();
+        }
     }
 
     class BoxWidget extends Widget {
@@ -29,35 +73,46 @@ const ui = function () {
         }
 
         paint(sandbox) {
-            let color = "#FFF";
-            if (this.hoverred)
-                color = "#FFFA";
-
             sandbox.ctx.save();
-            if (this.onned) {
-                sandbox.ctx.fillStyle = color;
-                sandbox.ctx.fillRect(this.x, this.y, this.w, this.h);
+
+            sandbox.ctx.lineWidth = .03;
+            if (this.hoverred) {
+                if (this.onned) {
+                    sandbox.ctx.strokeStyle = "#F0F";
+                    sandbox.ctx.fillStyle = "#F0F8";
+                } else {
+                    sandbox.ctx.strokeStyle = "#F0F8";
+                    sandbox.ctx.fillStyle = "#F0F4";
+                }
             } else {
-                sandbox.ctx.strokeStyle = color;
-                sandbox.ctx.beginPath();
-                sandbox.ctx.rect(this.x, this.y, this.w, this.h);
-                sandbox.ctx.stroke();
+                sandbox.ctx.strokeStyle = "#FFF8";
+                sandbox.ctx.fillStyle = "#FFF";
             }
+            sandbox.ctx.beginPath();
+            sandbox.ctx.rect(this.x, this.y, this.w, this.h);
+            sandbox.ctx.stroke();
+
+            if (this.onned) {
+                sandbox.ctx.fillRect(this.x, this.y, this.w, this.h);
+            }
+
             sandbox.ctx.restore();
         }
 
         clicked(pos) {
+            super.clicked(pos);
             if (this.contains(pos)) {
                 this.onned = !this.onned;
             }
         }
 
-        mousemoved(pos) {
+        mouseMoved(pos) {
+            super.mouseMoved(pos);
             this.hoverred = this.contains(pos);
         }
     }
 
-    class World extends Widget {
+    class WorldWidget extends Widget {
         constructor(paintAxis) {
             super();
             this.paintAxis = paintAxis;
@@ -93,14 +148,16 @@ const ui = function () {
         }
 
         clicked(pos) {
+            super.clicked(pos);
             for (let child of this.children) {
                 child.clicked(pos);
             }
         }
 
-        mousemoved(pos) {
+        mouseMoved(pos) {
+            super.mouseMoved(pos);
             for (let child of this.children) {
-                child.mousemoved(pos);
+                child.mouseMoved(pos);
             }
         }
     }
@@ -112,7 +169,7 @@ const ui = function () {
 
             this.ctx = this.canvas.getContext("2d");
 
-            this.dpr = window.devicePixelRatio || 1;
+            this.dpr = 1;
             this.pixelPerUnit = 1;
             this.resized();
 
@@ -120,7 +177,7 @@ const ui = function () {
 
             window.addEventListener('resize', evt => this.resized(evt));
             element.addEventListener("click", event => this.clicked(event));
-            element.addEventListener("mousemove", event => this.mousemoved(event));
+            element.addEventListener("mousemove", event => this.mouseMoved(event));
         }
 
         getWidth() {
@@ -174,6 +231,8 @@ const ui = function () {
         }
 
         resized(evt) {
+            this.dpr = window.devicePixelRatio || 1;
+
             var rect = this.canvas.getBoundingClientRect();
             var side = Math.min(rect.width, rect.height);
             this.canvas.width = rect.width * this.dpr;
@@ -190,15 +249,16 @@ const ui = function () {
             this.paint();
         }
 
-        mousemoved(evt) {
-            this.handleRescaledMouseEvent(evt, transformedMouse => this.mainWidget.mousemoved(transformedMouse));
+        mouseMoved(evt) {
+            this.handleRescaledMouseEvent(evt, transformedMouse => this.mainWidget.mouseMoved(transformedMouse));
             this.paint();
         }
     }
 
     return {
         BoxWidget: BoxWidget,
-        World: World,
+        LabelWidget: LabelWidget,
+        WorldWidget: WorldWidget,
         Sandbox: Sandbox
     }
 }();
