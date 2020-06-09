@@ -92,6 +92,7 @@ footer {
 html, body, content {
     margin: 0;
     height: 100%;
+    background-color: rgb(43, 41, 40);
 }
 
 header>h1 {
@@ -108,7 +109,6 @@ footer a {
     display: block;
     width: 100%;
     height: 100%;
-    background-color: rgb(43, 41, 40);
 }
 
 .logo {
@@ -116,4 +116,16 @@ footer a {
     border: 1px solid white;
     height: 2rem;
     width: 2rem;
+}
+
+.error {
+    background-color: rgba(255, 0, 0, 0.281);
+    border: 1px solid red;
+    padding: .8rem;
+    border-radius: .5rem;
+}
+
+.error a {
+    color: white;
+    font-weight: normal;
 }

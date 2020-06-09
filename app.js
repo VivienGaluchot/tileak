@@ -40,6 +40,10 @@ function main() {
     sandbox.paint();
 }
 
+window.addEventListener("error", function (e) {
+    document.getElementById("masked_error").style.display = "block";
+    return false;
+});
 
 document.addEventListener("DOMContentLoaded", (e) => {
     main();
