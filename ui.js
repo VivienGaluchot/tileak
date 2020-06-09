@@ -26,8 +26,9 @@ const ui = function () {
 
             this.fillStyle = "#FFF";
             this.font = "Verdana";
-            this.textAlign = "left";
             this.fontSize = .5;
+            this.fontWeight = "normal";
+            this.textAlign = "left";
         }
 
         paint(sandbox) {
@@ -42,7 +43,8 @@ const ui = function () {
             sandbox.ctx.resetTransform();
 
             sandbox.ctx.fillStyle = this.fillStyle;
-            sandbox.ctx.font = `${this.fontSize * sandbox.pixelPerUnit * sandbox.dpr}px ${this.font}`;
+            sandbox.ctx.font = `${this.fontWeight} ${this.fontSize * sandbox.pixelPerUnit * sandbox.dpr}px ${this.font}`;
+            sandbox.ctx.fontWeight
             sandbox.ctx.textAlign = this.textAlign;
 
             let txt;
@@ -78,6 +80,59 @@ const ui = function () {
             sandbox.ctx.rect(this.pos.x, this.pos.y, this.w, this.h);
             sandbox.ctx.stroke();
             sandbox.ctx.restore();
+        }
+    }
+
+    class ButtonWidget extends BoxWidget {
+        constructor(father, pos, w, h, text, textSpacing) {
+            super(father, pos, w, h);
+            this.hovered = false;
+
+            this.onClick = null;
+
+            this.baseColor = "FFF";
+
+            this.label = new ui.LabelWidget(this, new mt.Vect(pos.x + w / 2, pos.y + textSpacing), text);
+            this.label.fontSize = .3;
+            this.label.textAlign = "center";
+        }
+
+        paint(sandbox) {
+            sandbox.ctx.save();
+            sandbox.ctx.beginPath();
+            sandbox.ctx.strokeStyle = `#${this.baseColor}8`;
+            sandbox.ctx.fillStyle = `#${this.baseColor}4`;
+
+            if (this.hovered) {
+                sandbox.ctx.lineWidth = .06;
+            } else {
+                sandbox.ctx.lineWidth = .03;
+            }
+
+            sandbox.ctx.rect(this.pos.x, this.pos.y, this.w, this.h);
+            sandbox.ctx.stroke();
+            sandbox.ctx.fillRect(this.pos.x, this.pos.y, this.w, this.h);
+            sandbox.ctx.restore();
+
+            this.label.fillStyle = `#${this.baseColor}8`;
+            this.label.paint(sandbox);
+        }
+
+        clicked(pos) {
+            if (this.contains(pos)) {
+                if (this.onClick != null) {
+                    this.onClick(this);
+                    this.schedulePaint();
+                }
+            }
+        }
+
+        mouseMoved(pos) {
+            let contains = this.contains(pos);
+            if (contains != this.hovered) {
+                this.hovered = contains;
+                this.schedulePaint();
+            }
         }
     }
 
@@ -230,6 +285,7 @@ const ui = function () {
     return {
         BoxWidget: BoxWidget,
         LabelWidget: LabelWidget,
+        ButtonWidget: ButtonWidget,
         WorldWidget: WorldWidget,
         Sandbox: Sandbox
     }

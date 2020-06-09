@@ -11,6 +11,29 @@ const gm = function () {
             this.pos = mt.assertVect(pos);
             this.owner = null;
             this.power = 0;
+            this.productionTurn = 10;
+        }
+
+        * neighbors() {
+            if (this.pos.x > 0)
+                yield this.game.getCell(this.pos.x - 1, this.pos.y);
+            if (this.pos.x < this.game.width - 1)
+                yield this.game.getCell(this.pos.x + 1, this.pos.y);
+            if (this.pos.y > 0)
+                yield this.game.getCell(this.pos.x, this.pos.y - 1);
+            if (this.pos.y < this.game.height - 1)
+                yield this.game.getCell(this.pos.x, this.pos.y + 1);
+        }
+
+        gatherPower() {
+            if (this.productionTurn > 0) {
+                this.power += this.productionTurn;
+                this.productionTurn--;
+            }
+        }
+
+        isPlayable() {
+            return this.owner == null;
         }
 
         playForTurn() {
@@ -54,6 +77,33 @@ const gm = function () {
             this.onChange = null;
         }
 
+        * cells() {
+            for (let row of this.grid) {
+                for (let cell of row) {
+                    yield cell;
+                }
+            }
+        }
+
+        * currentPlayerCells() {
+            let current = this.getCurrentPlayer();
+            for (let cell of this.cells()) {
+                if (cell.owner == current) {
+                    yield cell;
+                }
+            }
+        }
+
+        maxPower() {
+            let max = 0;
+            for (let cell of this.cells()) {
+                if (cell.power > max) {
+                    max = cell.power;
+                }
+            }
+            return max;
+        }
+
         getCell(i, j) {
             if (i < 0 || i >= this.width)
                 throw new Error("row out of range");
@@ -70,26 +120,55 @@ const gm = function () {
 
         nextPlayer() {
             this.currentPlayerIndex = (this.currentPlayerIndex + 1) % this.players.length;
-            console.log("currentPlayerIndex", this.currentPlayerIndex);
         }
 
         gatherPower() {
-            for (let row of this.grid) {
-                for (let cell of row) {
-                    if (cell.owner == this.getCurrentPlayer()) {
-                        cell.power += 10;
-                    }
-                }
+            for (let cell of this.currentPlayerCells()) {
+                cell.gatherPower();
             }
         }
 
         flowPower() {
-            for (let row of this.grid) {
-                for (let cell of row) {
-                    if (cell.owner == this.getCurrentPlayer()) {
-                        // TODO
+            let nextTurnPower = new Map();
+            function transferPower(src, dst, incr) {
+                if (!nextTurnPower.has(src)) {
+                    nextTurnPower.set(src, src.power);
+                }
+                if (!nextTurnPower.has(dst)) {
+                    nextTurnPower.set(dst, dst.power);
+                }
+                nextTurnPower.set(src, nextTurnPower.get(src) - incr);
+                nextTurnPower.set(dst, nextTurnPower.get(dst) + incr);
+            }
+
+            for (let cell of this.currentPlayerCells()) {
+                let totalPwrDiff = 0;
+                for (let neighbor of cell.neighbors()) {
+                    if (neighbor.owner == this.getCurrentPlayer()) {
+                        if (cell.power > neighbor.power) {
+                            totalPwrDiff += cell.power - neighbor.power;
+                        }
                     }
                 }
+
+                let pwrOutput = Math.min(cell.power, totalPwrDiff);
+                for (let neighbor of cell.neighbors()) {
+                    if (neighbor.owner == this.getCurrentPlayer()) {
+                        if (cell.power > neighbor.power) {
+                            let localDiff = cell.power - neighbor.power;
+                            let localRatio = localDiff / totalPwrDiff;
+                            let localOutput = Math.floor(localRatio * pwrOutput / 2);
+                            console.log(cell.pos, neighbor.pos, localOutput);
+                            transferPower(cell, neighbor, localOutput);
+                        }
+                    }
+                }
+            }
+
+            for (var [cell, power] of nextTurnPower) {
+                if (power < 0)
+                    throw new Error("can't create negative power");
+                cell.power = power;
             }
         }
 
@@ -108,7 +187,6 @@ const gm = function () {
             this.flowPower();
 
             this.nextPlayer();
-
             if (this.onChange != null) {
                 this.onChange(this);
             }
