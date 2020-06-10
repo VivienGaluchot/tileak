@@ -59,6 +59,10 @@ const mt = function () {
             return this;
         }
 
+        add(a) {
+            return this.copy().addInplace(a);
+        }
+
         minus(other) {
             checkNumber(other.x);
             checkNumber(other.y);
@@ -72,6 +76,10 @@ const mt = function () {
             return this;
         }
 
+        scale(a) {
+            return this.copy().scaleInplace(a);
+        }
+
         capInplace(a) {
             checkNumber(a);
             var norm = this.norm();
@@ -79,6 +87,24 @@ const mt = function () {
                 this.setNorm(a);
             }
             return this;
+        }
+
+        cap(a) {
+            return this.copy().capInplace(a);
+        }
+
+        rotateInplace(r) {
+            let c = Math.cos(r);
+            let s = Math.sin(r);
+            let x = c * this.x - s * this.y;
+            let y = s * this.x + c * this.y;
+            this.x = x;
+            this.y = y;
+            return this;
+        }
+
+        rotate(r) {
+            return this.copy().rotateInplace(r);
         }
     }
 

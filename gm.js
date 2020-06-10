@@ -10,8 +10,13 @@ const gm = function () {
             this.game = game;
             this.pos = mt.assertVect(pos);
             this.owner = null;
+
+            this.widget = null;
+
             this.power = 0;
             this.productionTurn = 10;
+
+            this.drainTo = null;
         }
 
         * neighbors() {
@@ -26,28 +31,52 @@ const gm = function () {
         }
 
         gatherPower() {
-            if (this.productionTurn > 0) {
-                this.power += this.productionTurn;
-                this.productionTurn--;
+            this.power += this.productionTurn;
+        }
+
+        // drain cell for turn
+
+        isDrainable() {
+            return this.game.waitForTurn && this.owner == this.game.getCurrentPlayer();
+        }
+
+        * drainDsts() {
+            for (let neighbor of this.neighbors()) {
+                if (neighbor != this.drainTo && neighbor.owner == this.owner) {
+                    yield neighbor;
+                }
             }
         }
 
+        selectForDrain() {
+            this.game.selectedCell = this;
+        }
+
+        drainForTurn(dst) {
+            let turn = new Turn(null, this, dst);
+            this.game.playTurn(turn);
+        }
+
+        // own cell for turn
+
         isPlayable() {
-            return this.owner == null;
+            return this.game.waitForTurn && this.owner == null;
         }
 
         playForTurn() {
-            let turn = new Turn(this.pos);
+            let turn = new Turn(this, null, null);
             this.game.playTurn(turn);
         }
     }
 
     class Turn {
-        constructor(ownedPos) {
-            if (ownedPos != null)
-                this.ownedPos = mt.assertVect(ownedPos);
-            else
-                this.ownedPos = null;
+        constructor(ownedCell, drainSrc, drainDst) {
+            if (ownedCell != null && drainSrc != null)
+                throw new Error("single action per turn");
+
+            this.ownedCell = ownedCell;
+            this.drainSrc = drainSrc;
+            this.drainDst = drainDst;
         }
     }
 
@@ -73,6 +102,9 @@ const gm = function () {
             }
 
             this.currentPlayerIndex = 0;
+            this.waitForTurn = true;
+
+            this.selectedCell = null;
 
             this.onChange = null;
         }
@@ -116,16 +148,26 @@ const gm = function () {
             return this.players[this.currentPlayerIndex];
         }
 
+        // signal
+
+        signalChange() {
+            if (this.onChange != null) {
+                this.onChange(this);
+            }
+        }
+
         // turn parts
 
         nextPlayer() {
             this.currentPlayerIndex = (this.currentPlayerIndex + 1) % this.players.length;
+            this.signalChange();
         }
 
         gatherPower() {
             for (let cell of this.currentPlayerCells()) {
                 cell.gatherPower();
             }
+            this.signalChange();
         }
 
         flowPower() {
@@ -142,26 +184,8 @@ const gm = function () {
             }
 
             for (let cell of this.currentPlayerCells()) {
-                let totalPwrDiff = 0;
-                for (let neighbor of cell.neighbors()) {
-                    if (neighbor.owner == this.getCurrentPlayer()) {
-                        if (cell.power > neighbor.power) {
-                            totalPwrDiff += cell.power - neighbor.power;
-                        }
-                    }
-                }
-
-                let pwrOutput = Math.min(cell.power, totalPwrDiff);
-                for (let neighbor of cell.neighbors()) {
-                    if (neighbor.owner == this.getCurrentPlayer()) {
-                        if (cell.power > neighbor.power) {
-                            let localDiff = cell.power - neighbor.power;
-                            let localRatio = localDiff / totalPwrDiff;
-                            let localOutput = Math.floor(localRatio * pwrOutput / 2);
-                            console.log(cell.pos, neighbor.pos, localOutput);
-                            transferPower(cell, neighbor, localOutput);
-                        }
-                    }
+                if (cell.drainTo != null) {
+                    transferPower(cell, cell.drainTo, Math.round(cell.power / 2));
                 }
             }
 
@@ -170,27 +194,56 @@ const gm = function () {
                     throw new Error("can't create negative power");
                 cell.power = power;
             }
+            this.signalChange();
         }
 
         // turn loop
 
         playTurn(turn) {
-            assertTurn(turn);
-            if (turn.ownedPos != null) {
-                let cell = this.getCell(turn.ownedPos.x, turn.ownedPos.y);
-                if (cell.owner != null)
-                    throw new Error("cell already owned");
-                cell.owner = this.getCurrentPlayer();
+            if (!this.waitForTurn) {
+                return;
+            }
+            this.waitForTurn = false;
+            this.selectedCell = null;
+
+            let self = this;
+
+            function step3() {
+                self.waitForTurn = true;
+                self.nextPlayer();
             }
 
-            this.gatherPower();
-            this.flowPower();
-
-            this.nextPlayer();
-            if (this.onChange != null) {
-                this.onChange(this);
+            function step2() {
+                self.flowPower();
+                setTimeout(step3, 100);
             }
+
+            function step1() {
+                self.gatherPower();
+                setTimeout(step2, 100);
+            }
+
+            function step0() {
+                assertTurn(turn);
+                if (turn.ownedCell != null) {
+                    let cell = turn.ownedCell;
+                    if (cell.owner != null)
+                        throw new Error("cell already owned");
+                    cell.owner = self.getCurrentPlayer();
+                }
+                if (turn.drainSrc != null) {
+                    let cell = turn.drainSrc;
+                    cell.drainTo = turn.drainDst;
+                }
+                self.signalChange();
+
+                setTimeout(step1, 100);
+            }
+
+            step0();
         }
+
+
     }
 
     return {
