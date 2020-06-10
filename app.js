@@ -1,5 +1,5 @@
 const app = function () {
-    let gridSpacing = .15;
+    let gridSpacing = .12;
     let halfSide = (1 - gridSpacing) / 2;
 
     function getWidgetPos(cell) {
