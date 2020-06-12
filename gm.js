@@ -48,10 +48,6 @@ const gm = function () {
             }
         }
 
-        selectForDrain() {
-            this.game.selectedCell = this;
-        }
-
         drainForTurn(dst) {
             let turn = new Turn(null, this, dst);
             this.game.playTurn(turn);
@@ -103,8 +99,6 @@ const gm = function () {
 
             this.currentPlayerIndex = 0;
             this.waitForTurn = true;
-
-            this.selectedCell = null;
 
             this.onChange = null;
         }
@@ -204,7 +198,6 @@ const gm = function () {
                 return;
             }
             this.waitForTurn = false;
-            this.selectedCell = null;
 
             let self = this;
 

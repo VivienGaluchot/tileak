@@ -136,7 +136,7 @@ const ui = function () {
         }
     }
 
-    class WorldWidget extends Widget {
+    class NodeWidget extends Widget {
         constructor(father, paintAxis) {
             super(father);
             this.paintAxis = paintAxis;
@@ -144,6 +144,9 @@ const ui = function () {
         }
 
         addWidget(child) {
+            if (child.father != this) {
+                throw new Error("wrong father");
+            }
             this.children.push(child);
         }
 
@@ -187,7 +190,7 @@ const ui = function () {
     class Sandbox {
         constructor(element) {
             this.canvas = element;
-            this.world = new WorldWidget(this, false);
+            this.world = new NodeWidget(this, false);
 
             this.ctx = this.canvas.getContext("2d");
             this.isPaintScheduled = false;
@@ -286,7 +289,7 @@ const ui = function () {
         BoxWidget: BoxWidget,
         LabelWidget: LabelWidget,
         ButtonWidget: ButtonWidget,
-        WorldWidget: WorldWidget,
+        NodeWidget: NodeWidget,
         Sandbox: Sandbox
     }
 }();

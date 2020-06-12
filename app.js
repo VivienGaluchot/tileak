@@ -20,7 +20,7 @@ const app = function () {
 
     // UI elements
 
-    class CellWidget extends ui.BoxWidget {
+    class BoxWidget extends ui.BoxWidget {
         constructor(father, game, cell) {
             super(father, getWidgetPos(cell), 1 - gridSpacing, 1 - gridSpacing);
 
@@ -65,7 +65,8 @@ const app = function () {
             }
 
             let hover = this.hovered && (this.cell.isPlayable() || this.cell.isDrainable());
-            let selected = this.game.selectedCell;
+            let selected = this.father.selectedBox;
+            let isSelected = selected == this;
 
             if (hover || this.cell.owner != null) {
                 sandbox.ctx.strokeStyle = `#${baseColor}`;
@@ -75,7 +76,7 @@ const app = function () {
                 sandbox.ctx.fillStyle = `#${baseColor}44`;
             }
 
-            if (hover || selected == this.cell) {
+            if (hover || isSelected) {
                 sandbox.ctx.lineWidth = .06;
             } else {
                 sandbox.ctx.lineWidth = .03;
@@ -110,7 +111,7 @@ const app = function () {
                 arrow(cellStart, cellEnd);
             }
 
-            if (((hover && this.cell.isDrainable()) && selected == null) || selected == this.cell) {
+            if (((hover && this.cell.isDrainable()) && selected == null) || isSelected) {
                 for (let neighbor of this.cell.drainDsts()) {
                     if (neighbor.widget.hovered)
                         sandbox.ctx.fillStyle = `#${baseColor}`;
@@ -136,18 +137,18 @@ const app = function () {
                     return;
                 }
 
-                let selected = this.game.selectedCell;
+                let selected = this.father.selectedBox;
                 if (selected != null) {
-                    if (selected.drainTo == this.cell) {
+                    if (selected.cell.drainTo == this.cell) {
                         // remove existing link
                         selected.drainForTurn(null);
                         this.schedulePaint();
                         return;
                     } else {
                         // create link
-                        for (let neighbor of selected.drainDsts()) {
+                        for (let neighbor of selected.cell.drainDsts()) {
                             if (this.cell == neighbor) {
-                                selected.drainForTurn(this.cell);
+                                selected.cell.drainForTurn(this.cell);
                                 this.schedulePaint();
                                 return;
                             }
@@ -156,10 +157,11 @@ const app = function () {
                 }
 
                 if (this.cell.isDrainable()) {
-                    this.cell.selectForDrain();
+                    this.father.selectedBox = this;
                     this.schedulePaint();
                     return;
                 }
+                this.father.selectedBox = null;
             }
         }
 
@@ -172,70 +174,83 @@ const app = function () {
         }
     }
 
-    // Ui Setup
+    class GameBoard extends ui.NodeWidget {
+        constructor(father, game) {
+            super(father, false);
 
-    function makeGrid(game, world) {
-        let width = game.height;
-        let height = game.width;
+            this.selectedBox = null;
 
-        function makeLabel(x, y, i) {
-            let label = new ui.LabelWidget(world, new mt.Vect(x, y), `${i}`);
-            label.fillStyle = "#FFF2";
-            label.fontSize = .4;
-            label.font = "Roboto";
-            label.textAlign = "center";
-            return label;
+            // grid
+
+            let width = game.height;
+            let height = game.width;
+
+            let self = this;
+            function makeLabel(x, y, i) {
+                let label = new ui.LabelWidget(self, new mt.Vect(x, y), `${i}`);
+                label.fillStyle = "#FFF2";
+                label.fontSize = .4;
+                label.font = "Roboto";
+                label.textAlign = "center";
+                return label;
+            }
+
+            for (let i = 0; i < width; i++) {
+                let x = i - width / 2 + .5;
+                this.addWidget(makeLabel(x, height / 2 + .2, i));
+            }
+            for (let j = 0; j < height; j++) {
+                let y = height / 2 - j - .5;
+                this.addWidget(makeLabel(-1 * width / 2 - .35, y - .1, j));
+            }
+
+            for (let cell of game.cells()) {
+                this.addWidget(new BoxWidget(this, game, cell));
+            }
+
+            // player label
+
+            let playerPreLabel = new ui.LabelWidget(this, new mt.Vect(-.5 * game.height, -1 * game.width / 2 - 1), 'Player');
+            playerPreLabel.fontSize = .5;
+            playerPreLabel.textAlign = "left";
+            playerPreLabel.fillStyle = "#FFF2";
+            playerPreLabel.font = "Roboto";
+            playerPreLabel.fontWeight = "lighter";
+            this.addWidget(playerPreLabel);
+
+            let playerLabel = new ui.LabelWidget(this, new mt.Vect(-.5 * game.height + 2, -1 * game.width / 2 - 1), '-');
+            playerLabel.fontSize = .5;
+            playerLabel.textAlign = "left";
+            playerLabel.font = "Roboto";
+            this.addWidget(playerLabel);
+            function updatePlayerLabel(game) {
+                if (game.waitForTurn)
+                    playerLabel.fillStyle = `#${game.getCurrentPlayer().color}`;
+                else
+                    playerLabel.fillStyle = `#${game.getCurrentPlayer().color}88`;
+                playerLabel.text = game.getCurrentPlayer().name;
+            }
+            updatePlayerLabel(game);
+
+            // skip button
+
+            let button = new ui.ButtonWidget(this, new mt.Vect(.5 * game.height - 1.5, -1 * game.width / 2 - 1 - .2), 1.5, .7, "skip", .2);
+            button.label.fontSize = .4;
+            button.label.font = "Roboto";
+            button.label.fontWeight = "lighter";
+            button.onClick = btn => {
+                let turn = new gm.Turn();
+                game.playTurn(turn);
+            };
+            this.addWidget(button);
+
+
+            // on change
+
+            game.onChange = game => {
+                updatePlayerLabel(game);
+            };
         }
-
-        for (let i = 0; i < width; i++) {
-            let x = i - width / 2 + .5;
-            world.addWidget(makeLabel(x, height / 2 + .2, i));
-        }
-        for (let j = 0; j < height; j++) {
-            let y = height / 2 - j - .5;
-            world.addWidget(makeLabel(-1 * width / 2 - .35, y - .1, j));
-        }
-
-        for (let cell of game.cells()) {
-            world.addWidget(new CellWidget(world, game, cell));
-        }
-    }
-
-    function makePlayerLabel(game, world) {
-        let playerPreLabel = new ui.LabelWidget(world, new mt.Vect(-.5 * game.height, -1 * game.width / 2 - 1), 'Player');
-        playerPreLabel.fontSize = .5;
-        playerPreLabel.textAlign = "left";
-        playerPreLabel.fillStyle = "#FFF2";
-        playerPreLabel.font = "Roboto";
-        playerPreLabel.fontWeight = "lighter";
-        world.addWidget(playerPreLabel);
-
-        let playerLabel = new ui.LabelWidget(world, new mt.Vect(-.5 * game.height + 2, -1 * game.width / 2 - 1), '-');
-        playerLabel.fontSize = .5;
-        playerLabel.textAlign = "left";
-        playerLabel.font = "Roboto";
-        world.addWidget(playerLabel);
-        function updatePlayerLabel(game) {
-            if (game.waitForTurn)
-                playerLabel.fillStyle = `#${game.getCurrentPlayer().color}`;
-            else
-                playerLabel.fillStyle = `#${game.getCurrentPlayer().color}88`;
-            playerLabel.text = game.getCurrentPlayer().name;
-        }
-        updatePlayerLabel(game);
-        game.onChange = updatePlayerLabel;
-    }
-
-    function makeSkipButton(game, world) {
-        let button = new ui.ButtonWidget(world, new mt.Vect(.5 * game.height - 1.5, -1 * game.width / 2 - 1 - .2), 1.5, .7, "skip", .2);
-        button.label.fontSize = .4;
-        button.label.font = "Roboto";
-        button.label.fontWeight = "lighter";
-        button.onClick = btn => {
-            let turn = new gm.Turn();
-            game.playTurn(turn);
-        };
-        world.addWidget(button);
     }
 
     // Main function
@@ -247,9 +262,7 @@ const app = function () {
         let game = new gm.Game(players, 8, 8);
 
         let sandbox = new ui.Sandbox(document.getElementById("sandbox"));
-        makeGrid(game, sandbox.world);
-        makePlayerLabel(game, sandbox.world);
-        makeSkipButton(game, sandbox.world);
+        sandbox.world.addWidget(new GameBoard(sandbox.world, game));
 
         let initOnchange = game.onChange;
         game.onChange = game => {
