@@ -165,6 +165,9 @@ const gm = function () {
         }
 
         flowPower() {
+            // flow power from src to dest in all current player cells
+            // the power transferred is 1/2 * power of the src cell
+            // the transfer has a cost, 1/4 of the power is lost on transfer
             let nextTurnPower = new Map();
             function transferPower(src, dst, incr) {
                 if (!nextTurnPower.has(src)) {
@@ -173,8 +176,9 @@ const gm = function () {
                 if (!nextTurnPower.has(dst)) {
                     nextTurnPower.set(dst, dst.power);
                 }
+                let transferCost = Math.floor(incr / 4);
                 nextTurnPower.set(src, nextTurnPower.get(src) - incr);
-                nextTurnPower.set(dst, nextTurnPower.get(dst) + incr);
+                nextTurnPower.set(dst, nextTurnPower.get(dst) + (incr - transferCost));
             }
 
             for (let cell of this.currentPlayerCells()) {
@@ -185,7 +189,7 @@ const gm = function () {
 
             for (var [cell, power] of nextTurnPower) {
                 if (power < 0)
-                    throw new Error("can't create negative power");
+                    throw new Error("cells can't have negative power");
                 cell.power = power;
             }
             this.signalChange();
