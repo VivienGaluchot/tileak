@@ -42,7 +42,7 @@ const gm = function () {
 
         * drainDsts() {
             for (let neighbor of this.neighbors()) {
-                if (neighbor != this.drainTo && neighbor.owner == this.owner) {
+                if (neighbor != this.drainTo && neighbor.owner != null) {
                     yield neighbor;
                 }
             }
@@ -165,20 +165,30 @@ const gm = function () {
         }
 
         flowPower() {
-            // flow power from src to dest in all current player cells
+            // flow power from src to dest, for src being all current player cells
             // the power transferred is 1/2 * power of the src cell
-            // the transfer has a cost, 1/4 of the power is lost on transfer
+
+            // if the dest is not owned by the current player:
+            // - the power transferred is deduced from the dest power cell
+            // - if the dest cell get to a less than 1 of power, it is captured
+
+            let currentPlayer = this.getCurrentPlayer();
+
             let nextTurnPower = new Map();
-            function transferPower(src, dst, incr) {
+            function transferPower(src, dst, amount) {
                 if (!nextTurnPower.has(src)) {
                     nextTurnPower.set(src, src.power);
                 }
                 if (!nextTurnPower.has(dst)) {
                     nextTurnPower.set(dst, dst.power);
                 }
-                let transferCost = Math.floor(incr / 4);
-                nextTurnPower.set(src, nextTurnPower.get(src) - incr);
-                nextTurnPower.set(dst, nextTurnPower.get(dst) + (incr - transferCost));
+                nextTurnPower.set(src, nextTurnPower.get(src) - amount);
+
+                if (dst.owner == currentPlayer) {
+                    nextTurnPower.set(dst, nextTurnPower.get(dst) + amount);
+                } else {
+                    nextTurnPower.set(dst, nextTurnPower.get(dst) - amount);
+                }
             }
 
             for (let cell of this.currentPlayerCells()) {
@@ -188,9 +198,18 @@ const gm = function () {
             }
 
             for (var [cell, power] of nextTurnPower) {
-                if (power < 0)
-                    throw new Error("cells can't have negative power");
-                cell.power = power;
+                if (cell.owner == currentPlayer) {
+                    if (power < 0)
+                        throw new Error("cells can't have negative power");
+                    cell.power = power;
+                } else {
+                    if (power < 1) {
+                        cell.owner = currentPlayer;
+                        cell.power = -1 * power;
+                    } else {
+                        cell.power = power;
+                    }
+                }
             }
             this.signalChange();
         }

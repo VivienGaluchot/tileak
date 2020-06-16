@@ -64,9 +64,17 @@ const app = function () {
                 baseColor = this.cell.owner.color;
             }
 
-            let hover = this.hovered && (this.cell.isPlayable() || this.cell.isDrainable());
             let selected = this.father.selectedBox;
             let isSelected = selected == this;
+            let isDrainDst = false;
+            if (selected != null) {
+                for (let neighbor of selected.cell.drainDsts()) {
+                    if (neighbor == this.cell) {
+                        isDrainDst = true;
+                    }
+                }
+            }
+            let hover = this.hovered && (this.cell.isPlayable() || this.cell.isDrainable() || isDrainDst);
 
             if (hover || this.cell.owner != null) {
                 sandbox.ctx.strokeStyle = `#${baseColor}`;
@@ -131,26 +139,28 @@ const app = function () {
 
         clicked(pos) {
             if (this.contains(pos)) {
+                let selected = this.father.selectedBox;
+                this.father.selectedBox = null;
+
                 if (this.cell.isPlayable()) {
                     this.cell.playForTurn();
                     this.schedulePaint();
-                    return;
+                    return true;
                 }
 
-                let selected = this.father.selectedBox;
                 if (selected != null) {
                     if (selected.cell.drainTo == this.cell) {
                         // remove existing link
-                        selected.drainForTurn(null);
+                        selected.cell.drainForTurn(null);
                         this.schedulePaint();
-                        return;
+                        return true;
                     } else {
                         // create link
                         for (let neighbor of selected.cell.drainDsts()) {
                             if (this.cell == neighbor) {
                                 selected.cell.drainForTurn(this.cell);
                                 this.schedulePaint();
-                                return;
+                                return true;
                             }
                         }
                     }
@@ -159,9 +169,8 @@ const app = function () {
                 if (this.cell.isDrainable()) {
                     this.father.selectedBox = this;
                     this.schedulePaint();
-                    return;
+                    return true;
                 }
-                this.father.selectedBox = null;
             }
         }
 
@@ -250,6 +259,19 @@ const app = function () {
             game.onChange = game => {
                 updatePlayerLabel(game);
             };
+        }
+
+        clicked(pos) {
+            let clickHandled = false;
+            for (let child of this.children) {
+                let handled = child.clicked(pos);
+                if (handled)
+                    clickHandled = true;
+            }
+            if (!clickHandled) {
+                this.selectedBox = null;
+                this.schedulePaint();
+            }
         }
     }
 
