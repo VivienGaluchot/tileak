@@ -97,6 +97,8 @@ const gm = function () {
                 this.grid.push(row);
             }
 
+            this.turnCounter = 0;
+
             this.currentPlayerIndex = 0;
             this.waitForTurn = true;
 
@@ -154,6 +156,8 @@ const gm = function () {
 
         nextPlayer() {
             this.currentPlayerIndex = (this.currentPlayerIndex + 1) % this.players.length;
+            if (this.currentPlayerIndex == 0)
+                this.turnCounter++;
             this.signalChange();
         }
 

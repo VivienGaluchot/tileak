@@ -241,6 +241,23 @@ const app = function () {
             }
             updatePlayerLabel(game);
 
+            // turn label
+
+            let turnPreLabel = new ui.LabelWidget(this, new mt.Vect(-.5 * game.height, -1 * game.width / 2 - 2), 'Turn');
+            turnPreLabel.fontSize = .5;
+            turnPreLabel.textAlign = "left";
+            turnPreLabel.fillStyle = "#FFF2";
+            turnPreLabel.font = "Roboto";
+            turnPreLabel.fontWeight = "lighter";
+            this.addWidget(turnPreLabel);
+
+            let turnLabel = new ui.LabelWidget(this, new mt.Vect(-.5 * game.height + 2, -1 * game.width / 2 - 2), null, label => game.turnCounter);
+            turnLabel.fontSize = .5;
+            turnLabel.textAlign = "left";
+            turnLabel.font = "Roboto";
+            this.addWidget(turnLabel);
+
+
             // skip button
 
             let button = new ui.ButtonWidget(this, new mt.Vect(.5 * game.height - 1.5, -1 * game.width / 2 - 1 - .2), 1.5, .7, "skip", .2);
