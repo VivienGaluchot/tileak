@@ -53,6 +53,11 @@ const gm = function () {
             this.game.playTurn(turn);
         }
 
+        undrainForTurn() {
+            let turn = new Turn(null, this, null);
+            this.game.playTurn(turn);
+        }
+
         // own cell for turn
 
         isPlayable() {
@@ -209,6 +214,9 @@ const gm = function () {
                 } else {
                     if (power < 1) {
                         cell.owner = currentPlayer;
+                        if (cell.drainTo != null && cell.drainTo.drainTo == cell) {
+                            cell.drainTo = null;
+                        }
                         cell.power = -1 * power;
                     } else {
                         cell.power = power;

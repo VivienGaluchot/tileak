@@ -56,46 +56,52 @@ const app = function () {
             return hex;
         }
 
+        getBaseColor() {
+            if (this.cell.owner != null) {
+                return this.cell.owner.color;
+            } else {
+                return "FFFFFF";
+            }
+        }
+
         paint(sandbox) {
             sandbox.ctx.save();
 
-            let baseColor = "FFFFFF";
-            if (this.cell.owner != null) {
-                baseColor = this.cell.owner.color;
-            }
+            let baseColor = this.getBaseColor();
+
+            let action = this.getClickAction();
+            let hasAction = action != null;
+
+            let isOwned = this.cell.owner != null;
 
             let selected = this.father.selectedBox;
             let isSelected = selected == this;
-            let isDrainDst = false;
-            if (selected != null) {
-                for (let neighbor of selected.cell.drainDsts()) {
-                    if (neighbor == this.cell) {
-                        isDrainDst = true;
-                    }
-                }
-            }
-            let hover = this.hovered && (this.cell.isPlayable() || this.cell.isDrainable() || isDrainDst);
+            let hover = this.hovered && hasAction;
 
-            if (hover || this.cell.owner != null) {
+            // draw rectangle
+
+            if (hover || isOwned) {
                 sandbox.ctx.strokeStyle = `#${baseColor}`;
-                sandbox.ctx.fillStyle = `#${baseColor}${this.getPowerOpacity()}`;
             } else {
                 sandbox.ctx.strokeStyle = `#${baseColor}88`;
-                sandbox.ctx.fillStyle = `#${baseColor}44`;
             }
 
-            if (hover || isSelected) {
+            if (hover) {
                 sandbox.ctx.lineWidth = .06;
             } else {
                 sandbox.ctx.lineWidth = .03;
             }
+
             sandbox.ctx.beginPath();
             sandbox.ctx.rect(this.pos.x, this.pos.y, this.w, this.h);
             sandbox.ctx.stroke();
 
-            if (this.cell.owner != null) {
+            if (isOwned) {
+                sandbox.ctx.fillStyle = `#${baseColor}${this.getPowerOpacity()}`;
                 sandbox.ctx.fillRect(this.pos.x, this.pos.y, this.w, this.h);
             }
+
+            // arrows
 
             function arrow(start, end) {
                 let diff = end.minus(start).setNorm(halfSide);
@@ -112,12 +118,20 @@ const app = function () {
                 sandbox.ctx.fill();
             }
 
+            // draw existing drain arrow
+
             if (this.cell.drainTo != null) {
-                sandbox.ctx.fillStyle = `#${baseColor}`;
+                let drainToWidget = this.cell.drainTo.widget;
+                if (drainToWidget.hovered && drainToWidget.getClickAction() != null)
+                    sandbox.ctx.fillStyle = `#${baseColor}88`;
+                else
+                    sandbox.ctx.fillStyle = `#${baseColor}`;
                 let cellStart = this.pos.add(new mt.Vect(halfSide, halfSide));
-                let cellEnd = this.cell.drainTo.widget.pos.add(new mt.Vect(halfSide, halfSide));
+                let cellEnd = drainToWidget.pos.add(new mt.Vect(halfSide, halfSide));
                 arrow(cellStart, cellEnd);
             }
+
+            // draw playable drain arrow
 
             if (((hover && this.cell.isDrainable()) && selected == null) || isSelected) {
                 for (let neighbor of this.cell.drainDsts()) {
@@ -137,37 +151,59 @@ const app = function () {
                 this.powerLabel.paint(sandbox);
         }
 
-        clicked(pos) {
-            if (this.contains(pos)) {
-                let selected = this.father.selectedBox;
-                this.father.selectedBox = null;
-
-                if (this.cell.isPlayable()) {
-                    this.cell.playForTurn();
-                    this.schedulePaint();
-                    return true;
-                }
-
-                if (selected != null) {
-                    if (selected.cell.drainTo == this.cell) {
-                        // remove existing link
-                        selected.cell.drainForTurn(null);
-                        this.schedulePaint();
-                        return true;
-                    } else {
-                        // create link
-                        for (let neighbor of selected.cell.drainDsts()) {
-                            if (this.cell == neighbor) {
-                                selected.cell.drainForTurn(this.cell);
-                                this.schedulePaint();
-                                return true;
-                            }
+        getClickAction() {
+            let selected = this.father.selectedBox;
+            if (selected != null) {
+                if (selected.cell.drainTo == this.cell) {
+                    // remove existing link
+                    return {
+                        "name": "remove_link",
+                        "perform": _ => {
+                            selected.cell.undrainForTurn();
+                        }
+                    };
+                } else {
+                    // create link
+                    for (let neighbor of selected.cell.drainDsts()) {
+                        if (this.cell == neighbor) {
+                            return {
+                                "name": "add_link",
+                                "perform": _ => {
+                                    selected.cell.drainForTurn(this.cell);
+                                }
+                            };
                         }
                     }
                 }
-
+            } else {
+                // own the cell
+                if (this.cell.isPlayable()) {
+                    return {
+                        "name": "own_cell",
+                        "perform": _ => {
+                            this.cell.playForTurn();
+                        }
+                    };
+                }
+                // set the clicked cell as selected
                 if (this.cell.isDrainable()) {
-                    this.father.selectedBox = this;
+                    return {
+                        "name": "set_selected",
+                        "perform": _ => {
+                            this.father.selectedBox = this;
+                        }
+                    };
+                }
+            }
+            return null;
+        }
+
+        clicked(pos) {
+            if (this.contains(pos)) {
+                let action = this.getClickAction();
+                this.father.selectedBox = null;
+                if (action != null) {
+                    action.perform();
                     this.schedulePaint();
                     return true;
                 }
