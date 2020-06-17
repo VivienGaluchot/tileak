@@ -195,6 +195,7 @@ const ui = function () {
             this.ctx = this.canvas.getContext("2d");
             this.isPaintScheduled = false;
 
+            this.unitViewed = 15;
             this.dpr = 1;
             this.pixelPerUnit = 1;
             this.resized();
@@ -230,8 +231,8 @@ const ui = function () {
             this.ctx.save();
             this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
             // default style
-            this.ctx.fillStyle = "#FFF";
-            this.ctx.strokeStyle = "#FFF";
+            this.ctx.fillStyle = "#FFFFFF";
+            this.ctx.strokeStyle = "#FFFFFF";
             this.ctx.lineWidth = 1 / this.pixelPerUnit;
             this.withRescale(sandbox => sandbox.world.paint(sandbox));
             this.ctx.restore();
@@ -264,7 +265,7 @@ const ui = function () {
             this.canvas.width = rect.width * this.dpr;
             this.canvas.height = rect.height * this.dpr;
 
-            this.pixelPerUnit = side / 15;
+            this.pixelPerUnit = side / this.unitViewed;
 
             this.paint();
             console.debug(`sandbox sized to ${this.getWidth()}x${this.getHeight()}px`);

@@ -2,6 +2,9 @@ const gm = function () {
     class Player {
         constructor(name) {
             this.name = name;
+
+            this.production = 0;
+            this.storage = 0;
         }
     }
 
@@ -226,6 +229,19 @@ const gm = function () {
             this.signalChange();
         }
 
+        updateStats() {
+            for (let player of this.players) {
+                player.production = 0;
+                player.storage = 0;
+            }
+            for (let cell of this.cells()) {
+                if (cell.owner != null) {
+                    cell.owner.production += cell.productionTurn;
+                    cell.owner.storage += cell.power;
+                }
+            }
+        }
+
         // turn loop
 
         playTurn(turn) {
@@ -238,6 +254,7 @@ const gm = function () {
 
             function step3() {
                 self.waitForTurn = true;
+                self.updateStats();
                 self.nextPlayer();
             }
 

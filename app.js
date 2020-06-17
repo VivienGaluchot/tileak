@@ -1,9 +1,10 @@
 const app = function () {
     let gridSpacing = .12;
     let halfSide = (1 - gridSpacing) / 2;
+    let xOffset = -2;
 
     function getWidgetPos(cell) {
-        let x = cell.pos.y - cell.game.height / 2 + .5;
+        let x = cell.pos.y - cell.game.height / 2 + .5 + xOffset;
         let y = cell.game.width / 2 - cell.pos.x - .5;
         let pos = new mt.Vect(x - halfSide, y - halfSide);
         return pos;
@@ -20,7 +21,7 @@ const app = function () {
 
     // UI elements
 
-    class BoxWidget extends ui.BoxWidget {
+    class CellWidget extends ui.BoxWidget {
         constructor(father, game, cell) {
             super(father, getWidgetPos(cell), 1 - gridSpacing, 1 - gridSpacing);
 
@@ -219,6 +220,127 @@ const app = function () {
         }
     }
 
+    class PlayerStat extends ui.NodeWidget {
+        constructor(father, game, player, pos) {
+            super(father);
+            this.pos = pos;
+            this.game = game;
+            this.player = player;
+
+            // name label
+            this.nameLabel = new ui.LabelWidget(this, this.pos, null, label => this.player.name);
+            this.nameLabel.fontSize = .3;
+            this.nameLabel.textAlign = "left";
+            this.nameLabel.font = "Roboto";
+            this.addWidget(this.nameLabel);
+
+            // production label
+            this.productionLabel = new ui.LabelWidget(this, this.pos.add(new mt.Vect(2.5, 0)), null, label => this.player.production);
+            this.productionLabel.fontSize = .3;
+            this.productionLabel.textAlign = "right";
+            this.productionLabel.fillStyle = `#FFFFFF88`
+            this.productionLabel.font = "Roboto";
+            this.addWidget(this.productionLabel);
+
+            // storage label
+            this.storageLabel = new ui.LabelWidget(this, this.pos.add(new mt.Vect(4, 0)), null, label => this.player.storage);
+            this.storageLabel.fontSize = .3;
+            this.storageLabel.textAlign = "right";
+            this.storageLabel.fillStyle = `#FFFFFF88`
+            this.storageLabel.font = "Roboto";
+            this.addWidget(this.storageLabel);
+        }
+
+        paint(sandbox) {
+            if (this.game.getCurrentPlayer() == this.player && this.game.waitForTurn) {
+                this.nameLabel.fillStyle = `#${this.player.color}`;
+            } else {
+                this.nameLabel.fillStyle = `#${this.player.color}88`;
+            }
+            super.paint(sandbox);
+        }
+    }
+
+    class CurrentPlayerLabel extends ui.LabelWidget {
+        constructor(father, pos, game) {
+            super(father, pos, null, _ => game.getCurrentPlayer().name);
+            this.game = game;
+        }
+
+        paint(sandbox) {
+            if (this.game.waitForTurn)
+                this.fillStyle = `#${this.game.getCurrentPlayer().color}`;
+            else
+                this.fillStyle = `#${this.game.getCurrentPlayer().color}88`;
+            super.paint(sandbox);
+        }
+    }
+
+    class PlayerStats extends ui.NodeWidget {
+        constructor(father, game) {
+            super(father);
+            this.game = game;
+
+            let pos = new mt.Vect(.5 * game.height + 1 + xOffset, game.width / 2 + .2);
+
+            // player label
+            let playerPreLabel = new ui.LabelWidget(this, pos, 'Player');
+            playerPreLabel.fontSize = .5;
+            playerPreLabel.textAlign = "left";
+            playerPreLabel.fillStyle = "#FFF2";
+            playerPreLabel.font = "Roboto";
+            playerPreLabel.fontWeight = "lighter";
+            this.addWidget(playerPreLabel);
+
+            let playerLabel = new CurrentPlayerLabel(this, pos.add(new mt.Vect(1.8, 0)), game);
+            playerLabel.fontSize = .5;
+            playerLabel.textAlign = "left";
+            playerLabel.font = "Roboto";
+            this.addWidget(playerLabel);
+
+            pos = pos.add(new mt.Vect(0, -.8));
+
+            // turn label
+            let turnPreLabel = new ui.LabelWidget(this, pos, 'Turn');
+            turnPreLabel.fontSize = .5;
+            turnPreLabel.textAlign = "left";
+            turnPreLabel.fillStyle = "#FFF2";
+            turnPreLabel.font = "Roboto";
+            turnPreLabel.fontWeight = "lighter";
+            this.addWidget(turnPreLabel);
+
+            let turnLabel = new ui.LabelWidget(this, pos.add(new mt.Vect(1.8, 0)), null, label => game.turnCounter);
+            turnLabel.fontSize = .5;
+            turnLabel.textAlign = "left";
+            turnLabel.font = "Roboto";
+            this.addWidget(turnLabel);
+
+            pos = pos.add(new mt.Vect(0, -1));
+
+            // stat table
+
+            // production title
+            this.productionLabel = new ui.LabelWidget(this, pos.add(new mt.Vect(2.5, 0)), "production");
+            this.productionLabel.fontSize = .2;
+            this.productionLabel.textAlign = "right";
+            this.productionLabel.fillStyle = `#FFFFFF88`
+            this.productionLabel.font = "Roboto";
+            this.addWidget(this.productionLabel);
+            // storage title
+            this.storageLabel = new ui.LabelWidget(this, pos.add(new mt.Vect(4, 0)), "storage");
+            this.storageLabel.fontSize = .2;
+            this.storageLabel.textAlign = "right";
+            this.storageLabel.fillStyle = `#FFFFFF88`
+            this.storageLabel.font = "Roboto";
+            this.addWidget(this.storageLabel);
+            // lines
+            for (let [index, player] of game.players.entries()) {
+                let stats = new PlayerStat(this, game, player, pos.add(new mt.Vect(0, -.6 * index - .5)));
+                this.addWidget(stats);
+            }
+        }
+    }
+
     class GameBoard extends ui.NodeWidget {
         constructor(father, game) {
             super(father, false);
@@ -226,7 +348,6 @@ const app = function () {
             this.selectedBox = null;
 
             // grid
-
             let width = game.height;
             let height = game.width;
 
@@ -241,62 +362,20 @@ const app = function () {
             }
 
             for (let i = 0; i < width; i++) {
-                let x = i - width / 2 + .5;
+                let x = i - width / 2 + .5 + xOffset;
                 this.addWidget(makeLabel(x, height / 2 + .2, i));
             }
             for (let j = 0; j < height; j++) {
                 let y = height / 2 - j - .5;
-                this.addWidget(makeLabel(-1 * width / 2 - .35, y - .1, j));
+                this.addWidget(makeLabel(-1 * width / 2 - .35 + xOffset, y - .1, j));
             }
 
             for (let cell of game.cells()) {
-                this.addWidget(new BoxWidget(this, game, cell));
+                this.addWidget(new CellWidget(this, game, cell));
             }
-
-            // player label
-
-            let playerPreLabel = new ui.LabelWidget(this, new mt.Vect(-.5 * game.height, -1 * game.width / 2 - 1), 'Player');
-            playerPreLabel.fontSize = .5;
-            playerPreLabel.textAlign = "left";
-            playerPreLabel.fillStyle = "#FFF2";
-            playerPreLabel.font = "Roboto";
-            playerPreLabel.fontWeight = "lighter";
-            this.addWidget(playerPreLabel);
-
-            let playerLabel = new ui.LabelWidget(this, new mt.Vect(-.5 * game.height + 2, -1 * game.width / 2 - 1), '-');
-            playerLabel.fontSize = .5;
-            playerLabel.textAlign = "left";
-            playerLabel.font = "Roboto";
-            this.addWidget(playerLabel);
-            function updatePlayerLabel(game) {
-                if (game.waitForTurn)
-                    playerLabel.fillStyle = `#${game.getCurrentPlayer().color}`;
-                else
-                    playerLabel.fillStyle = `#${game.getCurrentPlayer().color}88`;
-                playerLabel.text = game.getCurrentPlayer().name;
-            }
-            updatePlayerLabel(game);
-
-            // turn label
-
-            let turnPreLabel = new ui.LabelWidget(this, new mt.Vect(-.5 * game.height, -1 * game.width / 2 - 2), 'Turn');
-            turnPreLabel.fontSize = .5;
-            turnPreLabel.textAlign = "left";
-            turnPreLabel.fillStyle = "#FFF2";
-            turnPreLabel.font = "Roboto";
-            turnPreLabel.fontWeight = "lighter";
-            this.addWidget(turnPreLabel);
-
-            let turnLabel = new ui.LabelWidget(this, new mt.Vect(-.5 * game.height + 2, -1 * game.width / 2 - 2), null, label => game.turnCounter);
-            turnLabel.fontSize = .5;
-            turnLabel.textAlign = "left";
-            turnLabel.font = "Roboto";
-            this.addWidget(turnLabel);
-
 
             // skip button
-
-            let button = new ui.ButtonWidget(this, new mt.Vect(.5 * game.height - 1.5, -1 * game.width / 2 - 1 - .2), 1.5, .7, "skip", .2);
+            let button = new ui.ButtonWidget(this, new mt.Vect(.5 * game.height - 2 + xOffset, -1 * game.width / 2 - 1 - .2), 2, .7, "skip turn", .2);
             button.label.fontSize = .4;
             button.label.font = "Roboto";
             button.label.fontWeight = "lighter";
@@ -306,12 +385,9 @@ const app = function () {
             };
             this.addWidget(button);
 
-
-            // on change
-
-            game.onChange = game => {
-                updatePlayerLabel(game);
-            };
+            // player stats
+            let stats = new PlayerStats(this, game);
+            this.addWidget(stats);
         }
 
         clicked(pos) {
@@ -339,13 +415,10 @@ const app = function () {
         let sandbox = new ui.Sandbox(document.getElementById("sandbox"));
         sandbox.world.addWidget(new GameBoard(sandbox.world, game));
 
-        let initOnchange = game.onChange;
         game.onChange = game => {
-            initOnchange(game);
             sandbox.paint();
         };
-
-        sandbox.paint();
+        game.signalChange();
     }
 
     return {
