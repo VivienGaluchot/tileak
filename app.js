@@ -290,10 +290,10 @@ const app = function () {
             let pos = new mt.Vect(.5 * game.height + 1 + xOffset, game.width / 2 + .2);
 
             // player label
-            let playerPreLabel = new ui.LabelWidget(this, pos, 'Player');
+            let playerPreLabel = new ui.LabelWidget(this, pos, "Player");
             playerPreLabel.fontSize = .5;
             playerPreLabel.textAlign = "left";
-            playerPreLabel.fillStyle = "#FFF2";
+            playerPreLabel.fillStyle = "#FFFFFF88";
             playerPreLabel.font = "Roboto";
             playerPreLabel.fontWeight = "lighter";
             this.addWidget(playerPreLabel);
@@ -307,10 +307,10 @@ const app = function () {
             pos = pos.add(new mt.Vect(0, -.8));
 
             // turn label
-            let turnPreLabel = new ui.LabelWidget(this, pos, 'Turn');
+            let turnPreLabel = new ui.LabelWidget(this, pos, "Turn");
             turnPreLabel.fontSize = .5;
             turnPreLabel.textAlign = "left";
-            turnPreLabel.fillStyle = "#FFF2";
+            turnPreLabel.fillStyle = "#FFFFFF88";
             turnPreLabel.font = "Roboto";
             turnPreLabel.fontWeight = "lighter";
             this.addWidget(turnPreLabel);
