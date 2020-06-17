@@ -1,5 +1,5 @@
 const app = function () {
-    let gridSpacing = .12;
+    let gridSpacing = .18;
     let halfSide = (1 - gridSpacing) / 2;
     let xOffset = -2;
 
@@ -34,9 +34,9 @@ const app = function () {
 
             this.hovered = false;
 
-            this.powerLabel = new ui.LabelWidget(this, new mt.Vect(this.pos.x + halfSide, this.pos.y + .35), null, lbl => `${cell.power}`);
+            this.powerLabel = new ui.LabelWidget(this, new mt.Vect(this.pos.x + halfSide, this.pos.y + .32), null, lbl => `${this.cell.power}`);
             this.powerLabel.fillStyle = "#FFF8";
-            this.powerLabel.fontSize = .3;
+            this.powerLabel.fontSize = .25;
             this.powerLabel.textAlign = "center";
         }
 
@@ -123,7 +123,8 @@ const app = function () {
 
             if (this.cell.drainTo != null) {
                 let drainToWidget = this.cell.drainTo.widget;
-                if (drainToWidget.hovered && drainToWidget.getClickAction() != null)
+                let action = drainToWidget.getClickAction();
+                if (drainToWidget.hovered && action != null && action.name == "remove_link")
                     sandbox.ctx.fillStyle = `#${baseColor}88`;
                 else
                     sandbox.ctx.fillStyle = `#${baseColor}`;
