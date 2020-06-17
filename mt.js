@@ -1,3 +1,7 @@
+/**
+ * Math utility
+ */
+
 const mt = function () {
     function checkNumber(a) {
         if (typeof a != "number")

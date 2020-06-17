@@ -1,3 +1,8 @@
+/**
+ * User interface basics
+ */
+
+
 const ui = function () {
     class Widget {
         constructor(father) {

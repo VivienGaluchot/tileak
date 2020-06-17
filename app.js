@@ -1,3 +1,8 @@
+/**
+ * This JS module is the main module.
+ * It provides a user interface to the game.
+ */
+
 const app = function () {
     let gridSpacing = .18;
     let halfSide = (1 - gridSpacing) / 2;
