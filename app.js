@@ -362,7 +362,7 @@ const app = function () {
             let self = this;
             function makeLabel(x, y, i) {
                 let label = new ui.LabelWidget(self, new mt.Vect(x, y), `${i}`);
-                label.fillStyle = "#FFF2";
+                label.fillStyle = "#FFFFFF22";
                 label.fontSize = .4;
                 label.font = "Roboto";
                 label.textAlign = "center";
@@ -383,7 +383,7 @@ const app = function () {
             }
 
             // skip button
-            let skipButton = new ui.ButtonWidget(this, new mt.Vect(.5 * game.height - 2 + xOffset, -1 * game.width / 2 - 1 - .2), 2, .7, "skip turn", .25);
+            let skipButton = new ui.ButtonWidget(this, new mt.Vect(.5 * game.height - 2 + xOffset, -1 * game.width / 2 - 1 - .2), 2, .7, "Skip turn", .25);
             skipButton.label.fontSize = .3;
             skipButton.label.font = "Roboto";
             skipButton.label.fontWeight = "lighter";
@@ -394,7 +394,7 @@ const app = function () {
             this.addWidget(skipButton);
 
             // surrender button
-            let surrenderButton = new ui.ButtonWidget(this, new mt.Vect(.5 * game.height - 4 + xOffset, -1 * game.width / 2 - 1 - .2), 2, .7, "surrender", .25);
+            let surrenderButton = new ui.ButtonWidget(this, new mt.Vect(.5 * game.height - 4.2 + xOffset, -1 * game.width / 2 - 1 - .2), 2, .7, "Surrender", .25);
             surrenderButton.label.fontSize = .3;
             surrenderButton.label.font = "Roboto";
             surrenderButton.label.fontWeight = "lighter";
@@ -432,6 +432,7 @@ const app = function () {
     let el_sandbox;
     let el_after_game;
     let el_winner;
+    let el_players;
 
     function setup() {
         el_html = document.querySelector("html");
@@ -439,6 +440,7 @@ const app = function () {
         el_sandbox = document.getElementById("js-sandbox");
         el_after_game = document.getElementById("js-content-after_game");
         el_winner = document.getElementById("js-winner");
+        el_players = document.getElementById("js-players");
     }
 
     function reset() {
@@ -481,39 +483,59 @@ const app = function () {
     let sandbox;
 
     function startGame() {
-        showSandbox();
+        let players = [];
+        let inputs = el_players.querySelectorAll("div>input");
+        let angleIncrement = Math.min(360 / inputs.length, 120);
+        for (let [index, input] of inputs.entries()) {
+            let angle = -1 * angleIncrement * index;
+            let color = clr.changeHue("#44FFFF", angle);
+            players.push(new Player(input.value, color.substr(1)));
+        }
 
-        let a = new Player("Alice", "00FFFF");
-        let b = new Player("Bob", "FFFF00");
-        let c = new Player("Charles", "FF00FF");
-        let players = [a, b, c];
-        let game = new gm.Game(players, 8, 8);
+        if (players.length > 1) {
+            showSandbox();
+            let game = new gm.Game(players, 8, 8);
 
-        sandbox = new ui.Sandbox(el_sandbox);
-        sandbox.world.addWidget(new GameBoard(sandbox.world, game));
+            sandbox = new ui.Sandbox(el_sandbox);
+            sandbox.world.addWidget(new GameBoard(sandbox.world, game));
 
-        game.onChange = game => {
-            if (game.terminated == false) {
-                sandbox.paint();
-            } else {
-                sandbox.stop();
-                if (game.winner != null) {
-                    el_winner.textContent = game.winner.name;
-                    el_winner.style.color = `#${game.winner.color}`
+            game.onChange = game => {
+                if (game.terminated == false) {
+                    sandbox.paint();
                 } else {
-                    el_winner.textContent = "Nobody";
-                    el_winner.style.color = `#FFFFFF`
+                    sandbox.stop();
+                    if (game.winner != null) {
+                        el_winner.textContent = game.winner.name;
+                        el_winner.style.color = `#${game.winner.color}`
+                    } else {
+                        el_winner.textContent = "Nobody";
+                        el_winner.style.color = `#FFFFFF`
+                    }
+                    showAfterGame();
                 }
-                showAfterGame();
-            }
-        };
-        game.signalChange();
+            };
+            game.signalChange();
+        }
+    }
+
+    function rmInput(el) {
+        el.parentNode.remove();
+    }
+
+    function addInput(el) {
+        let div = el.parentNode;
+        let section = div.parentNode;
+        let newDiv = document.createElement("div");
+        newDiv.innerHTML = "<input value=\"noname\"/><button onclick=\"app.rmInput(this);\">-</button>"
+        section.insertBefore(newDiv, div);
     }
 
     return {
         setup: setup,
         reset: reset,
         startGame: startGame,
+        rmInput: rmInput,
+        addInput: addInput,
     }
 }();
 

@@ -127,6 +127,12 @@ html.sandbox-enabled content {
 
 /* components */
 
+section {
+    display: block;
+    text-align: center;
+    margin: 3rem;
+}
+
 header h1 {
     margin: 0;
     font-weight: lighter;
@@ -172,8 +178,6 @@ html.sandbox-enabled #js-sandbox {
 
 .btn-cta {
     padding: .7rem;
-    --margin: 1rem;
-    margin: var(--margin);
     border: 1px solid #d3e057;
     background-color: transparent;
     color: #d3e057;
@@ -189,8 +193,41 @@ html.sandbox-enabled #js-sandbox {
 }
 
 .btn-cta:active {
-    margin-top: calc(var(--margin) + 3px);
+    margin-top: 3px;
     border-bottom-width: 1px;
+}
+
+.players-input>div {
+    margin: .5rem;
+    display: flex;
+    justify-content: center;
+}
+
+.players-input input {
+    padding: .7rem;
+    border: none;
+    background-color: #ffffff22;
+    color: #ffffff;
+    font-family: inherit;
+    font-size: inherit;
+}
+
+.players-input button {
+    padding: .7rem;
+    border: 1px solid #ffffff22;
+    background-color: transparent;
+    color: #ffffff;
+    font-family: inherit;
+    font-size: inherit;
+}
+
+.players-input button:hover {
+    background-color: #ffffff44;
+    cursor: pointer;
+}
+
+.players-input button:active {
+    background-color: #ffffff66;
 }
 
 /* js manipulators */

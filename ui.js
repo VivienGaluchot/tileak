@@ -29,7 +29,7 @@ const ui = function () {
             this.text = text;
             this.makeText = makeText;
 
-            this.fillStyle = "#FFF";
+            this.fillStyle = "#FFFFFF";
             this.font = "Verdana";
             this.fontSize = .5;
             this.fontWeight = "normal";
@@ -95,7 +95,7 @@ const ui = function () {
 
             this.onClick = null;
 
-            this.baseColor = "FFF";
+            this.baseColor = "FFFFFF";
 
             this.label = new ui.LabelWidget(this, new mt.Vect(pos.x + w / 2, pos.y + textSpacing), text);
             this.label.fontSize = .3;
@@ -105,13 +105,14 @@ const ui = function () {
         paint(sandbox) {
             sandbox.ctx.save();
             sandbox.ctx.beginPath();
-            sandbox.ctx.strokeStyle = `#${this.baseColor}8`;
-            sandbox.ctx.fillStyle = `#${this.baseColor}4`;
+            sandbox.ctx.strokeStyle = `#${this.baseColor}88`;
 
             if (this.hovered) {
                 sandbox.ctx.lineWidth = .06;
+                sandbox.ctx.fillStyle = `#${this.baseColor}11`;
             } else {
                 sandbox.ctx.lineWidth = .03;
+                sandbox.ctx.fillStyle = `#${this.baseColor}00`;
             }
 
             sandbox.ctx.rect(this.pos.x, this.pos.y, this.w, this.h);
@@ -119,7 +120,7 @@ const ui = function () {
             sandbox.ctx.fillRect(this.pos.x, this.pos.y, this.w, this.h);
             sandbox.ctx.restore();
 
-            this.label.fillStyle = `#${this.baseColor}8`;
+            this.label.fillStyle = `#${this.baseColor}88`;
             this.label.paint(sandbox);
         }
 
