@@ -10,7 +10,8 @@ const gm = function () {
             this.production = 0;
             this.storage = 0;
 
-            this.hasSurrender = false;
+            this.hasOwnedACell = false;
+            this.hasLost = false;
         }
     }
 
@@ -172,32 +173,6 @@ const gm = function () {
 
         // turn parts
 
-        nextPlayer() {
-            // check if the game is terminated
-            let nonSurrendered = 0;
-            for (let player of this.players) {
-                if (player.hasSurrender == false) {
-                    nonSurrendered++;
-                }
-            }
-            if (nonSurrendered <= 1) {
-                this.terminated = true;
-                if (nonSurrendered == 1) {
-                    for (let player of this.players) {
-                        if (player.hasSurrender == false) {
-                            this.winner = player;
-                        }
-                    }
-                }
-            }
-
-            this.currentPlayerIndex = (this.currentPlayerIndex + 1) % this.players.length;
-            if (this.currentPlayerIndex == 0)
-                this.turnCounter++;
-
-            this.signalChange();
-        }
-
         gatherPower() {
             for (let cell of this.currentPlayerCells()) {
                 cell.gatherPower();
@@ -258,17 +233,49 @@ const gm = function () {
             this.signalChange();
         }
 
-        updateStats() {
+        updatePlayers() {
             for (let player of this.players) {
                 player.production = 0;
                 player.storage = 0;
             }
             for (let cell of this.cells()) {
                 if (cell.owner != null) {
+                    cell.owner.hasOwnedACell = true;
                     cell.owner.production += cell.productionTurn;
                     cell.owner.storage += cell.power;
                 }
             }
+            for (let player of this.players) {
+                if (player.hasOwnedACell && player.production == 0) {
+                    player.hasLost = true;
+                }
+            }
+        }
+
+        nextPlayer() {
+            // check if the game is terminated
+            let nonLostPlayer = 0;
+            for (let player of this.players) {
+                if (player.hasLost == false) {
+                    nonLostPlayer++;
+                }
+            }
+            if (nonLostPlayer <= 1) {
+                this.terminated = true;
+                if (nonLostPlayer == 1) {
+                    for (let player of this.players) {
+                        if (player.hasLost == false) {
+                            this.winner = player;
+                        }
+                    }
+                }
+            }
+
+            this.currentPlayerIndex = (this.currentPlayerIndex + 1) % this.players.length;
+            if (this.currentPlayerIndex == 0)
+                this.turnCounter++;
+
+            this.signalChange();
         }
 
         // turn loop
@@ -286,11 +293,11 @@ const gm = function () {
 
             function step3() {
                 self.waitForTurn = true;
-                self.updateStats();
+                self.updatePlayers();
                 self.nextPlayer();
 
                 // skip turn for surrenders
-                if (!self.terminated && self.getCurrentPlayer().hasSurrender) {
+                if (!self.terminated && self.getCurrentPlayer().hasLost) {
                     let turn = new gm.Turn();
                     self.playTurn(turn);
                 }
@@ -321,7 +328,7 @@ const gm = function () {
                     cell.drainTo = turn.drainDst;
                 }
                 if (turn.surrender == true) {
-                    player.hasSurrender = true;
+                    player.hasLost = true;
                 }
                 self.signalChange();
 

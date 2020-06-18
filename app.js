@@ -258,7 +258,7 @@ const app = function () {
         }
 
         paint(sandbox) {
-            if (this.player.hasSurrender) {
+            if (this.player.hasLost) {
                 this.nameLabel.fillStyle = `#FFFFFF44`;
             } else if (this.game.getCurrentPlayer() == this.player && this.game.waitForTurn) {
                 this.nameLabel.fillStyle = `#${this.player.color}`;
@@ -354,6 +354,7 @@ const app = function () {
             super(father, false);
 
             this.selectedBox = null;
+            this.game = game;
 
             // grid
             let width = game.height;
@@ -412,6 +413,8 @@ const app = function () {
         }
 
         clicked(pos) {
+            if (this.game.terminated)
+                return;
             let clickHandled = false;
             for (let child of this.children) {
                 let handled = child.clicked(pos);
@@ -447,6 +450,7 @@ const app = function () {
 
     function reset() {
         showPreGame();
+        sandbox.stop();
     }
 
     function setEnabled(element, isEnabled) {
@@ -474,9 +478,9 @@ const app = function () {
     }
 
     function showAfterGame() {
-        el_html.classList.remove("sandbox-enabled");
+        el_html.classList.add("sandbox-enabled");
         setEnabled(el_pre_game, false);
-        setEnabled(el_sandbox, false);
+        setEnabled(el_sandbox, true);
         setEnabled(el_after_game, true);
     }
 
@@ -526,7 +530,6 @@ const app = function () {
                 if (game.terminated == false) {
                     sandbox.paint();
                 } else {
-                    sandbox.stop();
                     if (game.winner != null) {
                         el_winner.textContent = game.winner.name;
                         el_winner.style.color = `#${game.winner.color}`

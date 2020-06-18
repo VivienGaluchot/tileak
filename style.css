@@ -271,6 +271,11 @@ html.sandbox-enabled #js-sandbox {
     color: #ffffff;
 }
 
+.overlay {
+    position: absolute;
+    width: 100%;
+}
+
 /* js manipulators */
 
 .enabled {
