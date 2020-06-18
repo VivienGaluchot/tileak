@@ -40,17 +40,17 @@
                 <button onclick="app.selectGridSize(this);" class="selected">6x6</button>
                 <button onclick="app.selectGridSize(this);">4x4</button>
             </section>
-            <section id="js-players" class="text-center players-input">
-                <div>
-                    <input value="noname" />
-                    <button onclick="app.rmInput(this);">-</button>
-                </div>
-                <div>
-                    <input value="noname" />
-                    <button onclick="app.rmInput(this);">-</button>
-                </div>
-                <div>
-                    <button onclick="app.addInput(this);">+</button>
+            <section>
+                <div id="js-players" class="players-input">
+                    <div>
+                        <input value="noname" />
+                    </div>
+                    <div>
+                        <input value="noname" />
+                    </div>
+                    <div>
+                        <button class="add" onclick="app.addInput(this);">+</button>
+                    </div>
                 </div>
             </section>
             <section>

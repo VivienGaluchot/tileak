@@ -197,6 +197,11 @@ html.sandbox-enabled #js-sandbox {
     border-bottom-width: 1px;
 }
 
+.players-input {
+    /* margin: 0 auto; */
+    display: inline-block;
+}
+
 .players-input>div {
     margin: .5rem;
     display: flex;
@@ -204,6 +209,7 @@ html.sandbox-enabled #js-sandbox {
 }
 
 .players-input input {
+    flex-grow: 1;
     padding: .7rem;
     border: none;
     background-color: #ffffff22;
@@ -219,6 +225,10 @@ html.sandbox-enabled #js-sandbox {
     color: #ffffff;
     font-family: inherit;
     font-size: inherit;
+}
+
+.players-input button.add {
+    width: 100%;
 }
 
 .players-input button:hover {
