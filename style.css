@@ -213,7 +213,7 @@ html.sandbox-enabled #js-sandbox {
 }
 
 .players-input button {
-    padding: .7rem;
+    padding: .7rem 1rem;
     border: 1px solid #ffffff22;
     background-color: transparent;
     color: #ffffff;
