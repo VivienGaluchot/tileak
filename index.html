@@ -30,8 +30,25 @@
         </div>
     </header>
     <content>
-        <canvas id="sandbox">
-        </canvas>
+        <div id="js-content-pre_game" class="enabled">
+            <section class="text-center">
+                <h2>Play</h2>
+                <p>Enter the participant name and click "new game".</p>
+            </section>
+            <section class="text-center">
+                <button class="btn-cta" onclick="app.startGame();">New game</button>
+            </section>
+        </div>
+        <canvas id="js-sandbox" class="disabled"></canvas>
+        <div id="js-content-after_game" class="disabled">
+            <section class="text-center">
+                <h2>Results</h2>
+                <p><b><span id="js-winner"></span></b> is the bestest</p>
+            </section>
+            <section class="text-center">
+                <button class="btn-cta" onclick="app.reset();">Return</button>
+            </section>
+        </div>
     </content>
     <footer>
         <div>

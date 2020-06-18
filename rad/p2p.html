@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>tileak</title>
+    <!-- <link rel="icon" href="icon.svg"> -->
+
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <header>
+        <div class="error" id="masked_error" style="display:none;">
+            <p>
+                An error have been encountered.<br>
+                Your browser may not be supported by the application.
+            </p>
+            <p>
+                <a href="#" onclick="window.location.reload(true);">Try to reload the page.</a>
+            </p>
+        </div>
+    </header>
+    <content>
+        <button id="button" onclick="createOffer()">Offer:</button>
+        <textarea id="offer" placeholder="Paste offer here"></textarea>
+        Answer: <textarea id="answer"></textarea><br>
+        <div id="div"></div>
+        Chat: <input id="chat"><br>
+    </content>
+    <footer>
+        <div>
+            <a href="https://github.com/VivienGaluchot/tileak">Open-source</a> application.
+        </div>
+    </footer>
+    <script type="text/javascript" src="p2p.js"></script>
+</body>
+
+</html>

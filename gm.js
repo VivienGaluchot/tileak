@@ -9,6 +9,8 @@ const gm = function () {
 
             this.production = 0;
             this.storage = 0;
+
+            this.hasSurrender = false;
         }
     }
 
@@ -78,13 +80,14 @@ const gm = function () {
     }
 
     class Turn {
-        constructor(ownedCell, drainSrc, drainDst) {
+        constructor(ownedCell, drainSrc, drainDst, surrender) {
             if (ownedCell != null && drainSrc != null)
                 throw new Error("single action per turn");
 
             this.ownedCell = ownedCell;
             this.drainSrc = drainSrc;
             this.drainDst = drainDst;
+            this.surrender = surrender;
         }
     }
 
@@ -113,6 +116,9 @@ const gm = function () {
 
             this.currentPlayerIndex = 0;
             this.waitForTurn = true;
+
+            this.terminated = false;
+            this.winner = null;
 
             this.onChange = null;
         }
@@ -167,9 +173,28 @@ const gm = function () {
         // turn parts
 
         nextPlayer() {
+            // check if the game is terminated
+            let nonSurrendered = 0;
+            for (let player of this.players) {
+                if (player.hasSurrender == false) {
+                    nonSurrendered++;
+                }
+            }
+            if (nonSurrendered <= 1) {
+                this.terminated = true;
+                if (nonSurrendered == 1) {
+                    for (let player of this.players) {
+                        if (player.hasSurrender == false) {
+                            this.winner = player;
+                        }
+                    }
+                }
+            }
+
             this.currentPlayerIndex = (this.currentPlayerIndex + 1) % this.players.length;
             if (this.currentPlayerIndex == 0)
                 this.turnCounter++;
+
             this.signalChange();
         }
 
@@ -249,6 +274,9 @@ const gm = function () {
         // turn loop
 
         playTurn(turn) {
+            if (this.terminated)
+                throw new Error("game terminated");
+
             if (!this.waitForTurn) {
                 return;
             }
@@ -260,6 +288,12 @@ const gm = function () {
                 self.waitForTurn = true;
                 self.updateStats();
                 self.nextPlayer();
+
+                // skip turn for surrenders
+                if (!self.terminated && self.getCurrentPlayer().hasSurrender) {
+                    let turn = new gm.Turn();
+                    self.playTurn(turn);
+                }
             }
 
             function step2() {
@@ -273,16 +307,21 @@ const gm = function () {
             }
 
             function step0() {
+                let player = self.getCurrentPlayer();
+
                 assertTurn(turn);
                 if (turn.ownedCell != null) {
                     let cell = turn.ownedCell;
                     if (cell.owner != null)
                         throw new Error("cell already owned");
-                    cell.owner = self.getCurrentPlayer();
+                    cell.owner = player;
                 }
                 if (turn.drainSrc != null) {
                     let cell = turn.drainSrc;
                     cell.drainTo = turn.drainDst;
+                }
+                if (turn.surrender == true) {
+                    player.hasSurrender = true;
                 }
                 self.signalChange();
 

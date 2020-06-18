@@ -258,7 +258,9 @@ const app = function () {
         }
 
         paint(sandbox) {
-            if (this.game.getCurrentPlayer() == this.player && this.game.waitForTurn) {
+            if (this.player.hasSurrender) {
+                this.nameLabel.fillStyle = `#FFFFFF44`;
+            } else if (this.game.getCurrentPlayer() == this.player && this.game.waitForTurn) {
                 this.nameLabel.fillStyle = `#${this.player.color}`;
             } else {
                 this.nameLabel.fillStyle = `#${this.player.color}88`;
@@ -381,15 +383,28 @@ const app = function () {
             }
 
             // skip button
-            let button = new ui.ButtonWidget(this, new mt.Vect(.5 * game.height - 2 + xOffset, -1 * game.width / 2 - 1 - .2), 2, .7, "skip turn", .2);
-            button.label.fontSize = .4;
-            button.label.font = "Roboto";
-            button.label.fontWeight = "lighter";
-            button.onClick = btn => {
+            let skipButton = new ui.ButtonWidget(this, new mt.Vect(.5 * game.height - 2 + xOffset, -1 * game.width / 2 - 1 - .2), 2, .7, "skip turn", .25);
+            skipButton.label.fontSize = .3;
+            skipButton.label.font = "Roboto";
+            skipButton.label.fontWeight = "lighter";
+            skipButton.onClick = btn => {
                 let turn = new gm.Turn();
                 game.playTurn(turn);
             };
-            this.addWidget(button);
+            this.addWidget(skipButton);
+
+            // surrender button
+            let surrenderButton = new ui.ButtonWidget(this, new mt.Vect(.5 * game.height - 4 + xOffset, -1 * game.width / 2 - 1 - .2), 2, .7, "surrender", .25);
+            surrenderButton.label.fontSize = .3;
+            surrenderButton.label.font = "Roboto";
+            surrenderButton.label.fontWeight = "lighter";
+            surrenderButton.onClick = btn => {
+                if (confirm("Are you sure to surrender ?")) {
+                    let turn = new gm.Turn(null, null, null, true);
+                    game.playTurn(turn);
+                }
+            };
+            this.addWidget(surrenderButton);
 
             // player stats
             let stats = new PlayerStats(this, game);
@@ -410,25 +425,95 @@ const app = function () {
         }
     }
 
-    // Main function
+    // DOM elements manipulation
 
-    function main() {
+    let el_html;
+    let el_pre_game;
+    let el_sandbox;
+    let el_after_game;
+    let el_winner;
+
+    function setup() {
+        el_html = document.querySelector("html");
+        el_pre_game = document.getElementById("js-content-pre_game");
+        el_sandbox = document.getElementById("js-sandbox");
+        el_after_game = document.getElementById("js-content-after_game");
+        el_winner = document.getElementById("js-winner");
+    }
+
+    function reset() {
+        showPreGame();
+    }
+
+    function setEnabled(element, isEnabled) {
+        if (isEnabled) {
+            element.classList.remove("disabled");
+            element.classList.add("enabled");
+        } else {
+            element.classList.remove("enabled");
+            element.classList.add("disabled");
+        }
+    }
+
+    function showPreGame() {
+        el_html.classList.remove("sandbox-enabled");
+        setEnabled(el_pre_game, true);
+        setEnabled(el_sandbox, false);
+        setEnabled(el_after_game, false);
+    }
+
+    function showSandbox() {
+        el_html.classList.add("sandbox-enabled");
+        setEnabled(el_pre_game, false);
+        setEnabled(el_sandbox, true);
+        setEnabled(el_after_game, false);
+    }
+
+    function showAfterGame() {
+        el_html.classList.remove("sandbox-enabled");
+        setEnabled(el_pre_game, false);
+        setEnabled(el_sandbox, false);
+        setEnabled(el_after_game, true);
+    }
+
+    /* Game mgt */
+
+    let sandbox;
+
+    function startGame() {
+        showSandbox();
+
         let a = new Player("Alice", "00FFFF");
         let b = new Player("Bob", "FFFF00");
-        let players = [a, b];
+        let c = new Player("Charles", "FF00FF");
+        let players = [a, b, c];
         let game = new gm.Game(players, 8, 8);
 
-        let sandbox = new ui.Sandbox(document.getElementById("sandbox"));
+        sandbox = new ui.Sandbox(el_sandbox);
         sandbox.world.addWidget(new GameBoard(sandbox.world, game));
 
         game.onChange = game => {
-            sandbox.paint();
+            if (game.terminated == false) {
+                sandbox.paint();
+            } else {
+                sandbox.stop();
+                if (game.winner != null) {
+                    el_winner.textContent = game.winner.name;
+                    el_winner.style.color = `#${game.winner.color}`
+                } else {
+                    el_winner.textContent = "Nobody";
+                    el_winner.style.color = `#FFFFFF`
+                }
+                showAfterGame();
+            }
         };
         game.signalChange();
     }
 
     return {
-        main: main
+        setup: setup,
+        reset: reset,
+        startGame: startGame,
     }
 }();
 
@@ -438,5 +523,5 @@ window.addEventListener("error", function (e) {
 });
 
 document.addEventListener("DOMContentLoaded", (e) => {
-    app.main();
+    app.setup();
 });

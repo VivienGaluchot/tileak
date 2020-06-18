@@ -69,33 +69,65 @@ hr {
 
 /* specific page design */
 
-header, content, footer {
-    display: block;
+html, body {
+    margin: 0;
     font-weight: lighter;
     color: white;
+    background-color: rgb(43, 41, 40);
 }
 
-header, footer {
+header, content, footer {
+    display: block;
+}
+
+/* sandbox not enabled */
+
+html:not(.sandbox-enabled) {
+    height: 100%;
+}
+
+html:not(.sandbox-enabled) body {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+html:not(.sandbox-enabled) content {
+    flex-grow: 1;
+}
+
+html:not(.sandbox-enabled) header, html:not(.sandbox-enabled) content, html:not(.sandbox-enabled) footer {
+    margin: 1rem;
+}
+
+/* sandbox enabled */
+
+html.sandbox-enabled, html.sandbox-enabled body {
+    height: 100%;
+}
+
+html.sandbox-enabled header, html.sandbox-enabled footer {
     position: absolute;
 }
 
-header {
+html.sandbox-enabled header {
     top: 1rem;
     left: 1rem;
 }
 
-footer {
+html.sandbox-enabled footer {
     bottom: 1rem;
     left: 1rem;
 }
 
-html, body, content {
+html.sandbox-enabled content {
     margin: 0;
     height: 100%;
-    background-color: rgb(43, 41, 40);
 }
 
-header>h1 {
+/* components */
+
+header h1 {
     margin: 0;
     font-weight: lighter;
 }
@@ -105,7 +137,11 @@ footer a {
     font-weight: normal;
 }
 
-#sandbox {
+#js-sandbox {
+    display: none;
+}
+
+html.sandbox-enabled #js-sandbox {
     display: block;
     width: 100%;
     height: 100%;
@@ -128,4 +164,41 @@ footer a {
 .error a {
     color: white;
     font-weight: normal;
+}
+
+.text-center {
+    text-align: center;
+}
+
+.btn-cta {
+    padding: .7rem;
+    --margin: 1rem;
+    margin: var(--margin);
+    border: 1px solid #d3e057;
+    background-color: transparent;
+    color: #d3e057;
+    font-family: inherit;
+    font-size: inherit;
+    border-radius: 8px;
+    border-bottom-width: 4px;
+}
+
+.btn-cta:hover {
+    background-color: #d3e05744;
+    cursor: pointer;
+}
+
+.btn-cta:active {
+    margin-top: calc(var(--margin) + 3px);
+    border-bottom-width: 1px;
+}
+
+/* js manipulators */
+
+.enabled {
+    /* visibility: visible; */
+}
+
+.disabled {
+    display: none;
 }

@@ -205,9 +205,18 @@ const ui = function () {
             this.pixelPerUnit = 1;
             this.resized();
 
-            window.addEventListener('resize', evt => this.resized(evt));
-            element.addEventListener("click", event => this.clicked(event));
-            element.addEventListener("mousemove", event => this.mouseMoved(event));
+            this.resizeHandler = event => this.resized(event);
+            this.clickHandler = event => this.clicked(event);
+            this.mousemoveHandler = event => this.mouseMoved(event);
+            window.addEventListener('resize', this.resizeHandler);
+            this.canvas.addEventListener("click", this.clickHandler);
+            this.canvas.addEventListener("mousemove", this.mousemoveHandler);
+        }
+
+        stop() {
+            window.removeEventListener('resize', this.resizeHandler);
+            this.canvas.removeEventListener("click", this.clickHandler);
+            this.canvas.removeEventListener("mousemove", this.mousemoveHandler);
         }
 
         getWidth() {
