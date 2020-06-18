@@ -433,6 +433,7 @@ const app = function () {
     let el_after_game;
     let el_winner;
     let el_players;
+    let el_grid_size;
 
     function setup() {
         el_html = document.querySelector("html");
@@ -441,6 +442,7 @@ const app = function () {
         el_after_game = document.getElementById("js-content-after_game");
         el_winner = document.getElementById("js-winner");
         el_players = document.getElementById("js-players");
+        el_grid_size = document.getElementById("js-grid_size");
     }
 
     function reset() {
@@ -478,11 +480,9 @@ const app = function () {
         setEnabled(el_after_game, true);
     }
 
-    /* Game mgt */
+    /* Inputs */
 
-    let sandbox;
-
-    function startGame() {
+    function makePlayers() {
         let players = [];
         let inputs = el_players.querySelectorAll("div>input");
         let angleIncrement = Math.min(360 / inputs.length, 120);
@@ -491,10 +491,33 @@ const app = function () {
             let color = clr.changeHue("#44FFFF", angle);
             players.push(new Player(input.value, color.substr(1)));
         }
+        return players;
+    }
 
+    function getSelectedGridSize() {
+        let selected = el_grid_size.querySelector("button.selected");
+        let size = selected.innerText;
+        if (size == "8x8") {
+            return { w: 8, h: 8 }
+        } else if (size == "6x6") {
+            return { w: 6, h: 6 }
+        } else if (size == "4x4") {
+            return { w: 4, h: 4 }
+        } else {
+            throw new Error("unexpected grid size");
+        }
+    }
+
+    /* Game mgt */
+
+    let sandbox;
+
+    function startGame() {
+        let players = makePlayers();
+        let gridSize = getSelectedGridSize();
         if (players.length > 1) {
             showSandbox();
-            let game = new gm.Game(players, 8, 8);
+            let game = new gm.Game(players, gridSize.w, gridSize.h);
 
             sandbox = new ui.Sandbox(el_sandbox);
             sandbox.world.addWidget(new GameBoard(sandbox.world, game));
@@ -530,12 +553,24 @@ const app = function () {
         section.insertBefore(newDiv, div);
     }
 
+    function selectGridSize(el) {
+        let section = el.parentNode;
+        for (let button of section.querySelectorAll("button")) {
+            if (button == el) {
+                button.classList.add("selected");
+            } else {
+                button.classList.remove("selected");
+            }
+        }
+    }
+
     return {
         setup: setup,
         reset: reset,
         startGame: startGame,
         rmInput: rmInput,
         addInput: addInput,
+        selectGridSize: selectGridSize,
     }
 }();
 

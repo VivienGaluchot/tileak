@@ -230,6 +230,37 @@ html.sandbox-enabled #js-sandbox {
     background-color: #ffffff66;
 }
 
+.grid_size-input {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.grid_size-input button {
+    margin: .5rem;
+    display: inline-block;
+    padding: .7rem;
+    border: 1px solid #ffffff22;
+    background-color: transparent;
+    font-family: inherit;
+    color: #ffffff66;
+    font-size: inherit;
+}
+
+.grid_size-input button:hover {
+    background-color: #ffffff44;
+    cursor: pointer;
+}
+
+.grid_size-input button:active {
+    background-color: #ffffff66;
+}
+
+.grid_size-input button.selected {
+    border: 3px solid #ffffff22;
+    color: #ffffff;
+}
+
 /* js manipulators */
 
 .enabled {

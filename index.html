@@ -33,9 +33,12 @@
         <div id="js-content-pre_game" class="enabled">
             <section>
                 <h2>Play</h2>
+                <p>Choose a grid size, enter the participant name and click "new game".</p>
             </section>
-            <section>
-                <p>Enter the participant name and click "new game".</p>
+            <section id="js-grid_size" class="text-center grid_size-input">
+                <button onclick="app.selectGridSize(this);">8x8</button>
+                <button onclick="app.selectGridSize(this);" class="selected">6x6</button>
+                <button onclick="app.selectGridSize(this);">4x4</button>
             </section>
             <section id="js-players" class="text-center players-input">
                 <div>
