@@ -10,33 +10,72 @@
 
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
 
-    <link rel="stylesheet" href="style.css">
+    <style>
+        .b64 {
+            max-width: 64ch;
+            word-break: break-all;
+            margin: 1rem;
+            padding: 1rem;
+            font-family: monospace;
+        }
+
+        div.b64 {
+            border: 1px solid black;
+        }
+
+        textarea.b64 {
+            resize: vertical;
+            width: 64ch;
+        }
+
+        .js-hidden {
+            display: none;
+        }
+    </style>
 </head>
 
 <body>
-    <header>
-        <div class="error" id="masked_error" style="display:none;">
-            <p>
-                An error have been encountered.<br>
-                Your browser may not be supported by the application.
-            </p>
-            <p>
-                <a href="#" onclick="window.location.reload(true);">Try to reload the page.</a>
-            </p>
+    <div>
+        <button id="initiateBtn" onclick="initiate()">Initiate</button>
+        <button id="joinBtn" onclick="join()">Join</button>
+        <button onclick="window.location.reload(true);">Reset</button>
+
+        <div class="initiator js-hidden">
+            <h1>Initiate</h1>
+            <div>1. Send your RTC-tag to the other peer</div>
+            <div id="offer" class="b64"></div>
         </div>
-    </header>
-    <content>
-        <button id="button" onclick="createOffer()">Offer:</button>
-        <textarea id="offer" placeholder="Paste offer here"></textarea>
-        Answer: <textarea id="answer"></textarea><br>
-        <div id="div"></div>
-        Chat: <input id="chat"><br>
-    </content>
-    <footer>
-        <div>
-            <a href="https://github.com/VivienGaluchot/tileak">Open-source</a> application.
+
+        <div class="initiator js-hidden">
+            2. Type the peer RTC-tag there and click OK
         </div>
-    </footer>
+        <div class="non-initiator js-hidden">
+            <h1>Join</h1>
+            1. Type the peer tag there and click OK
+        </div>
+        <div class="initiator non-initiator js-hidden">
+            <textarea id="peerTag" class="b64"></textarea>
+        </div>
+        <div class="initiator js-hidden">
+            <button onclick="terminate()" class="initiator">OK</button>
+        </div>
+        <div class="non-initiator js-hidden">
+            <button onclick="reach()" class="non-initiator">OK</button>
+        </div>
+
+        <div class="non-initiator-2 js-hidden">
+            <div>2. Send this local tag to the other peer</div>
+            <div id="answer" class="b64"></div>
+        </div>
+
+        <div class="success js-hidden">
+            <h1>Chat</h1>
+            <p>
+                Message <input id="chatInput">
+            </p>
+            <div id="chatLog"></div>
+        </div>
+    </div>
     <script type="text/javascript" src="p2p.js"></script>
 </body>
 
