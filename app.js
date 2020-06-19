@@ -26,10 +26,8 @@ const app = function () {
         }
 
         fillHistory(turnCounter) {
-            if (!this.hasLost) {
-                this.productionHistory.addPoint(turnCounter, this.production);
-                this.storageHistory.addPoint(turnCounter, this.storage);
-            }
+            this.productionHistory.addPoint(turnCounter, this.production);
+            this.storageHistory.addPoint(turnCounter, this.storage);
         }
     }
 

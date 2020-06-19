@@ -85,8 +85,8 @@ const cgraph = function () {
         }
 
         getRanges() {
-            let x = 0;
-            let y = 0;
+            let x = 10;
+            let y = 100;
             for (let dataset of this.datasets) {
                 for (let v of dataset.points) {
                     x = Math.max(x, v.x);
