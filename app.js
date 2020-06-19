@@ -436,7 +436,8 @@ const app = function () {
         for (let [index, input] of inputs.entries()) {
             let angle = -1 * angleIncrement * index;
             let color = clr.changeHue("#44FFFF", angle);
-            players.push(new Player(input.value, color.substr(1)));
+            let name = input.value.substr(0, 25);
+            players.push(new Player(name, color.substr(1)));
         }
         return players;
     }
