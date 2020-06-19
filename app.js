@@ -101,6 +101,15 @@ const app = function () {
             sandbox.ctx.rect(this.pos.x, this.pos.y, this.w, this.h);
             sandbox.ctx.stroke();
 
+            if (isSelected) {
+                let innerPadding = .05;
+                sandbox.ctx.lineWidth = .03;
+                sandbox.ctx.setLineDash([.1]);
+                sandbox.ctx.beginPath();
+                sandbox.ctx.rect(this.pos.x + innerPadding, this.pos.y + innerPadding, this.w - 2 * innerPadding, this.h - 2 * innerPadding);
+                sandbox.ctx.stroke();
+            }
+
             if (isOwned) {
                 sandbox.ctx.fillStyle = `#${baseColor}${this.getPowerOpacity()}`;
                 sandbox.ctx.fillRect(this.pos.x, this.pos.y, this.w, this.h);
@@ -368,14 +377,15 @@ const app = function () {
             rows.push({
                 update: _ => {
                     let color;
-                    if (player.hasLost) {
-                        color = `#FFFFFF44`;
-                    } else if (game.getCurrentPlayer() == player && game.waitForTurn) {
+                    if (game.getCurrentPlayer() == player && game.waitForTurn) {
                         color = `#${player.color}`;
                     } else {
                         color = `#${player.color}88`;
                     }
 
+                    if (player.hasLost) {
+                        playerDiv.style.textDecoration = "line-through";
+                    }
                     playerDiv.style.color = color;
                     playerDiv.innerText = player.name;
                     productionDiv.innerText = player.production;

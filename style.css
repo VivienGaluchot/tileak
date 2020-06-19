@@ -247,10 +247,6 @@ footer a {
     margin: 2rem;
 }
 
-.game-panel .header, .game-panel .footer, .game-panel .main, .game-panel .sidebar {
-    /* background-color: #FFFFFF08; */
-}
-
 .game-panel .footer {
     text-align: center;
 }
