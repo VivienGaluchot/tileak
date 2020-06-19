@@ -209,15 +209,35 @@ const ui = function () {
             this.resizeHandler = event => this.resized(event);
             this.clickHandler = event => this.clicked(event);
             this.mousemoveHandler = event => this.mouseMoved(event);
-            window.addEventListener('resize', this.resizeHandler);
+            window.addEventListener("resize", this.resizeHandler);
             this.canvas.addEventListener("click", this.clickHandler);
             this.canvas.addEventListener("mousemove", this.mousemoveHandler);
+
+            this.sizePollingTimer = null;
+            let lastKnownHeight = null;
+            let lastKnownWidth = null;
+            let self = this;
+            function pollSizeChange() {
+                let target = self.canvas;
+                var rect = target.getBoundingClientRect();
+                if (lastKnownHeight == null) {
+                    lastKnownWidth = rect.width;
+                    lastKnownHeight = rect.height;
+                } else if (lastKnownWidth != rect.width || lastKnownHeight != rect.height) {
+                    self.resized();
+                    lastKnownWidth = rect.width;
+                    lastKnownHeight = rect.height;
+                }
+                self.sizePollingTimer = window.setTimeout(function () { pollSizeChange() }, 100);
+            }
+            pollSizeChange();
         }
 
         stop() {
-            window.removeEventListener('resize', this.resizeHandler);
+            window.removeEventListener("resize", this.resizeHandler);
             this.canvas.removeEventListener("click", this.clickHandler);
             this.canvas.removeEventListener("mousemove", this.mousemoveHandler);
+            clearTimeout(this.sizePollingTimer);
         }
 
         getWidth() {

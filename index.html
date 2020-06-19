@@ -30,41 +30,67 @@
         </div>
     </header>
     <content>
-        <div id="js-content-pre_game" class="enabled">
+        <div id="js-content-pre_game">
             <section>
                 <h2>Play</h2>
                 <p>Choose a grid size, enter the participant name and click "new game".</p>
             </section>
             <section id="js-grid_size" class="text-center grid_size-input">
-                <button onclick="app.selectGridSize(this);">8x8</button>
-                <button onclick="app.selectGridSize(this);" class="selected">6x6</button>
-                <button onclick="app.selectGridSize(this);">4x4</button>
+                <button class="btn" onclick="app.selectGridSize(this);">8x8</button>
+                <button class="btn selected" onclick="app.selectGridSize(this);">6x6</button>
+                <button class="btn" onclick="app.selectGridSize(this);">4x4</button>
             </section>
             <section>
                 <div id="js-players" class="players-input">
                     <div>
-                        <input value="noname" />
+                        <input value="noname" class="fixed" />
                     </div>
                     <div>
-                        <input value="noname" />
+                        <input value="noname" class="fixed" />
                     </div>
                     <div>
-                        <button class="add" onclick="app.addInput(this);">+</button>
+                        <button class="btn add" onclick="app.addInput(this);">+</button>
                     </div>
                 </div>
             </section>
             <section>
-                <button class="btn-cta" onclick="app.startGame();">New game</button>
+                <button class="btn btn-cta" onclick="app.startGame();">New game</button>
             </section>
         </div>
-        <div id="js-content-after_game" class="overlay disabled">
+        <div id="js-content-after_game" class="js-hidden">
             <section>
-                <h2>Results</h2>
                 <p><b><span id="js-winner"></span></b> is the bestest</p>
-                <button class="btn-cta" onclick="app.reset();">Return</button>
+                <button class="btn btn-cta" onclick="app.reset();">Return</button>
             </section>
         </div>
-        <canvas id="js-sandbox" class="disabled"></canvas>
+        <div id="js-content-game" class="js-hidden">
+            <div class="game-panel">
+                <div class="mainbar">
+                    <div class="header">
+                        <div class="game-header-grid">
+                            <div class="label">Player</div>
+                            <div id="js-game-player_name" class="js-data">noname</div>
+                            <div class="label">Turn</div>
+                            <div id="js-game-turn_count" class="js-data">0</div>
+                        </div>
+                    </div>
+                    <div class="main">
+                        <canvas id="js-sandbox" height="100" width="100"></canvas>
+                    </div>
+                    <div class="footer">
+                        <button id="js-game-surrender" class="btn" disabled>Surrender</button>
+                        <button id="js-game-skip_turn" class="btn" disabled>Skip turn</button>
+                    </div>
+                </div>
+                <div class="sidebar">
+                    <div id="js-game-stats" class="game-stats-grid">
+                        <div class="col-header"></div>
+                        <div class="col-header number">Production</div>
+                        <div class="col-header number">Storage</div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </content>
     <footer>
         <div>

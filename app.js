@@ -6,10 +6,9 @@
 const app = function () {
     let gridSpacing = .18;
     let halfSide = (1 - gridSpacing) / 2;
-    let xOffset = -2;
 
     function getWidgetPos(cell) {
-        let x = cell.pos.y - cell.game.height / 2 + .5 + xOffset;
+        let x = cell.pos.y - cell.game.height / 2 + .5;
         let y = cell.game.width / 2 - cell.pos.x - .5;
         let pos = new mt.Vect(x - halfSide, y - halfSide);
         return pos;
@@ -226,129 +225,6 @@ const app = function () {
         }
     }
 
-    class PlayerStat extends ui.NodeWidget {
-        constructor(father, game, player, pos) {
-            super(father);
-            this.pos = pos;
-            this.game = game;
-            this.player = player;
-
-            // name label
-            this.nameLabel = new ui.LabelWidget(this, this.pos, null, label => this.player.name);
-            this.nameLabel.fontSize = .3;
-            this.nameLabel.textAlign = "left";
-            this.nameLabel.font = "Roboto";
-            this.addWidget(this.nameLabel);
-
-            // production label
-            this.productionLabel = new ui.LabelWidget(this, this.pos.add(new mt.Vect(2.5, 0)), null, label => this.player.production);
-            this.productionLabel.fontSize = .3;
-            this.productionLabel.textAlign = "right";
-            this.productionLabel.fillStyle = `#FFFFFF88`
-            this.productionLabel.font = "Roboto";
-            this.addWidget(this.productionLabel);
-
-            // storage label
-            this.storageLabel = new ui.LabelWidget(this, this.pos.add(new mt.Vect(4, 0)), null, label => this.player.storage);
-            this.storageLabel.fontSize = .3;
-            this.storageLabel.textAlign = "right";
-            this.storageLabel.fillStyle = `#FFFFFF88`
-            this.storageLabel.font = "Roboto";
-            this.addWidget(this.storageLabel);
-        }
-
-        paint(sandbox) {
-            if (this.player.hasLost) {
-                this.nameLabel.fillStyle = `#FFFFFF44`;
-            } else if (this.game.getCurrentPlayer() == this.player && this.game.waitForTurn) {
-                this.nameLabel.fillStyle = `#${this.player.color}`;
-            } else {
-                this.nameLabel.fillStyle = `#${this.player.color}88`;
-            }
-            super.paint(sandbox);
-        }
-    }
-
-    class CurrentPlayerLabel extends ui.LabelWidget {
-        constructor(father, pos, game) {
-            super(father, pos, null, _ => game.getCurrentPlayer().name);
-            this.game = game;
-        }
-
-        paint(sandbox) {
-            if (this.game.waitForTurn)
-                this.fillStyle = `#${this.game.getCurrentPlayer().color}`;
-            else
-                this.fillStyle = `#${this.game.getCurrentPlayer().color}88`;
-            super.paint(sandbox);
-        }
-    }
-
-    class PlayerStats extends ui.NodeWidget {
-        constructor(father, game) {
-            super(father);
-            this.game = game;
-
-            let pos = new mt.Vect(.5 * game.height + 1 + xOffset, game.width / 2 + .2);
-
-            // player label
-            let playerPreLabel = new ui.LabelWidget(this, pos, "Player");
-            playerPreLabel.fontSize = .5;
-            playerPreLabel.textAlign = "left";
-            playerPreLabel.fillStyle = "#FFFFFF88";
-            playerPreLabel.font = "Roboto";
-            playerPreLabel.fontWeight = "lighter";
-            this.addWidget(playerPreLabel);
-
-            let playerLabel = new CurrentPlayerLabel(this, pos.add(new mt.Vect(1.8, 0)), game);
-            playerLabel.fontSize = .5;
-            playerLabel.textAlign = "left";
-            playerLabel.font = "Roboto";
-            this.addWidget(playerLabel);
-
-            pos = pos.add(new mt.Vect(0, -.8));
-
-            // turn label
-            let turnPreLabel = new ui.LabelWidget(this, pos, "Turn");
-            turnPreLabel.fontSize = .5;
-            turnPreLabel.textAlign = "left";
-            turnPreLabel.fillStyle = "#FFFFFF88";
-            turnPreLabel.font = "Roboto";
-            turnPreLabel.fontWeight = "lighter";
-            this.addWidget(turnPreLabel);
-
-            let turnLabel = new ui.LabelWidget(this, pos.add(new mt.Vect(1.8, 0)), null, label => game.turnCounter);
-            turnLabel.fontSize = .5;
-            turnLabel.textAlign = "left";
-            turnLabel.font = "Roboto";
-            this.addWidget(turnLabel);
-
-            pos = pos.add(new mt.Vect(0, -1));
-
-            // stat table
-
-            // production title
-            this.productionLabel = new ui.LabelWidget(this, pos.add(new mt.Vect(2.5, 0)), "production");
-            this.productionLabel.fontSize = .2;
-            this.productionLabel.textAlign = "right";
-            this.productionLabel.fillStyle = `#FFFFFF88`
-            this.productionLabel.font = "Roboto";
-            this.addWidget(this.productionLabel);
-            // storage title
-            this.storageLabel = new ui.LabelWidget(this, pos.add(new mt.Vect(4, 0)), "storage");
-            this.storageLabel.fontSize = .2;
-            this.storageLabel.textAlign = "right";
-            this.storageLabel.fillStyle = `#FFFFFF88`
-            this.storageLabel.font = "Roboto";
-            this.addWidget(this.storageLabel);
-            // lines
-            for (let [index, player] of game.players.entries()) {
-                let stats = new PlayerStat(this, game, player, pos.add(new mt.Vect(0, -.6 * index - .5)));
-                this.addWidget(stats);
-            }
-        }
-    }
-
     class GameBoard extends ui.NodeWidget {
         constructor(father, game) {
             super(father, false);
@@ -371,45 +247,29 @@ const app = function () {
             }
 
             for (let i = 0; i < width; i++) {
-                let x = i - width / 2 + .5 + xOffset;
+                let x = i - width / 2 + .5;
                 this.addWidget(makeLabel(x, height / 2 + .2, i));
             }
             for (let j = 0; j < height; j++) {
                 let y = height / 2 - j - .5;
-                this.addWidget(makeLabel(-1 * width / 2 - .35 + xOffset, y - .1, j));
+                this.addWidget(makeLabel(-1 * width / 2 - .35, y - .1, j));
             }
 
             for (let cell of game.cells()) {
                 this.addWidget(new CellWidget(this, game, cell));
             }
+        }
 
-            // skip button
-            let skipButton = new ui.ButtonWidget(this, new mt.Vect(.5 * game.height - 2 + xOffset, -1 * game.width / 2 - 1 - .2), 2, .7, "Skip turn", .25);
-            skipButton.label.fontSize = .3;
-            skipButton.label.font = "Roboto";
-            skipButton.label.fontWeight = "lighter";
-            skipButton.onClick = btn => {
-                let turn = new gm.Turn();
-                game.playTurn(turn);
-            };
-            this.addWidget(skipButton);
+        skipTurn() {
+            let turn = new gm.Turn();
+            this.game.playTurn(turn);
+        }
 
-            // surrender button
-            let surrenderButton = new ui.ButtonWidget(this, new mt.Vect(.5 * game.height - 4.2 + xOffset, -1 * game.width / 2 - 1 - .2), 2, .7, "Surrender", .25);
-            surrenderButton.label.fontSize = .3;
-            surrenderButton.label.font = "Roboto";
-            surrenderButton.label.fontWeight = "lighter";
-            surrenderButton.onClick = btn => {
-                if (confirm("Are you sure to surrender ?")) {
-                    let turn = new gm.Turn(null, null, null, true);
-                    game.playTurn(turn);
-                }
-            };
-            this.addWidget(surrenderButton);
-
-            // player stats
-            let stats = new PlayerStats(this, game);
-            this.addWidget(stats);
+        surrender() {
+            if (confirm("Are you sure to surrender ?")) {
+                let turn = new gm.Turn(null, null, null, true);
+                this.game.playTurn(turn);
+            }
         }
 
         clicked(pos) {
@@ -430,61 +290,124 @@ const app = function () {
 
     // DOM elements manipulation
 
-    let el_html;
-    let el_pre_game;
+    let els_content;
+    let els_game;
+
     let el_sandbox;
-    let el_after_game;
     let el_winner;
     let el_players;
-    let el_grid_size;
+    let el_gridSize;
 
     function setup() {
-        el_html = document.querySelector("html");
-        el_pre_game = document.getElementById("js-content-pre_game");
+        els_content = {
+            preGame: document.getElementById("js-content-pre_game"),
+            game: document.getElementById("js-content-game"),
+            afterGame: document.getElementById("js-content-after_game")
+        }
+        els_game = {
+            playerName: document.getElementById("js-game-player_name"),
+            turnCount: document.getElementById("js-game-turn_count"),
+            stats: document.getElementById("js-game-stats"),
+            btnSurrender: document.getElementById("js-game-surrender"),
+            btnSkipTurn: document.getElementById("js-game-skip_turn")
+        }
         el_sandbox = document.getElementById("js-sandbox");
-        el_after_game = document.getElementById("js-content-after_game");
         el_winner = document.getElementById("js-winner");
         el_players = document.getElementById("js-players");
-        el_grid_size = document.getElementById("js-grid_size");
-    }
-
-    function reset() {
-        showPreGame();
-        sandbox.stop();
+        el_gridSize = document.getElementById("js-grid_size");
     }
 
     function setEnabled(element, isEnabled) {
         if (isEnabled) {
-            element.classList.remove("disabled");
-            element.classList.add("enabled");
+            element.classList.remove("js-hidden");
         } else {
-            element.classList.remove("enabled");
-            element.classList.add("disabled");
+            element.classList.add("js-hidden");
         }
     }
 
     function showPreGame() {
-        el_html.classList.remove("sandbox-enabled");
-        setEnabled(el_pre_game, true);
-        setEnabled(el_sandbox, false);
-        setEnabled(el_after_game, false);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        setEnabled(els_content.preGame, true);
+        setEnabled(els_content.game, false);
+        setEnabled(els_content.afterGame, false);
     }
 
-    function showSandbox() {
-        el_html.classList.add("sandbox-enabled");
-        setEnabled(el_pre_game, false);
-        setEnabled(el_sandbox, true);
-        setEnabled(el_after_game, false);
+    function showGame() {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        setEnabled(els_content.preGame, false);
+        setEnabled(els_content.game, true);
+        setEnabled(els_content.afterGame, false);
     }
 
     function showAfterGame() {
-        el_html.classList.add("sandbox-enabled");
-        setEnabled(el_pre_game, false);
-        setEnabled(el_sandbox, true);
-        setEnabled(el_after_game, true);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        setEnabled(els_content.preGame, false);
+        setEnabled(els_content.game, true);
+        setEnabled(els_content.afterGame, true);
     }
 
-    /* Inputs */
+    function makeStatsGridElements(game) {
+        let rows = [];
+        for (let player of game.players) {
+            let div = els_game.stats;
+
+            let playerDiv = document.createElement("div");
+            playerDiv.innerText = player.name;
+            div.appendChild(playerDiv);
+
+            let productionDiv = document.createElement("div");
+            productionDiv.classList.add("number");
+            productionDiv.innerText = player.production;
+            div.appendChild(productionDiv);
+
+            let storageDiv = document.createElement("div");
+            storageDiv.classList.add("number");
+            storageDiv.innerText = player.storage;
+            div.appendChild(storageDiv);
+
+            rows.push({
+                update: _ => {
+                    let color;
+                    if (player.hasLost) {
+                        color = `#FFFFFF44`;
+                    } else if (game.getCurrentPlayer() == player && game.waitForTurn) {
+                        color = `#${player.color}`;
+                    } else {
+                        color = `#${player.color}88`;
+                    }
+
+                    playerDiv.style.color = color;
+                    playerDiv.innerText = player.name;
+                    productionDiv.innerText = player.production;
+                    storageDiv.innerText = player.storage;
+                },
+                remove: _ => {
+                    playerDiv.remove();
+                    productionDiv.remove();
+                    storageDiv.remove();
+                }
+            });
+        }
+        return rows;
+    }
+
+    function updateOutOfCanvasElements(game, statsGridEls) {
+        let playerColor;
+        if (game.waitForTurn)
+            playerColor = `#${game.getCurrentPlayer().color}`;
+        else
+            playerColor = `#${game.getCurrentPlayer().color}88`;
+        els_game.playerName.innerText = game.getCurrentPlayer().name;
+        els_game.playerName.style.color = playerColor;
+
+        els_game.turnCount.innerText = game.turnCounter;
+
+        for (let el of statsGridEls) {
+            el.update();
+        }
+    }
+
+    /* DOM inputs */
 
     function makePlayers() {
         let players = [];
@@ -499,7 +422,7 @@ const app = function () {
     }
 
     function getSelectedGridSize() {
-        let selected = el_grid_size.querySelector("button.selected");
+        let selected = el_gridSize.querySelector("button.selected");
         let size = selected.innerText;
         if (size == "8x8") {
             return { w: 8, h: 8 }
@@ -515,34 +438,73 @@ const app = function () {
     /* Game mgt */
 
     let sandbox;
+    let cleanup;
 
     function startGame() {
         let players = makePlayers();
+        if (players.length <= 1)
+            throw new Error("a game must have at least 2 players");
+
+        showGame();
+
         let gridSize = getSelectedGridSize();
-        if (players.length > 1) {
-            showSandbox();
-            let game = new gm.Game(players, gridSize.w, gridSize.h);
+        let game = new gm.Game(players, gridSize.w, gridSize.h);
 
-            sandbox = new ui.Sandbox(el_sandbox);
-            sandbox.world.addWidget(new GameBoard(sandbox.world, game));
+        sandbox = new ui.Sandbox(el_sandbox);
+        sandbox.unitViewed = Math.max(gridSize.w + 1, gridSize.h + 1);
+        sandbox.resized();
 
-            game.onChange = game => {
-                if (game.terminated == false) {
-                    sandbox.paint();
+        let board = new GameBoard(sandbox.world, game);
+        sandbox.world.addWidget(board);
+
+        let skipTurn = _ => board.skipTurn();
+        let surrender = _ => board.surrender();
+
+        els_game.btnSkipTurn.addEventListener("click", skipTurn);
+        els_game.btnSurrender.addEventListener("click", surrender);
+        els_game.btnSurrender.disabled = false;
+        els_game.btnSkipTurn.disabled = false;
+
+        let statsGridEls = makeStatsGridElements(game);
+
+        game.onChange = game => {
+            updateOutOfCanvasElements(game, statsGridEls);
+
+            if (game.terminated == false) {
+                sandbox.paint();
+            } else {
+                if (game.winner != null) {
+                    el_winner.textContent = game.winner.name;
+                    el_winner.style.color = `#${game.winner.color}`
                 } else {
-                    if (game.winner != null) {
-                        el_winner.textContent = game.winner.name;
-                        el_winner.style.color = `#${game.winner.color}`
-                    } else {
-                        el_winner.textContent = "Nobody";
-                        el_winner.style.color = `#FFFFFF`
-                    }
-                    showAfterGame();
+                    el_winner.textContent = "Nobody";
+                    el_winner.style.color = `#FFFFFF`
                 }
+
+                els_game.btnSurrender.disabled = true;
+                els_game.btnSkipTurn.disabled = true;
+                els_game.btnSkipTurn.removeEventListener("click", skipTurn);
+                els_game.btnSurrender.removeEventListener("click", surrender);
+
+                showAfterGame();
+            }
+        };
+        game.signalChange();
+
+        cleanup = _ => {
+            sandbox.stop();
+            for (let el of statsGridEls) {
+                el.remove();
             };
-            game.signalChange();
         }
     }
+
+    function reset() {
+        showPreGame();
+        cleanup();
+    }
+
+    /* First page controls */
 
     function rmInput(el) {
         el.parentNode.remove();
@@ -552,7 +514,7 @@ const app = function () {
         let div = el.parentNode;
         let section = div.parentNode;
         let newDiv = document.createElement("div");
-        newDiv.innerHTML = "<input value=\"noname\"/><button onclick=\"app.rmInput(this);\">-</button>"
+        newDiv.innerHTML = "<input value=\"noname\"/><button class=\"btn\" onclick=\"app.rmInput(this);\">-</button>";
         section.insertBefore(newDiv, div);
     }
 
