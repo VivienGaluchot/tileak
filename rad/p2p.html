@@ -44,11 +44,9 @@
             <h1>Initiate</h1>
             <div>1. Send your RTC-tag to the other peer</div>
             <div id="offer" class="b64"></div>
+            <div>2. Type the peer RTC-tag there and click OK</div>
         </div>
 
-        <div class="initiator js-hidden">
-            2. Type the peer RTC-tag there and click OK
-        </div>
         <div class="non-initiator js-hidden">
             <h1>Join</h1>
             1. Type the peer tag there and click OK
@@ -60,7 +58,7 @@
             <button onclick="terminate()" class="initiator">OK</button>
         </div>
         <div class="non-initiator js-hidden">
-            <button onclick="reach()" class="non-initiator">OK</button>
+            <button onclick="reach()" class="non-initiator" style="margin-bottom: 1rem;">OK</button>
         </div>
 
         <div class="non-initiator-2 js-hidden">
