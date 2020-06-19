@@ -20,6 +20,16 @@ const app = function () {
         constructor(name, color) {
             super(name);
             this.color = color;
+
+            this.productionHistory = new cgraph.Dataset2D(name, color);
+            this.storageHistory = new cgraph.Dataset2D(name, color);
+        }
+
+        fillHistory(turnCounter) {
+            if (!this.hasLost) {
+                this.productionHistory.addPoint(turnCounter, this.production);
+                this.storageHistory.addPoint(turnCounter, this.storage);
+            }
         }
     }
 
@@ -317,6 +327,8 @@ const app = function () {
             playerName: document.getElementById("js-game-player_name"),
             turnCount: document.getElementById("js-game-turn_count"),
             stats: document.getElementById("js-game-stats"),
+            graphProduction: document.getElementById("js-game-graph_production"),
+            graphStorage: document.getElementById("js-game-graph_storage"),
             btnSurrender: document.getElementById("js-game-surrender"),
             btnSkipTurn: document.getElementById("js-game-skip_turn")
         }
@@ -460,6 +472,15 @@ const app = function () {
         let gridSize = getSelectedGridSize();
         let game = new gm.Game(players, gridSize.w, gridSize.h);
 
+        // setup graphs
+        let graphProduction = new cgraph.CGraph2D(els_game.graphProduction);
+        let graphStorage = new cgraph.CGraph2D(els_game.graphStorage);
+        for (let player of players) {
+            graphProduction.addDataset(player.productionHistory);
+            graphStorage.addDataset(player.storageHistory);
+        }
+
+        // setup main canvas
         sandbox = new ui.Sandbox(el_sandbox);
         sandbox.unitViewed = Math.max(gridSize.w + 1, gridSize.h + 1);
         sandbox.resized();
@@ -467,18 +488,30 @@ const app = function () {
         let board = new GameBoard(sandbox.world, game);
         sandbox.world.addWidget(board);
 
+        // setup DOM buttons
         let skipTurn = _ => board.skipTurn();
         let surrender = _ => board.surrender();
-
         els_game.btnSkipTurn.addEventListener("click", skipTurn);
         els_game.btnSurrender.addEventListener("click", surrender);
         els_game.btnSurrender.disabled = false;
         els_game.btnSkipTurn.disabled = false;
 
+        // setup stats grid
         let statsGridEls = makeStatsGridElements(game);
 
+        let lastTurn = null;
         game.onChange = game => {
             updateOutOfCanvasElements(game, statsGridEls);
+
+            // at start of a new turn complete graphs
+            if (game.turnCounter != lastTurn) {
+                lastTurn = game.turnCounter;
+                for (let player of players) {
+                    player.fillHistory(game.turnCounter);
+                }
+                graphProduction.paint();
+                graphStorage.paint();
+            }
 
             if (game.terminated == false) {
                 sandbox.paint();
@@ -503,6 +536,8 @@ const app = function () {
 
         cleanup = _ => {
             sandbox.stop();
+            graphProduction.stop();
+            graphStorage.stop();
             for (let el of statsGridEls) {
                 el.remove();
             };

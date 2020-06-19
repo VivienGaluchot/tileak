@@ -104,7 +104,6 @@ const ui = function () {
 
         paint(sandbox) {
             sandbox.ctx.save();
-            sandbox.ctx.beginPath();
             sandbox.ctx.strokeStyle = `#${this.baseColor}88`;
 
             if (this.hovered) {
@@ -115,6 +114,7 @@ const ui = function () {
                 sandbox.ctx.fillStyle = `#${this.baseColor}00`;
             }
 
+            sandbox.ctx.beginPath();
             sandbox.ctx.rect(this.pos.x, this.pos.y, this.w, this.h);
             sandbox.ctx.stroke();
             sandbox.ctx.fillRect(this.pos.x, this.pos.y, this.w, this.h);

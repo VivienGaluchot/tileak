@@ -288,6 +288,12 @@ footer a {
     row-gap: .5rem;
 }
 
+.sidebar {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
 .game-stats-grid {
     display: grid;
     grid-template-columns: min-content 1fr 1fr;
@@ -304,6 +310,18 @@ footer a {
 
 .game-stats-grid .number {
     text-align: right;
+}
+
+.game-graph {
+    display: block;
+    width: 100%;
+    margin-top: 2rem;
+}
+
+.graph-label {
+    font-size: .8rem;
+    color: #FFFFFF88;
+    font-weight: lighter;
 }
 
 /* js manipulators */
