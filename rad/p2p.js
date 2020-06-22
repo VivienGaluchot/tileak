@@ -1,6 +1,6 @@
 class P2PConnection {
     constructor() {
-        const config = { iceServers: [{ urls: "stun:stun.1.google.com:19302" }] };
+        const config = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
         this.pc = new RTCPeerConnection(config);
 
         this.isInitiator = null;
@@ -42,8 +42,9 @@ class P2PConnection {
 
         await this.pc.setLocalDescription();
         return new Promise(resolve => {
-            this.pc.onicecandidate = ({ candidate }) => {
-                if (candidate != null)
+            this.pc.onicecandidate = event => {
+                console.log("ice candidate ", event.candidate);
+                if (event.candidate != null)
                     return;
                 resolve(this.tagCompress(this.pc.localDescription.sdp));
             }
@@ -83,8 +84,9 @@ class P2PConnection {
         // await this.pc.setLocalDescription(await this.pc.createAnswer());
         await this.pc.setLocalDescription();
         return new Promise(resolve => {
-            this.pc.onicecandidate = ({ candidate }) => {
-                if (candidate != null)
+            this.pc.onicecandidate = event => {
+                console.log("ice candidate ", event.candidate);
+                if (event.candidate != null)
                     return;
                 resolve(this.tagCompress(this.pc.localDescription.sdp));
             }
