@@ -9,6 +9,8 @@
     <!-- <link rel="icon" href="icon.svg"> -->
 
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css"
+        integrity="sha256-h20CPZ0QyXlBuAw7A+KluUYx/3pK+c7lYEpqLTlxjYQ=" crossorigin="anonymous" />
 
     <link rel="stylesheet" href="style.css">
 </head>
@@ -31,36 +33,66 @@
     </header>
     <content>
         <div id="js-content-pre_game">
-            <section>
-                <h2>Play</h2>
-                <p>Choose a grid size, enter the participant name and click "new game".</p>
-            </section>
-            <section id="js-grid_size" class="text-center grid_size-input">
-                <button class="btn" onclick="app.selectGridSize(this);">8x8</button>
-                <button class="btn selected" onclick="app.selectGridSize(this);">6x6</button>
-                <button class="btn" onclick="app.selectGridSize(this);">4x4</button>
-            </section>
-            <section>
-                <div id="js-players" class="players-input">
-                    <div>
-                        <input value="noname" class="fixed" />
+            <div class="tab-nav">
+                <button class="btn radio selected" onclick="app.showTab(this);" data-target="tab-host">Host</button>
+                <button class="btn radio" onclick="app.showTab(this);" data-target="tab-join">Join</button>
+            </div>
+            <div id="tab-host" class="tab-content">
+                <section>
+                    <h2>Host a game</h2>
+                    <p>Choose a grid size, enter the participant name and click "new game".</p>
+                    <p>Players can be on the same PC or remote.</p>
+                </section>
+                <section>
+                    <h3>Grid</h3>
+                    <div id="js-grid_size" class="grid_size-input">
+                        <button class="btn radio" onclick="app.selectRadio(this);">8x8</button>
+                        <button class="btn radio selected" onclick="app.selectRadio(this);">6x6</button>
+                        <button class="btn radio" onclick="app.selectRadio(this);">4x4</button>
+
                     </div>
-                    <div>
-                        <input value="noname" class="fixed" />
+                </section>
+                <section>
+                    <h3>Players</h3>
+                    <div id="js-players" class="players-input">
+                        <div>
+                            <label><i class="fas fa-chair"></i></label>
+                            <input class="player local" value="noname" />
+                        </div>
+                        <div>
+                            <label><i class="fas fa-chair"></i></label>
+                            <input class="player local" value="noname" />
+                            <button class="btn" onclick="app.rmPlayer(this);">-</button>
+                        </div>
+                        <div class="action-bar">
+                            <label>add player</label>
+                            <button class="btn" onclick="app.addLocalPlayer(this);">local</button>
+                            <button class="btn" onclick="app.addRemotePlayer(this);" disabled>remote</button>
+                        </div>
                     </div>
-                    <div>
-                        <button class="btn add" onclick="app.addInput(this);">+</button>
-                    </div>
-                </div>
-            </section>
-            <section>
-                <button class="btn btn-cta" onclick="app.startGame();">New game</button>
-            </section>
+                </section>
+                <section>
+                    <button class="btn btn-cta" onclick="app.startGame();">Start</button>
+                </section>
+            </div>
+            <div id="tab-join" class="tab-content js-hidden">
+                <section>
+                    <h2>Join a game</h2>
+                    <p>Not yet available</p>
+                </section>
+                <section>
+                    <button class="btn btn-cta" onclick="" disabled>Go</button>
+                </section>
+            </div>
         </div>
         <div id="js-content-after_game" class="js-hidden">
             <section>
-                <p><b><span id="js-winner"></span></b> is the bestest</p>
-                <button class="btn btn-cta" onclick="app.reset();">Return</button>
+                <div class="result">
+                    <h3>End of game</h3>
+                    <p><b><span id="js-winner"></span></b> was the bestest</p>
+                    <button class="btn btn-cta" onclick="app.reset();">Return</button>
+                </div>
+                <hr>
             </section>
         </div>
         <div id="js-content-game" class="js-hidden">

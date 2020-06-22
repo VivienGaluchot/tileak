@@ -550,19 +550,33 @@ const app = function () {
 
     /* First page controls */
 
-    function rmInput(el) {
+    function rmPlayer(el) {
         el.parentNode.remove();
     }
 
-    function addInput(el) {
+    function addLocalPlayer(el) {
         let div = el.parentNode;
         let section = div.parentNode;
         let newDiv = document.createElement("div");
-        newDiv.innerHTML = "<input value=\"noname\"/><button class=\"btn\" onclick=\"app.rmInput(this);\">-</button>";
+        newDiv.innerHTML =
+            `<label><i class="fas fa-chair"></i></label>
+            <input class="player local" value="noname" />
+            <button class="btn" onclick="app.rmPlayer(this);">-</button>`;
         section.insertBefore(newDiv, div);
     }
 
-    function selectGridSize(el) {
+    function addRemotePlayer(el) {
+        let div = el.parentNode;
+        let section = div.parentNode;
+        let newDiv = document.createElement("div");
+        newDiv.innerHTML =
+            `<label><i class="fas fa-globe"></i></label>
+            <div class="player remote">noname</div>
+            <button class="btn" onclick="app.rmPlayer(this);">-</button>`;
+        section.insertBefore(newDiv, div);
+    }
+
+    function selectRadio(el) {
         let section = el.parentNode;
         for (let button of section.querySelectorAll("button")) {
             if (button == el) {
@@ -573,13 +587,26 @@ const app = function () {
         }
     }
 
+    function showTab(el) {
+        selectRadio(el);
+        for (let tab of document.querySelectorAll(`.tab-content`)) {
+            setEnabled(tab, false);
+        }
+        let id = el.dataset["target"];
+        for (let tab of document.querySelectorAll(`#${id}`)) {
+            setEnabled(tab, true);
+        }
+    }
+
     return {
         setup: setup,
         reset: reset,
         startGame: startGame,
-        rmInput: rmInput,
-        addInput: addInput,
-        selectGridSize: selectGridSize,
+        rmPlayer: rmPlayer,
+        addLocalPlayer: addLocalPlayer,
+        addRemotePlayer: addRemotePlayer,
+        selectRadio: selectRadio,
+        showTab: showTab,
     }
 }();
 

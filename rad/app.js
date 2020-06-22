@@ -95,8 +95,3 @@ function reach() {
             console.log("consumeOfferAndGetAnswer error", reason);
         });
 }
-
-function send(text) {
-    console.log(text);
-    connection.dc.send(text);
-}
