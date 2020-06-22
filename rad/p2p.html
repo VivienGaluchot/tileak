@@ -15,6 +15,10 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
+        * {
+            box-sizing: border-box;
+        }
+
         .state {
             border: 1px solid #00000055;
             padding: .2rem;
@@ -28,15 +32,16 @@
             margin: 1rem;
             padding: 1rem;
             font-family: monospace;
+            /* border: 1px solid black; */
         }
 
-        div.b64 {
-            border: 1px solid black;
-        }
-
-        textarea.b64 {
+        .b64 textarea {
             resize: vertical;
-            width: 64ch;
+            width: 100%;
+        }
+
+        .b64 button {
+            margin-top: .5rem;
         }
 
         .js-hidden {
@@ -67,7 +72,11 @@
         <div class="initiator js-hidden">
             <h3>Initiate</h3>
             <div>1. Send your SDP-TAG to the other peer</div>
-            <div id="offer" class="b64"></div>
+            <div class="b64">
+                <div id="offer"></div>
+                <button onclick="updateClipboard(offer.innerText);">Copy</button>
+            </div>
+
             <div>2. Type the peer SDP-TAG there and click OK</div>
         </div>
 
@@ -76,7 +85,9 @@
             1. Type the peer tag there and click OK
         </div>
         <div class="initiator non-initiator js-hidden">
-            <textarea id="peerTag" class="b64"></textarea>
+            <div class="b64">
+                <textarea id="peerTag"></textarea>
+            </div>
         </div>
         <div class="initiator js-hidden">
             <button onclick="terminate()" class="initiator">OK</button>
@@ -87,7 +98,10 @@
 
         <div class="non-initiator-2 js-hidden">
             <div>2. Send this local tag to the other peer</div>
-            <div id="answer" class="b64"></div>
+            <div class="b64">
+                <div id="answer"></div>
+                <button onclick="updateClipboard(answer.innerText);">Copy</button>
+            </div>
         </div>
     </div>
 

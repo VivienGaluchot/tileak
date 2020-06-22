@@ -1,5 +1,9 @@
 let connection;
 
+function updateClipboard(newClip) {
+    navigator.clipboard.writeText(newClip);
+}
+
 document.addEventListener("DOMContentLoaded", evt => {
     connection = new P2PConnection();
 
