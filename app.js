@@ -561,10 +561,10 @@ const app = function () {
             els_party.remoteAnswerBtn.onclick = () => {
                 pendingInviteCon?.consumeAnswer(els_party.remoteAnswer.get())
                     .then(() => {
-                        console.log("consumeAnswer ok");
+                        console.debug("consumeAnswer ok");
                     })
                     .catch(reason => {
-                        console.log("consumeAnswer error", reason);
+                        console.error("consumeAnswer error", reason);
                         els_party.inviteStatus.set("error", null, true);
                         pendingInviteCon = null;
                     });
@@ -598,11 +598,11 @@ const app = function () {
             els_party.remoteOfferBtn.onclick = () => {
                 pendingJoinCon?.consumeOfferAndGetAnswer(els_party.remoteOffer.get())
                     .then(answer => {
-                        console.log("consumeOfferAndGetAnswer ok");
+                        console.debug("consumeOfferAndGetAnswer ok");
                         els_party.localAnswer.set(answer);
                     })
                     .catch(reason => {
-                        console.log("consumeOfferAndGetAnswer error", reason);
+                        console.error("consumeOfferAndGetAnswer error", reason);
                         els_party.joinStatus.set("error", null, true);
                         pendingJoinCon = null;
                     });
