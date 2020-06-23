@@ -71,9 +71,6 @@ hr {
 
 html {
     margin: 0;
-    font-weight: lighter;
-    color: white;
-    background-color: rgb(43, 41, 40);
     min-height: 100%;
     height: 100%;
 }
@@ -83,6 +80,9 @@ body {
     height: 100%;
     display: flex;
     flex-direction: column;
+    font-weight: lighter;
+    color: white;
+    background-color: rgb(43, 41, 40);
 }
 
 header, content, footer {

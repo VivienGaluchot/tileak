@@ -78,6 +78,9 @@ const p2p = function () {
             };
 
             pingChannel.onclose = () => {
+                this.isConnected = false;
+                this.onStateChange?.(this);
+
                 clearTimeout(pingTimer);
             };
 

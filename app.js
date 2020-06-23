@@ -378,6 +378,11 @@ const app = function () {
                         setEnabled(document.getElementById("join-ko"), isKo);
                     return document.getElementById("join-status").innerText = value;
                 }
+            },
+            list: {
+                add: el => {
+                    document.getElementById("party-list").appendChild(el);
+                }
             }
         }
         els_game = {
@@ -615,6 +620,26 @@ const app = function () {
     function registerConnection(connection) {
         console.debug("connection registered");
         partyConnections.push(connection);
+
+        let div = document.createElement("div");
+        let update = () => {
+            if (connection.isConnected) {
+                div.innerHTML =
+                    `<div class="player remote">?</div>
+                    <div>${connection.pingDelay}ms</div>
+                    <div class="con-status ok"><i class="fas fa-check-circle"></i></div>`;
+            } else {
+                div.innerHTML =
+                    `<div class="player remote">?</div>
+                    <div class="con-status ko"><i class="fas fa-times-circle"></i></div>`;
+            }
+        };
+
+        connection.onStateChange = update;
+        connection.onPingChange = update;
+        update();
+
+        els_party.list.add(div);
     }
 
 
