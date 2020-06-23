@@ -261,6 +261,7 @@ const gm = function () {
                 }
             }
             if (nonLostPlayer <= 1) {
+                console.debug(`game terminated`);
                 this.terminated = true;
                 if (nonLostPlayer == 1) {
                     for (let player of this.players) {
@@ -292,29 +293,43 @@ const gm = function () {
             let self = this;
 
             function step4() {
-                self.waitForTurn = true;
+                console.debug(`turn step 4 : gather power`);
                 self.gatherPower();
+
+                self.waitForTurn = true;
+                self.updatePlayers();
+                self.signalChange();
 
                 // skip turn for surrenders
                 if (!self.terminated && self.getCurrentPlayer().hasLost) {
+                    console.debug(`surrender skip turn`);
                     let turn = new gm.Turn();
                     self.playTurn(turn);
+                } else {
+                    console.debug(`wait for turn`);
                 }
             }
 
             function step3() {
-                self.updatePlayers();
+                console.debug(`turn step 3 : next player`);
                 self.nextPlayer();
+
+
+                console.debug(`player ${self.currentPlayerIndex} '${self.getCurrentPlayer().name}'`);
 
                 setTimeout(step4, 100);
             }
 
             function step2() {
+                console.debug(`turn step 2 : flow power`);
                 self.flowPower();
+                self.updatePlayers();
+
                 setTimeout(step3, 100);
             }
 
             function step0() {
+                console.debug(`turn step 0 : play turn`);
                 let player = self.getCurrentPlayer();
 
                 assertTurn(turn);
@@ -323,13 +338,19 @@ const gm = function () {
                     if (cell.owner != null)
                         throw new Error("cell already owned");
                     cell.owner = player;
+                    console.debug(`own cell ${cell.pos.x};${cell.pos.y}`);
                 }
                 if (turn.drainSrc != null) {
                     let cell = turn.drainSrc;
                     cell.drainTo = turn.drainDst;
+                    if (cell.drainTo != null)
+                        console.debug(`drain cell ${cell.pos.x};${cell.pos.y} to ${cell.drainTo.pos.x};${cell.drainTo.pos.y}`);
+                    else
+                        console.debug(`undrain cell ${cell.pos.x};${cell.pos.y}`);
                 }
                 if (turn.surrender == true) {
                     player.hasLost = true;
+                    console.debug(`surrender`);
                 }
                 self.signalChange();
 

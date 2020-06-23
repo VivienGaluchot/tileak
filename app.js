@@ -345,6 +345,7 @@ const app = function () {
     }
 
     function showPreGame() {
+        console.debug(`showPreGame`);
         window.scrollTo({ top: 0, behavior: 'smooth' });
         setEnabled(els_content.preGame, true);
         setEnabled(els_content.game, false);
@@ -352,6 +353,7 @@ const app = function () {
     }
 
     function showGame() {
+        console.debug(`showGame`);
         window.scrollTo({ top: 0, behavior: 'smooth' });
         setEnabled(els_content.preGame, false);
         setEnabled(els_content.game, true);
@@ -359,6 +361,7 @@ const app = function () {
     }
 
     function showAfterGame() {
+        console.debug(`showAfterGame`);
         window.scrollTo({ top: 0, behavior: 'smooth' });
         setEnabled(els_content.preGame, false);
         setEnabled(els_content.game, true);
@@ -534,6 +537,7 @@ const app = function () {
         game.signalChange();
 
         cleanup = _ => {
+            console.debug(`game context cleanup`);
             sandbox.stop();
             graphProduction.stop();
             graphStorage.stop();
