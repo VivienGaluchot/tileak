@@ -52,12 +52,7 @@ const ui = function () {
             sandbox.ctx.fontWeight
             sandbox.ctx.textAlign = this.textAlign;
 
-            let txt;
-            if (this.text != null) {
-                txt = this.text;
-            } else {
-                txt = this.makeText(this);
-            }
+            let txt = this.text ?? this.makeText(this);
             sandbox.ctx.fillText(txt, transformedPos.x, transformedPos.y);
 
             sandbox.ctx.restore();

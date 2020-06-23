@@ -70,11 +70,7 @@ const app = function () {
         }
 
         getBaseColor() {
-            if (this.cell.owner != null) {
-                return this.cell.owner.color;
-            } else {
-                return "FFFFFF";
-            }
+            return this.cell.owner?.color ?? "FFFFFF";
         }
 
         paint(sandbox) {
@@ -518,13 +514,8 @@ const app = function () {
             if (game.terminated == false) {
                 sandbox.paint();
             } else {
-                if (game.winner != null) {
-                    el_winner.textContent = game.winner.name;
-                    el_winner.style.color = `#${game.winner.color}`
-                } else {
-                    el_winner.textContent = "Nobody";
-                    el_winner.style.color = `#FFFFFF`
-                }
+                el_winner.textContent = game.winner?.name ?? "Nobody";
+                el_winner.style.color = `#${game.winner?.color ?? "FFFFFF"}`;
 
                 els_game.btnSurrender.disabled = true;
                 els_game.btnSkipTurn.disabled = true;

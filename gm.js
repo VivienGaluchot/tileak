@@ -166,9 +166,7 @@ const gm = function () {
         // signal
 
         signalChange() {
-            if (this.onChange != null) {
-                this.onChange(this);
-            }
+            this.onChange?.(this);
         }
 
         // turn parts
