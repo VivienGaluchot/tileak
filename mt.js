@@ -112,8 +112,17 @@ const mt = function () {
         }
     }
 
+    // from https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Objets_globaux/Math/random
+    // return a random int in range [min;max[
+    function getRandomInt(min, max) {
+        min = Math.ceil(min);
+        max = Math.floor(max);
+        return Math.floor(Math.random() * (max - min)) + min;
+    }
+
     return {
         Vect: Vect,
-        assertVect: assertVect
+        assertVect: assertVect,
+        getRandomInt: getRandomInt
     }
 }();

@@ -34,8 +34,8 @@
     <content>
         <div id="js-content-pre_game">
             <!-- <div class="tab-nav">
-                <button class="btn radio selected" onclick="app.showTab(this);" data-target="tab-play">Play</button>
-                <button class="btn radio" onclick="app.showTab(this);" data-target="tab-join">Join</button>
+                <button class="btn radio selected" onclick="app.showTab(this);" data-target="#tab-play">Play</button>
+                <button class="btn radio" onclick="app.showTab(this);" data-target="#tab-join">Join</button>
             </div> -->
             <div id="tab-play" class="tab-content">
                 <section>
@@ -46,15 +46,89 @@
                 <section>
                     <h3>Network party</h3>
                     <p>Play with people over network.</p>
-                    <p><b>Work in progress...</b></p>
+                    <!-- <div class="block-list">
+                        <div>
+                            <div class="player remote">location</div>
+                            <div>100ms</div>
+                            <div class="con-status ok"><i class="fas fa-check-circle"></i></div>
+                        </div>
+                        <div>
+                            <div class="player remote">location</div>
+                            <div class="con-status ko"><i class="fas fa-times-circle"></i></div>
+                        </div>
+                    </div> -->
+                    <div class="btn-group">
+                        <button class="btn" onclick="app.invite();app.showTab(this);"
+                            data-target="#tab-party-invite">Invite</button>
+                        <button class="btn" onclick="app.join();app.showTab(this);"
+                            data-target="#tab-party-join">Join</button>
+                    </div>
                     <div>
-                        <button class="btn" onclick="" disabled>Invite</button>
-                        <button class="btn" onclick="" disabled>Join</button>
+                        <div id="tab-party-invite" class="tab-content js-hidden">
+                            <div class="card">
+                                <div class="header">
+                                    <div class="title">
+                                        Invite peer
+                                    </div>
+                                    <button class="btn dismiss" onclick="app.hideTarget(this);"
+                                        data-target="#tab-party-invite"><i class="fas fa-times"></i></button>
+                                </div>
+                                <div class="content">
+                                    <p>1. Send your local TAG to the peer you want to invite</p>
+                                    <div id="local-offer" class="b64"></div>
+                                    <p>2. Paste the peer's TAG and press "done"</p>
+                                    <p><textarea id="remote-answer" class="b64" spellcheck="false"></textarea></p>
+                                    <button id="remote-answer-btn" class="btn">done</button>
+                                </div>
+                                <div class="footer">
+                                    <p>
+                                        Connection status
+                                    </p>
+                                    <p>
+                                        <span id="invite-ok" class="con-status ok js-hidden"><i
+                                                class="fas fa-check-circle"></i></span>
+                                        <span id="invite-ko" class="con-status ko js-hidden"><i
+                                                class="fas fa-times-circle"></i></span>
+                                        <span id="invite-status" class="pending-con-status"></span>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="tab-party-join" class="tab-content js-hidden">
+                            <div class="card">
+                                <div class="header">
+                                    <div class="title">
+                                        Join peer
+                                    </div>
+                                    <button class="btn dismiss" onclick="app.hideTarget(this);"
+                                        data-target="#tab-party-join"><i class="fas fa-times"></i></button>
+                                </div>
+                                <div class="content">
+                                    <p>1. Paste the joined peer's TAG and press "done"</p>
+                                    <p><textarea id="remote-offer" class="b64" spellcheck="false"></textarea></p>
+                                    <button id="remote-offer-btn" class="btn">done</button>
+                                    <p>2. Send your TAG back to the peer</p>
+                                    <div id="local-answer" class="b64"></div>
+                                </div>
+                                <div class="footer">
+                                    <p>
+                                        Connection status
+                                    </p>
+                                    <p>
+                                        <span id="join-ok" class="con-status ok js-hidden"><i
+                                                class="fas fa-check-circle"></i></span>
+                                        <span id="join-ko" class="con-status ko js-hidden"><i
+                                                class="fas fa-times-circle"></i></span>
+                                        <span id="join-status" class="pending-con-status"></span>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </section>
                 <section>
                     <h3>Grid</h3>
-                    <div id="js-grid_size" class="grid_size-input">
+                    <div id="js-grid_size" class="btn-group">
                         <button class="btn radio" onclick="app.selectRadio(this);">8x8</button>
                         <button class="btn radio selected" onclick="app.selectRadio(this);">6x6</button>
                         <button class="btn radio" onclick="app.selectRadio(this);">4x4</button>
@@ -63,20 +137,18 @@
                 </section>
                 <section>
                     <h3>Players</h3>
-                    <div id="js-players" class="players-input">
+                    <div id="js-players" class="block-list">
                         <div class="action-bar">
                             <button class="btn" onclick="app.addLocalPlayer(this);">add local</button>
                         </div>
                         <div>
-                            <!-- <label><i class="fas fa-chair"></i></label> -->
                             <input class="player local" value="noname" />
                         </div>
                         <div>
-                            <!-- <label><i class="fas fa-chair"></i></label> -->
                             <input class="player local" value="noname" />
                             <button class="btn" onclick="app.rmPlayer(this);"><i class="fas fa-trash-alt"></i></button>
                         </div>
-                        <div>
+                        <!-- <div>
                             <label><i class="fas fa-globe"></i></label>
                             <div class="player remote">noname</div>
                             <label class="con-status ok"><i class="fas fa-check-circle"></i></label>
@@ -85,14 +157,14 @@
                             <label><i class="fas fa-globe"></i></label>
                             <div class="player remote">noname</div>
                             <label class="con-status ko"><i class="fas fa-times-circle"></i></label>
-                        </div>
+                        </div> -->
                     </div>
                 </section>
                 <section>
                     <button class="btn btn-cta" onclick="app.startGame();"><i class="fas fa-play"></i> Start</button>
                 </section>
             </div>
-            <!-- <div id="tab-join" class="tab-content js-hidden">
+            <div id="tab-join" class="tab-content js-hidden">
                 <section>
                     <h2>Join a game</h2>
                     <p>Not yet available</p>
@@ -100,7 +172,7 @@
                 <section>
                     <button class="btn btn-cta" onclick="" disabled>Go</button>
                 </section>
-            </div> -->
+            </div>
         </div>
         <div id="js-content-after_game" class="js-hidden">
             <section>
@@ -152,11 +224,13 @@
             <a href="https://github.com/VivienGaluchot/tileak">Open-source</a> application.
         </div>
     </footer>
+    <script type="text/javascript" src="vendor/lz-string.js"></script>
+    <script type="text/javascript" src="vendor/clr.js"></script>
     <script type="text/javascript" src="mt.js"></script>
     <script type="text/javascript" src="ui.js"></script>
     <script type="text/javascript" src="gm.js"></script>
-    <script type="text/javascript" src="clr.js"></script>
     <script type="text/javascript" src="cgraph.js"></script>
+    <script type="text/javascript" src="p2p.js"></script>
     <script type="text/javascript" src="app.js"></script>
 </body>
 

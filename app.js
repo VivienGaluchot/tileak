@@ -312,6 +312,7 @@ const app = function () {
     // DOM elements manipulation
 
     let els_content;
+    let els_party;
     let els_game;
 
     let el_sandbox;
@@ -324,6 +325,60 @@ const app = function () {
             preGame: document.getElementById("js-content-pre_game"),
             game: document.getElementById("js-content-game"),
             afterGame: document.getElementById("js-content-after_game")
+        }
+        els_party = {
+            localOffer: {
+                set: value => {
+                    document.getElementById("local-offer").innerText = value;
+                },
+                clear: () => {
+                    document.getElementById("local-offer").innerText = "";
+                }
+            },
+            remoteOffer: {
+                get: () => {
+                    return document.getElementById("remote-offer").value;
+                },
+                clear: () => {
+                    document.getElementById("remote-offer").value = "";
+                }
+            },
+            remoteOfferBtn: document.getElementById("remote-offer-btn"),
+            localAnswer: {
+                set: value => {
+                    document.getElementById("local-answer").innerText = value;
+                },
+                clear: () => {
+                    document.getElementById("local-answer").innerText = "";
+                }
+            },
+            remoteAnswer: {
+                get: () => {
+                    return document.getElementById("remote-answer").value;
+                },
+                clear: () => {
+                    document.getElementById("remote-answer").value = "";
+                }
+            },
+            remoteAnswerBtn: document.getElementById("remote-answer-btn"),
+            inviteStatus: {
+                set: (value, isOk, isKo) => {
+                    if (isOk != null)
+                        setEnabled(document.getElementById("invite-ok"), isOk);
+                    if (isKo != null)
+                        setEnabled(document.getElementById("invite-ko"), isKo);
+                    return document.getElementById("invite-status").innerText = value;
+                }
+            },
+            joinStatus: {
+                set: (value, isOk, isKo) => {
+                    if (isOk != null)
+                        setEnabled(document.getElementById("join-ok"), isOk);
+                    if (isKo != null)
+                        setEnabled(document.getElementById("join-ko"), isKo);
+                    return document.getElementById("join-status").innerText = value;
+                }
+            }
         }
         els_game = {
             playerName: document.getElementById("js-game-player_name"),
@@ -463,6 +518,106 @@ const app = function () {
         }
     }
 
+    /* Party mgt */
+
+    let pendingInviteCon = null;
+    let pendingJoinCon = null;
+
+    function invite() {
+        console.debug("invite");
+        if (pendingInviteCon == null) {
+            // clear UI
+            els_party.localOffer.clear();
+            els_party.remoteAnswer.clear();
+            els_party.inviteStatus.set("none", false, false);
+
+            // create connection
+            console.debug("new invite PeerConnection");
+            pendingInviteCon = new p2p.PeerConnection();
+
+            // status change callback
+            pendingInviteCon.onStateChange = () => {
+                els_party.inviteStatus.set(pendingInviteCon.getStateDetails(), pendingInviteCon.isConnected, null);
+                if (pendingInviteCon.isConnected) {
+                    pendingInviteCon.onStateChange = null;
+                    registerConnection(pendingInviteCon);
+                    pendingInviteCon = null;
+                }
+            }
+
+            // create offer
+            pendingInviteCon.createOffer()
+                .then((offer) => {
+                    console.debug("createOffer ok");
+                    els_party.localOffer.set(offer);
+                })
+                .catch(reason => {
+                    console.error("createOffer error", reason);
+                    els_party.inviteStatus.set("error", null, true);
+                    con = null;
+                });
+
+            // consume answer on click
+            els_party.remoteAnswerBtn.onclick = () => {
+                pendingInviteCon?.consumeAnswer(els_party.remoteAnswer.get())
+                    .then(() => {
+                        console.log("consumeAnswer ok");
+                    })
+                    .catch(reason => {
+                        console.log("consumeAnswer error", reason);
+                        els_party.inviteStatus.set("error", null, true);
+                        pendingInviteCon = null;
+                    });
+            };
+        }
+    }
+
+    function join() {
+        console.debug("join");
+        if (pendingJoinCon == null) {
+            // clear UI
+            els_party.localAnswer.clear();
+            els_party.remoteOffer.clear();
+            els_party.joinStatus.set("none", false, false);
+
+            // create connection
+            console.debug("new join PeerConnection");
+            pendingJoinCon = new p2p.PeerConnection();
+
+            // status change callback
+            pendingJoinCon.onStateChange = () => {
+                els_party.joinStatus.set(pendingJoinCon.getStateDetails(), pendingJoinCon.isConnected, null);
+                if (pendingJoinCon.isConnected) {
+                    pendingJoinCon.onStateChange = null;
+                    registerConnection(pendingJoinCon);
+                    pendingJoinCon = null;
+                }
+            }
+
+            // consume offer and make answer on click
+            els_party.remoteOfferBtn.onclick = () => {
+                pendingJoinCon?.consumeOfferAndGetAnswer(els_party.remoteOffer.get())
+                    .then(answer => {
+                        console.log("consumeOfferAndGetAnswer ok");
+                        els_party.localAnswer.set(answer);
+                    })
+                    .catch(reason => {
+                        console.log("consumeOfferAndGetAnswer error", reason);
+                        els_party.joinStatus.set("error", null, true);
+                        pendingJoinCon = null;
+                    });
+            }
+        }
+    }
+
+    let partyConnections = [];
+
+    function registerConnection(connection) {
+        console.debug("connection registered");
+        partyConnections.push(connection);
+    }
+
+
     /* Game mgt */
 
     let sandbox;
@@ -561,8 +716,7 @@ const app = function () {
         let section = el.parentNode.parentNode;
         let newDiv = document.createElement("div");
         newDiv.innerHTML =
-            `<label><i class="fas fa-chair"></i></label>
-            <input class="player local" value="noname" />
+            `<input class="player local" value="noname" />
             <button class="btn" onclick="app.rmPlayer(this);"><i class="fas fa-trash-alt"></i></button>`;
         section.appendChild(newDiv);
     }
@@ -580,12 +734,17 @@ const app = function () {
 
     function showTab(el) {
         selectRadio(el);
-        for (let tab of document.querySelectorAll(`.tab-content`)) {
-            setEnabled(tab, false);
+        for (let target of document.querySelectorAll(el.dataset["target"])) {
+            for (let tab of target.parentElement.querySelectorAll(`.tab-content`)) {
+                setEnabled(tab, false);
+            }
+            setEnabled(target, true);
         }
-        let id = el.dataset["target"];
-        for (let tab of document.querySelectorAll(`#${id}`)) {
-            setEnabled(tab, true);
+    }
+
+    function hideTarget(el) {
+        for (let target of document.querySelectorAll(el.dataset["target"])) {
+            setEnabled(target, false);
         }
     }
 
@@ -597,6 +756,9 @@ const app = function () {
         addLocalPlayer: addLocalPlayer,
         selectRadio: selectRadio,
         showTab: showTab,
+        hideTarget: hideTarget,
+        invite: invite,
+        join: join,
     }
 }();
 
