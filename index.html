@@ -55,24 +55,24 @@
                 <section>
                     <h3>Players</h3>
                     <div id="js-players" class="players-input">
-                        <div>
-                            <label><i class="fas fa-chair"></i></label>
-                            <input class="player local" value="noname" />
-                        </div>
-                        <div>
-                            <label><i class="fas fa-chair"></i></label>
-                            <input class="player local" value="noname" />
-                            <button class="btn" onclick="app.rmPlayer(this);">-</button>
-                        </div>
                         <div class="action-bar">
-                            <label>add player</label>
+                            <label>add a player</label>
                             <button class="btn" onclick="app.addLocalPlayer(this);">local</button>
-                            <button class="btn" onclick="app.addRemotePlayer(this);" disabled>remote</button>
+                            <button class="btn" onclick="app.addRemotePlayer(this);">remote</button>
+                        </div>
+                        <div>
+                            <label><i class="fas fa-chair"></i></label>
+                            <input class="player local" value="noname" />
+                        </div>
+                        <div>
+                            <label><i class="fas fa-chair"></i></label>
+                            <input class="player local" value="noname" />
+                            <button class="btn" onclick="app.rmPlayer(this);"><i class="fas fa-trash-alt"></i></button>
                         </div>
                     </div>
                 </section>
                 <section>
-                    <button class="btn btn-cta" onclick="app.startGame();">Start</button>
+                    <button class="btn btn-cta" onclick="app.startGame();"><i class="fas fa-play"></i> Start</button>
                 </section>
             </div>
             <div id="tab-join" class="tab-content js-hidden">

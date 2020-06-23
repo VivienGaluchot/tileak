@@ -133,13 +133,17 @@ footer a {
 .error {
     background-color: rgba(255, 0, 0, 0.281);
     border: 1px solid red;
-    padding: .8rem;
+    margin: 2rem .8rem;
     border-radius: .5rem;
 }
 
 .error a {
     color: white;
     font-weight: normal;
+}
+
+.error p {
+    margin: 1.2rem;
 }
 
 .text-center {
@@ -274,9 +278,9 @@ footer a {
 }
 
 .players-input .action-bar {
-    margin-top: 1.2rem;
-    padding-top: 1.2rem;
-    border-top: 1px solid #ffffff11;
+    margin-bottom: 1.2rem;
+    padding-bottom: 1.2rem;
+    border-bottom: 1px solid #ffffff11;
 }
 
 .players-input .action-bar label {
@@ -415,6 +419,7 @@ footer a {
 .tab-nav {
     border-bottom: 1px solid #FFFFFF22;
     padding: 0 2rem;
+    text-align: right;
 }
 
 .tab-nav>button {

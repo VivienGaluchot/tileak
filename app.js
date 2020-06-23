@@ -550,25 +550,23 @@ const app = function () {
     }
 
     function addLocalPlayer(el) {
-        let div = el.parentNode;
-        let section = div.parentNode;
+        let section = el.parentNode.parentNode;
         let newDiv = document.createElement("div");
         newDiv.innerHTML =
             `<label><i class="fas fa-chair"></i></label>
             <input class="player local" value="noname" />
-            <button class="btn" onclick="app.rmPlayer(this);">-</button>`;
-        section.insertBefore(newDiv, div);
+            <button class="btn" onclick="app.rmPlayer(this);"><i class="fas fa-trash-alt"></i></button>`;
+        section.appendChild(newDiv);
     }
 
     function addRemotePlayer(el) {
-        let div = el.parentNode;
-        let section = div.parentNode;
+        let section = el.parentNode.parentNode;
         let newDiv = document.createElement("div");
         newDiv.innerHTML =
             `<label><i class="fas fa-globe"></i></label>
             <div class="player remote">noname</div>
-            <button class="btn" onclick="app.rmPlayer(this);">-</button>`;
-        section.insertBefore(newDiv, div);
+            <button class="btn" onclick="app.rmPlayer(this);"><i class="fas fa-trash-alt"></i></button>`;
+        section.appendChild(newDiv);
     }
 
     function selectRadio(el) {
@@ -607,6 +605,7 @@ const app = function () {
 
 window.addEventListener("error", function (e) {
     document.getElementById("masked_error").style.display = "block";
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     return false;
 });
 
