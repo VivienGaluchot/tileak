@@ -227,33 +227,36 @@ footer a {
     color: #ffffff88;
 }
 
+.players-input>div>*, .players-input>div>.btn {
+    border: none;
+    border-left: 1px solid #ffffff11;
+    padding: .7rem 1rem;
+}
+
 .players-input>div>*:first-child {
-    border-radius: .2rem 0 0 .2rem;
+    border-top-left-radius: .2rem;
+    border-bottom-left-radius: .2rem;
     margin-left: 0;
+    border-left: none;
 }
 
 .players-input>div>*:last-child {
-    border-radius: 0 .2rem .2rem 0;
+    border-top-right-radius: .2rem;
+    border-bottom-right-radius: .2rem;
 }
 
 .players-input .player {
     flex-grow: 1;
     text-align: left;
-    color: #ffffff88;
-    font-weight: bold;
-}
-
-.players-input div.player {
-    font-style: italic;
+    color: #ffffff;
 }
 
 .players-input input.player {
-    color: #ffffff;
-    border: none;
     background-color: #ffffff22;
     font-family: inherit;
     font-size: inherit;
     min-width: 5rem;
+    font-weight: bold;
 }
 
 .players-input input.player:focus {
@@ -261,7 +264,6 @@ footer a {
 }
 
 .players-input .btn {
-    border: none;
     color: #ffffff;
 }
 
@@ -290,6 +292,14 @@ footer a {
 
 .players-input .action-bar .btn {
     flex-grow: 1;
+}
+
+.players-input .con-status.ok {
+    color: #9eff81;
+}
+
+.players-input .con-status.ko {
+    color: #ff8192;
 }
 
 /* grid size input */

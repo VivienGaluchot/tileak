@@ -33,15 +33,24 @@
     </header>
     <content>
         <div id="js-content-pre_game">
-            <div class="tab-nav">
-                <button class="btn radio selected" onclick="app.showTab(this);" data-target="tab-host">Host</button>
+            <!-- <div class="tab-nav">
+                <button class="btn radio selected" onclick="app.showTab(this);" data-target="tab-play">Play</button>
                 <button class="btn radio" onclick="app.showTab(this);" data-target="tab-join">Join</button>
-            </div>
-            <div id="tab-host" class="tab-content">
+            </div> -->
+            <div id="tab-play" class="tab-content">
                 <section>
-                    <h2>Host a game</h2>
-                    <p>Choose a grid size, enter the participant name and click "new game".</p>
-                    <p>Players can be on the same PC or remote.</p>
+                    <h2>Play</h2>
+                    <p>Choose a grid size, add participants and click "new game".</p>
+                    <p>Players can be on the same PC or remote linked via peer to peer link.</p>
+                </section>
+                <section>
+                    <h3>Network party</h3>
+                    <p>Play with people over network.</p>
+                    <p><b>Work in progress...</b></p>
+                    <div>
+                        <button class="btn" onclick="" disabled>Invite</button>
+                        <button class="btn" onclick="" disabled>Join</button>
+                    </div>
                 </section>
                 <section>
                     <h3>Grid</h3>
@@ -56,18 +65,26 @@
                     <h3>Players</h3>
                     <div id="js-players" class="players-input">
                         <div class="action-bar">
-                            <label>add a player</label>
-                            <button class="btn" onclick="app.addLocalPlayer(this);">local</button>
-                            <button class="btn" onclick="app.addRemotePlayer(this);">remote</button>
+                            <button class="btn" onclick="app.addLocalPlayer(this);">add local</button>
                         </div>
                         <div>
-                            <label><i class="fas fa-chair"></i></label>
+                            <!-- <label><i class="fas fa-chair"></i></label> -->
                             <input class="player local" value="noname" />
                         </div>
                         <div>
-                            <label><i class="fas fa-chair"></i></label>
+                            <!-- <label><i class="fas fa-chair"></i></label> -->
                             <input class="player local" value="noname" />
                             <button class="btn" onclick="app.rmPlayer(this);"><i class="fas fa-trash-alt"></i></button>
+                        </div>
+                        <div>
+                            <label><i class="fas fa-globe"></i></label>
+                            <div class="player remote">noname</div>
+                            <label class="con-status ok"><i class="fas fa-check-circle"></i></label>
+                        </div>
+                        <div>
+                            <label><i class="fas fa-globe"></i></label>
+                            <div class="player remote">noname</div>
+                            <label class="con-status ko"><i class="fas fa-times-circle"></i></label>
                         </div>
                     </div>
                 </section>
@@ -75,7 +92,7 @@
                     <button class="btn btn-cta" onclick="app.startGame();"><i class="fas fa-play"></i> Start</button>
                 </section>
             </div>
-            <div id="tab-join" class="tab-content js-hidden">
+            <!-- <div id="tab-join" class="tab-content js-hidden">
                 <section>
                     <h2>Join a game</h2>
                     <p>Not yet available</p>
@@ -83,7 +100,7 @@
                 <section>
                     <button class="btn btn-cta" onclick="" disabled>Go</button>
                 </section>
-            </div>
+            </div> -->
         </div>
         <div id="js-content-after_game" class="js-hidden">
             <section>
