@@ -281,7 +281,7 @@ const gm = function () {
 
         // turn loop
 
-        playTurn(turn) {
+        async playTurn(turn) {
             if (this.terminated)
                 throw new Error("game terminated");
 
@@ -290,48 +290,15 @@ const gm = function () {
             }
             this.waitForTurn = false;
 
-            let self = this;
-
-            function step4() {
-                console.debug(`turn step 4 : gather power`);
-                self.gatherPower();
-
-                self.waitForTurn = true;
-                self.updatePlayers();
-                self.signalChange();
-
-                // skip turn for surrenders
-                if (!self.terminated && self.getCurrentPlayer().hasLost) {
-                    console.debug(`surrender skip turn`);
-                    let turn = new gm.Turn();
-                    self.playTurn(turn);
-                } else {
-                    console.debug(`wait for turn`);
-                }
+            function stepDelay() {
+                return new Promise(resolve => setTimeout(resolve, 200));
             }
 
-            function step3() {
-                console.debug(`turn step 3 : next player`);
-                self.nextPlayer();
+            // step 0
+            (() => {
+                let player = this.getCurrentPlayer();
 
-
-                console.debug(`player ${self.currentPlayerIndex} '${self.getCurrentPlayer().name}'`);
-
-                setTimeout(step4, 100);
-            }
-
-            function step2() {
-                console.debug(`turn step 2 : flow power`);
-                self.flowPower();
-                self.updatePlayers();
-
-                setTimeout(step3, 100);
-            }
-
-            function step0() {
                 console.debug(`turn step 0 : play turn`);
-                let player = self.getCurrentPlayer();
-
                 assertTurn(turn);
                 if (turn.ownedCell != null) {
                     let cell = turn.ownedCell;
@@ -352,12 +319,47 @@ const gm = function () {
                     player.hasLost = true;
                     console.debug(`surrender`);
                 }
-                self.signalChange();
+                this.signalChange();
+            })();
 
-                setTimeout(step2, 100);
-            }
+            await stepDelay();
 
-            step0();
+            // step 2
+            (() => {
+                console.debug(`turn step 2 : flow power`);
+                this.flowPower();
+                this.updatePlayers();
+            })();
+
+            await stepDelay();
+
+            // step 3
+            (() => {
+                console.debug(`turn step 3 : next player`);
+                this.nextPlayer();
+                console.debug(`player ${this.currentPlayerIndex} '${this.getCurrentPlayer().name}'`);
+            })();
+
+            await stepDelay();
+
+            // step 4
+            (() => {
+                console.debug(`turn step 4 : gather power`);
+                this.gatherPower();
+
+                this.waitForTurn = true;
+                this.updatePlayers();
+                this.signalChange();
+
+                // skip turn for surrenders
+                if (!this.terminated && this.getCurrentPlayer().hasLost) {
+                    console.debug(`surrender skip turn`);
+                    let turn = new gm.Turn();
+                    this.playTurn(turn);
+                } else {
+                    console.debug(`wait for turn`);
+                }
+            })();
         }
 
 

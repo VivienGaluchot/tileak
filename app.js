@@ -181,7 +181,7 @@ const app = function () {
                     // remove existing link
                     return {
                         "name": "remove_link",
-                        "perform": _ => {
+                        "perform": () => {
                             selected.cell.undrainForTurn();
                         }
                     };
@@ -191,7 +191,7 @@ const app = function () {
                         if (this.cell == neighbor) {
                             return {
                                 "name": "add_link",
-                                "perform": _ => {
+                                "perform": () => {
                                     selected.cell.drainForTurn(this.cell);
                                 }
                             };
@@ -203,7 +203,7 @@ const app = function () {
                 if (this.cell.isPlayable()) {
                     return {
                         "name": "own_cell",
-                        "perform": _ => {
+                        "perform": () => {
                             this.cell.playForTurn();
                         }
                     };
@@ -212,7 +212,7 @@ const app = function () {
                 if (this.cell.isDrainable()) {
                     return {
                         "name": "set_selected",
-                        "perform": _ => {
+                        "perform": () => {
                             this.father.selectedBox = this;
                         }
                     };
@@ -388,7 +388,7 @@ const app = function () {
             div.appendChild(storageDiv);
 
             rows.push({
-                update: _ => {
+                update: () => {
                     let color;
                     if (game.getCurrentPlayer() == player && game.waitForTurn) {
                         color = `#${player.color}`;
@@ -404,7 +404,7 @@ const app = function () {
                     productionDiv.innerText = player.production;
                     storageDiv.innerText = player.storage;
                 },
-                remove: _ => {
+                remove: () => {
                     playerDiv.remove();
                     productionDiv.remove();
                     storageDiv.remove();
@@ -491,8 +491,8 @@ const app = function () {
         sandbox.world.addWidget(board);
 
         // setup DOM buttons
-        let skipTurn = _ => board.skipTurn();
-        let surrender = _ => board.surrender();
+        let skipTurn = () => board.skipTurn();
+        let surrender = () => board.surrender();
         els_game.btnSkipTurn.addEventListener("click", skipTurn);
         els_game.btnSurrender.addEventListener("click", surrender);
         els_game.btnSurrender.disabled = false;
@@ -536,7 +536,7 @@ const app = function () {
         };
         game.signalChange();
 
-        cleanup = _ => {
+        cleanup = () => {
             console.debug(`game context cleanup`);
             sandbox.stop();
             graphProduction.stop();
