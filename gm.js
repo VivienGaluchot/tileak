@@ -291,10 +291,9 @@ const gm = function () {
 
             let self = this;
 
-            function step3() {
+            function step4() {
                 self.waitForTurn = true;
-                self.updatePlayers();
-                self.nextPlayer();
+                self.gatherPower();
 
                 // skip turn for surrenders
                 if (!self.terminated && self.getCurrentPlayer().hasLost) {
@@ -303,14 +302,16 @@ const gm = function () {
                 }
             }
 
+            function step3() {
+                self.updatePlayers();
+                self.nextPlayer();
+
+                setTimeout(step4, 100);
+            }
+
             function step2() {
                 self.flowPower();
                 setTimeout(step3, 100);
-            }
-
-            function step1() {
-                self.gatherPower();
-                setTimeout(step2, 100);
             }
 
             function step0() {
@@ -332,7 +333,7 @@ const gm = function () {
                 }
                 self.signalChange();
 
-                setTimeout(step1, 100);
+                setTimeout(step2, 100);
             }
 
             step0();
