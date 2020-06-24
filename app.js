@@ -428,7 +428,7 @@ const app = function () {
                 page.elements().party.inviteStatus.set(pendingInviteCon.getStateDetails(), pendingInviteCon.isConnected, null);
                 if (pendingInviteCon.isConnected) {
                     pendingInviteCon.onStateChange = null;
-                    registerConnection(pendingInviteCon);
+                    completedConnection(pendingInviteCon);
                     page.elements().party.tabPartyInvite.disable();
                     pendingInviteCon = null;
                 }
@@ -478,7 +478,7 @@ const app = function () {
                 page.elements().party.joinStatus.set(pendingJoinCon.getStateDetails(), pendingJoinCon.isConnected, null);
                 if (pendingJoinCon.isConnected) {
                     pendingJoinCon.onStateChange = null;
-                    registerConnection(pendingJoinCon);
+                    completedConnection(pendingJoinCon);
                     page.elements().party.tabPartyJoin.disable();
                     pendingJoinCon = null;
                 }
@@ -500,11 +500,11 @@ const app = function () {
         }
     }
 
-    let partyConnections = [];
+    const hub = new p2p.Hub(localEndpoint);
 
-    function registerConnection(connection) {
+    function completedConnection(connection) {
         console.debug("connection registered");
-        partyConnections.push(connection);
+        connection.registerDataChannel("hub", { negotiated: true, id: 100 }, hub);
 
         let div = document.createElement("div");
         let update = () => {

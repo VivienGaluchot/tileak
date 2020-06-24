@@ -85,20 +85,26 @@ const p2p = function () {
 
             // mgt channels
 
-            this.pingChanHandler = new PingHandler(this.localEndpoint);
-            this.pingChanHandler.onPingChange = () => {
-                this.onPingChange?.();
-            };
-            this.pingChanHandler.onStateChange = () => {
-                this.onStateChange?.(this);
-            };
-            this.registerDataChannel("p2p-ping", { negotiated: true, id: 0 }, this.pingChanHandler);
+            this.pingChanHandler = new PingHandler();
 
-            const handshake = new HandshakeHandler(this.localEndpoint);
-            handshake.onHandshake = remoteEndpoint => {
-                this.setRemoteEndpoint(remoteEndpoint);
-            };
-            this.registerDataChannel("p2p-handshake", { negotiated: true, id: 1 }, handshake);
+            const makeHandshake = new Promise(resolve => {
+                const handler = new HandshakeHandler();
+                handler.onHandshake = remoteEndpoint => {
+                    this.setRemoteEndpoint(remoteEndpoint);
+                    resolve();
+                };
+                this.registerDataChannel("p2p-handshake", { negotiated: true, id: 1 }, handler);
+            });
+
+            makeHandshake.then(() => {
+                this.pingChanHandler.onPingChange = () => {
+                    this.onPingChange?.();
+                };
+                this.pingChanHandler.onStateChange = () => {
+                    this.onStateChange?.(this);
+                };
+                this.registerDataChannel("p2p-ping", { negotiated: true, id: 0 }, this.pingChanHandler);
+            });
         }
 
         // init
@@ -106,6 +112,9 @@ const p2p = function () {
         setRemoteEndpoint(remoteEndpoint) {
             if (this.remoteEndpoint != null) {
                 throw new Error(`remote endpoint already set`);
+            }
+            if (this.localEndpoint.id == remoteEndpoint.id) {
+                throw new Error(`remote and local endpoint must not be the same to prevent networking loops`);
             }
             this.remoteEndpoint = remoteEndpoint;
             this.onStateChange?.(this);
@@ -129,15 +138,10 @@ const p2p = function () {
         // channels
 
         registerDataChannel(label, dataChannelDict, handler) {
-            if (this.isInitiator != null)
-                console.error("channels must be created before initialization");
-            if (handler.connection != this)
-                console.error("handler registered on wrong connection");
-
             const chan = this.pc.createDataChannel(label, dataChannelDict);
-            chan.onopen = () => handler.onopen(chan);
-            chan.onmessage = (evt) => handler.onmessage(chan, evt);
-            chan.onclose = () => handler.onclose(chan);
+            chan.onopen = () => handler.onopen(this, chan);
+            chan.onmessage = (evt) => handler.onmessage(this, chan, evt);
+            chan.onclose = () => handler.onclose(this, chan);
         }
 
         // terminate
@@ -230,33 +234,32 @@ const p2p = function () {
     class ChannelHandler {
         constructor() { }
 
-        onopen(chan) {
+        onopen(connection, chan) {
             console.debug(`channel opened`);
         }
 
-        onmessage(chan, evt) { }
+        onmessage(connection, chan, evt) { }
 
-        onclose(chan) {
+        onclose(connection, chan) {
             console.debug(`channel closed`);
         }
     }
 
     class HandshakeHandler extends ChannelHandler {
-        constructor(localEndpoint) {
+        constructor() {
             super();
-            this.localEndpoint = localEndpoint;
 
             // callbacks
             this.onHandshake = remoteEndpoint => { };
         }
 
-        onopen(chan) {
+        onopen(connection, chan) {
             chan.send(JSON.stringify({
-                endpoint: this.localEndpoint.serialize(),
+                endpoint: connection.localEndpoint.serialize(),
             }));
         }
 
-        onmessage(chan, evt) {
+        onmessage(connection, chan, evt) {
             let data = JSON.parse(evt.data);
             if (data.endpoint == undefined) {
                 throw new Error(`unexpected data received '${data}'`);
@@ -266,9 +269,8 @@ const p2p = function () {
     }
 
     class PingHandler extends ChannelHandler {
-        constructor(localEndpoint) {
+        constructor() {
             super();
-            this.localId = localEndpoint.id;
 
             // state
             this.isConnected = false;
@@ -292,7 +294,7 @@ const p2p = function () {
             this.pingSendTime = null;
         }
 
-        onopen(chan) {
+        onopen(connection, chan) {
             this.isConnected = true;
             this.onStateChange?.(this);
 
@@ -308,7 +310,7 @@ const p2p = function () {
 
                 chan.send(JSON.stringify({
                     type: "ping",
-                    src: this.localId,
+                    src: connection.localEndpoint.id,
                     ctr: this.pingValue
                 }));
 
@@ -317,7 +319,7 @@ const p2p = function () {
             sendPing();
         }
 
-        onmessage(chan, evt) {
+        onmessage(connection, chan, evt) {
             let data = JSON.parse(evt.data);
             if (data.type == undefined || data.type != "ping") {
                 throw new Error(`unexpected data received '${data}'`);
@@ -326,7 +328,7 @@ const p2p = function () {
             if (data.src == undefined) {
                 throw new Error(`unexpected data received '${data}'`);
             }
-            if (data.src == this.localId) {
+            if (data.src == connection.localEndpoint.id) {
                 // ping sent from local peer
                 if (data.ctr == this.pingValue) {
                     this.pingValue = null;
@@ -339,16 +341,74 @@ const p2p = function () {
             }
         }
 
-        onclose(chan) {
+        onclose(connection, chan) {
             this.isConnected = false;
             this.onStateChange?.(this);
             clearTimeout(this.pingTimer);
         }
     }
 
+    // Many to many
+
+    class Hub extends ChannelHandler {
+        constructor(localEndpoint) {
+            super();
+
+            this.localEndpoint = localEndpoint;
+            this.peerMap = new Map();
+
+            // callbacks
+
+            this.onChange = hub => {
+                console.debug("hub update");
+                for (let con of this.connections()) {
+                    console.debug(con.remoteEndpoint.id);
+                }
+            };
+        }
+
+        addConnection(connection) {
+            if (connection.localEndpoint.id != this.localEndpoint.id) {
+                throw new Error("unexpected local endpoint");
+            }
+            if (this.peerMap.has(connection.remoteEndpoint.id)) {
+                throw new Error(`endpoint already registered ${connection.remoteEndpoint.id}`);
+            }
+            this.peerMap.set(connection.remoteEndpoint.id, connection);
+            this.onChange?.(this);
+        }
+
+        * connections() {
+            for (let [id, connection] of this.peerMap) {
+                yield connection;
+            }
+        }
+
+        // channel handling
+
+        onopen(connection, chan) {
+            this.addConnection(connection);
+            // TODO 
+            // - connect to the other peer hub
+            // - share the new peer to the rest of the hub
+        }
+
+        onmessage(connection, chan, evt) {
+            // TODO
+            // - handle announced peer
+        }
+
+        onclose(connection, chan) {
+            this.peerMap.delete(connection.remoteEndpoint.id);
+            this.onChange?.(this);
+        }
+    }
+
     return {
-        PeerConnection: PeerConnection,
         LocalEndpoint: LocalEndpoint,
-        RemoteEndpoint: RemoteEndpoint
+        RemoteEndpoint: RemoteEndpoint,
+        PeerConnection: PeerConnection,
+        ChannelHandler: ChannelHandler,
+        Hub: Hub
     }
 }();
