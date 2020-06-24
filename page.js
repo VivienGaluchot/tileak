@@ -24,7 +24,7 @@ const page = function () {
             preGame: document.getElementById("js-content-pre_game"),
             game: document.getElementById("js-content-game"),
             afterGame: document.getElementById("js-content-after_game")
-        }
+        };
 
         let party = {
             localOffer: {
@@ -94,7 +94,7 @@ const page = function () {
                     setEnabled(document.getElementById("tab-party-join"), false);
                 }
             }
-        }
+        };
 
         let game = {
             playerName: {
@@ -114,13 +114,51 @@ const page = function () {
             graphStorage: document.getElementById("js-game-graph_storage"),
             btnSurrender: document.getElementById("js-game-surrender"),
             btnSkipTurn: document.getElementById("js-game-skip_turn")
-        }
+        };
+
+        let chat = {
+            onMessage: msg => console.debug(`chat message typed : ${msg}`),
+            addHistory: (src, msg) => {
+                let el = document.getElementById("chat-history");
+
+                let divSrc = document.createElement("div");
+                divSrc.classList.add("src");
+                divSrc.innerText = src;
+                let divData = document.createElement("div");
+                divSrc.classList.add("data");
+                divData.innerText = msg;
+                let div = document.createElement("div");
+                div.classList.add("msg");
+                div.appendChild(divSrc);
+                div.appendChild(divData);
+
+                var doScroll = el.scrollTop > el.scrollHeight - el.clientHeight - 1;
+                el.appendChild(div);
+                if (doScroll) {
+                    el.scrollTop = el.scrollHeight - el.clientHeight;
+                }
+            }
+        };
+        let chatInput = document.getElementById("chat-input");
+        chatInput.onkeypress = function (event) {
+            if (event.keyCode == 13) {
+                if (event.shiftKey) {
+                    chatInput.value = chatInput.value + "\n";
+                } else {
+                    chat.onMessage(chatInput.value);
+                    chat.addHistory("you", chatInput.value);
+                    chatInput.value = "";
+                }
+                return false;
+            }
+        };
 
         elements = {
             // complex
             content: content,
             party: party,
             game: game,
+            chat: chat,
             // simple
             sandbox: document.getElementById("js-sandbox"),
             winner: document.getElementById("js-winner"),

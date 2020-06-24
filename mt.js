@@ -123,9 +123,25 @@ const mt = function () {
         return Math.floor(Math.random() * (max - min)) + min;
     }
 
+    function getRandomByteArray(length) {
+        let buffer = new Uint8Array(length);
+        for (let i = 0; i < length; i++) {
+            buffer[i] = getRandomInt(0, 2 ** 8);
+        }
+        return buffer;
+    }
+
+    function bufferToHex(buffer) {
+        return [...new Uint8Array(buffer)]
+            .map(b => b.toString(16).padStart(2, "0"))
+            .join("");
+    }
+
     return {
         Vect: Vect,
         assertVect: assertVect,
-        getRandomInt: getRandomInt
+        getRandomInt: getRandomInt,
+        getRandomByteArray, getRandomByteArray,
+        bufferToHex, bufferToHex
     }
 }();

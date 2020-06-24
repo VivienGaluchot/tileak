@@ -509,6 +509,51 @@ a.copied::before {
     background-color: #253d1d;
 }
 
+/* chat */
+
+.chat {
+    text-align: left;
+}
+
+.chat-history {
+    min-height: 5rem;
+    max-height: 10rem;
+    overflow-y: auto;
+    border-radius: .2rem .2rem 0 0;
+    background-color: #ffffff11;
+}
+
+.chat-history .msg {
+    margin: 1rem;
+    display: grid;
+    grid-template-columns: min-content 1fr;
+    row-gap: 1rem;
+    column-gap: 1rem;
+}
+
+.chat-history .msg .src {
+    color: #ffffff88;
+}
+
+.chat textarea {
+    border-radius: 0 0 .2rem .2rem;
+    border: none;
+    padding: .7rem 1rem;
+    color: #ffffff;
+    width: 100%;
+    background-color: #ffffff22;
+    font-family: inherit;
+    font-size: inherit;
+    min-width: 5rem;
+    resize: vertical;
+    min-height: 2.8rem;
+    height: 2.8rem;
+}
+
+.chat input:focus {
+    background-color: #ffffff44;
+}
+
 /* js manipulators */
 
 .js-hidden {

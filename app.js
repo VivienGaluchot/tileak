@@ -398,8 +398,14 @@ const app = function () {
 
     /* Network mgt */
 
+    const localEndpoint = new p2p.LocalEndpoint();
+
     let pendingInviteCon = null;
     let pendingJoinCon = null;
+
+    function getLocalId() {
+        return localEndpoint.id;
+    }
 
     function invite() {
         console.debug("invite");
@@ -411,7 +417,7 @@ const app = function () {
 
             // create connection
             console.debug("new invite PeerConnection");
-            pendingInviteCon = new p2p.PeerConnection();
+            pendingInviteCon = new p2p.PeerConnection(localEndpoint);
 
             // status change callback
             pendingInviteCon.onStateChange = () => {
@@ -461,7 +467,7 @@ const app = function () {
 
             // create connection
             console.debug("new join PeerConnection");
-            pendingJoinCon = new p2p.PeerConnection();
+            pendingJoinCon = new p2p.PeerConnection(localEndpoint);
 
             // status change callback
             pendingJoinCon.onStateChange = () => {
@@ -500,12 +506,12 @@ const app = function () {
         let update = () => {
             if (connection.isConnected) {
                 div.innerHTML =
-                    `<div class="player remote">?</div>
-                    <div>${connection.pingDelay}ms</div>
+                    `<div class="player remote">${connection.remoteEndpoint?.id ?? "?"}</div>
+                    <div>${connection.pingDelay ?? "-"} ms</div>
                     <div class="con-status ok"><i class="fas fa-check-circle"></i></div>`;
             } else {
                 div.innerHTML =
-                    `<div class="player remote">?</div>
+                    `<div class="player remote">${connection.remoteEndpoint?.id ?? "?"}</div>
                     <div class="con-status ko"><i class="fas fa-times-circle"></i></div>`;
             }
         };
@@ -609,6 +615,7 @@ const app = function () {
     return {
         reset: reset,
         startGame: startGame,
+        getLocalId: getLocalId,
         invite: invite,
         join: join,
     }
