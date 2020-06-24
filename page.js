@@ -208,8 +208,8 @@ const page = function () {
         let section = el.parentNode.parentNode;
         let newDiv = document.createElement("div");
         newDiv.innerHTML =
-            `<input class="player local" value="noname" />
-            <button class="btn" onclick="app.rmPlayer(this);"><i class="fas fa-trash-alt"></i></button>`;
+            `<input class="player local" placeholder="name" value="noname" />
+            <button class="btn" onclick="page.rmPlayer(this);"><i class="fas fa-trash-alt"></i></button>`;
         section.appendChild(newDiv);
     }
 
