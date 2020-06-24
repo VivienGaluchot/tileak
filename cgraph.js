@@ -2,6 +2,8 @@
  * Canvas base graph
  */
 
+"use strict";
+
 
 const cgraph = function () {
 

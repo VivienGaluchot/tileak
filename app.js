@@ -3,12 +3,7 @@
  * It provides a user interface to the game.
  */
 
-
-window.addEventListener("error", function (e) {
-    document.getElementById("masked_error").style.display = "block";
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-    return false;
-});
+"use strict";
 
 
 const app = function () {
@@ -39,7 +34,7 @@ const app = function () {
         }
     }
 
-    // UI elements
+    // UI elements()
 
     class CellWidget extends ui.BoxWidget {
         constructor(father, game, cell) {
@@ -309,133 +304,12 @@ const app = function () {
         }
     }
 
-    // DOM elements manipulation
-
-    let els_content;
-    let els_party;
-    let els_game;
-
-    let el_sandbox;
-    let el_winner;
-    let el_players;
-    let el_gridSize;
-
-    function setup() {
-        els_content = {
-            preGame: document.getElementById("js-content-pre_game"),
-            game: document.getElementById("js-content-game"),
-            afterGame: document.getElementById("js-content-after_game")
-        }
-        els_party = {
-            localOffer: {
-                set: value => {
-                    document.getElementById("local-offer").innerText = value;
-                },
-                clear: () => {
-                    document.getElementById("local-offer").innerText = "";
-                }
-            },
-            remoteOffer: {
-                get: () => {
-                    return document.getElementById("remote-offer").value;
-                },
-                clear: () => {
-                    document.getElementById("remote-offer").value = "";
-                }
-            },
-            remoteOfferBtn: document.getElementById("remote-offer-btn"),
-            localAnswer: {
-                set: value => {
-                    document.getElementById("local-answer").innerText = value;
-                },
-                clear: () => {
-                    document.getElementById("local-answer").innerText = "";
-                }
-            },
-            remoteAnswer: {
-                get: () => {
-                    return document.getElementById("remote-answer").value;
-                },
-                clear: () => {
-                    document.getElementById("remote-answer").value = "";
-                }
-            },
-            remoteAnswerBtn: document.getElementById("remote-answer-btn"),
-            inviteStatus: {
-                set: (value, isOk, isKo) => {
-                    if (isOk != null)
-                        setEnabled(document.getElementById("invite-ok"), isOk);
-                    if (isKo != null)
-                        setEnabled(document.getElementById("invite-ko"), isKo);
-                    return document.getElementById("invite-status").innerText = value;
-                }
-            },
-            joinStatus: {
-                set: (value, isOk, isKo) => {
-                    if (isOk != null)
-                        setEnabled(document.getElementById("join-ok"), isOk);
-                    if (isKo != null)
-                        setEnabled(document.getElementById("join-ko"), isKo);
-                    return document.getElementById("join-status").innerText = value;
-                }
-            },
-            list: {
-                add: el => {
-                    document.getElementById("party-list").appendChild(el);
-                }
-            }
-        }
-        els_game = {
-            playerName: document.getElementById("js-game-player_name"),
-            turnCount: document.getElementById("js-game-turn_count"),
-            stats: document.getElementById("js-game-stats"),
-            graphProduction: document.getElementById("js-game-graph_production"),
-            graphStorage: document.getElementById("js-game-graph_storage"),
-            btnSurrender: document.getElementById("js-game-surrender"),
-            btnSkipTurn: document.getElementById("js-game-skip_turn")
-        }
-        el_sandbox = document.getElementById("js-sandbox");
-        el_winner = document.getElementById("js-winner");
-        el_players = document.getElementById("js-players");
-        el_gridSize = document.getElementById("js-grid_size");
-    }
-
-    function setEnabled(element, isEnabled) {
-        if (isEnabled) {
-            element.classList.remove("js-hidden");
-        } else {
-            element.classList.add("js-hidden");
-        }
-    }
-
-    function showPreGame() {
-        console.debug(`showPreGame`);
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-        setEnabled(els_content.preGame, true);
-        setEnabled(els_content.game, false);
-        setEnabled(els_content.afterGame, false);
-    }
-
-    function showGame() {
-        console.debug(`showGame`);
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-        setEnabled(els_content.preGame, false);
-        setEnabled(els_content.game, true);
-        setEnabled(els_content.afterGame, false);
-    }
-
-    function showAfterGame() {
-        console.debug(`showAfterGame`);
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-        setEnabled(els_content.preGame, false);
-        setEnabled(els_content.game, true);
-        setEnabled(els_content.afterGame, true);
-    }
+    // DOM elements() manipulation
 
     function makeStatsGridElements(game) {
         let rows = [];
         for (let player of game.players) {
-            let div = els_game.stats;
+            let div = page.elements().game.statsGrid;
 
             let playerDiv = document.createElement("div");
             playerDiv.innerText = player.name;
@@ -484,10 +358,9 @@ const app = function () {
             playerColor = `#${game.getCurrentPlayer().color}`;
         else
             playerColor = `#${game.getCurrentPlayer().color}88`;
-        els_game.playerName.innerText = game.getCurrentPlayer().name;
-        els_game.playerName.style.color = playerColor;
+        page.elements().game.playerName.set(game.getCurrentPlayer().name, playerColor);
 
-        els_game.turnCount.innerText = game.turnCounter;
+        page.elements().game.turnCount.set(game.turnCounter);
 
         for (let el of statsGridEls) {
             el.update();
@@ -498,7 +371,7 @@ const app = function () {
 
     function makePlayers() {
         let players = [];
-        let inputs = el_players.querySelectorAll("div>input");
+        let inputs = page.elements().players.querySelectorAll("div>input");
         let angleIncrement = Math.min(360 / inputs.length, 120);
         for (let [index, input] of inputs.entries()) {
             let angle = -1 * angleIncrement * index;
@@ -510,7 +383,7 @@ const app = function () {
     }
 
     function getSelectedGridSize() {
-        let selected = el_gridSize.querySelector("button.selected");
+        let selected = page.elements().gridSize.querySelector("button.selected");
         let size = selected.innerText;
         if (size == "8x8") {
             return { w: 8, h: 8 }
@@ -523,7 +396,7 @@ const app = function () {
         }
     }
 
-    /* Party mgt */
+    /* Network mgt */
 
     let pendingInviteCon = null;
     let pendingJoinCon = null;
@@ -532,9 +405,9 @@ const app = function () {
         console.debug("invite");
         if (pendingInviteCon == null) {
             // clear UI
-            els_party.localOffer.clear();
-            els_party.remoteAnswer.clear();
-            els_party.inviteStatus.set("none", false, false);
+            page.elements().party.localOffer.clear();
+            page.elements().party.remoteAnswer.clear();
+            page.elements().party.inviteStatus.set("none", false, false);
 
             // create connection
             console.debug("new invite PeerConnection");
@@ -542,10 +415,11 @@ const app = function () {
 
             // status change callback
             pendingInviteCon.onStateChange = () => {
-                els_party.inviteStatus.set(pendingInviteCon.getStateDetails(), pendingInviteCon.isConnected, null);
+                page.elements().party.inviteStatus.set(pendingInviteCon.getStateDetails(), pendingInviteCon.isConnected, null);
                 if (pendingInviteCon.isConnected) {
                     pendingInviteCon.onStateChange = null;
                     registerConnection(pendingInviteCon);
+                    page.elements().party.tabPartyInvite.disable();
                     pendingInviteCon = null;
                 }
             }
@@ -554,23 +428,23 @@ const app = function () {
             pendingInviteCon.createOffer()
                 .then((offer) => {
                     console.debug("createOffer ok");
-                    els_party.localOffer.set(offer);
+                    page.elements().party.localOffer.set(offer);
                 })
                 .catch(reason => {
                     console.error("createOffer error", reason);
-                    els_party.inviteStatus.set("error", null, true);
+                    page.elements().party.inviteStatus.set("error", null, true);
                     con = null;
                 });
 
             // consume answer on click
-            els_party.remoteAnswerBtn.onclick = () => {
-                pendingInviteCon?.consumeAnswer(els_party.remoteAnswer.get())
+            page.elements().party.remoteAnswerBtn.onclick = () => {
+                pendingInviteCon?.consumeAnswer(page.elements().party.remoteAnswer.get())
                     .then(() => {
                         console.debug("consumeAnswer ok");
                     })
                     .catch(reason => {
                         console.error("consumeAnswer error", reason);
-                        els_party.inviteStatus.set("error", null, true);
+                        page.elements().party.inviteStatus.set("error", null, true);
                         pendingInviteCon = null;
                     });
             };
@@ -581,9 +455,9 @@ const app = function () {
         console.debug("join");
         if (pendingJoinCon == null) {
             // clear UI
-            els_party.localAnswer.clear();
-            els_party.remoteOffer.clear();
-            els_party.joinStatus.set("none", false, false);
+            page.elements().party.localAnswer.clear();
+            page.elements().party.remoteOffer.clear();
+            page.elements().party.joinStatus.set("none", false, false);
 
             // create connection
             console.debug("new join PeerConnection");
@@ -591,24 +465,25 @@ const app = function () {
 
             // status change callback
             pendingJoinCon.onStateChange = () => {
-                els_party.joinStatus.set(pendingJoinCon.getStateDetails(), pendingJoinCon.isConnected, null);
+                page.elements().party.joinStatus.set(pendingJoinCon.getStateDetails(), pendingJoinCon.isConnected, null);
                 if (pendingJoinCon.isConnected) {
                     pendingJoinCon.onStateChange = null;
                     registerConnection(pendingJoinCon);
+                    page.elements().party.tabPartyJoin.disable();
                     pendingJoinCon = null;
                 }
             }
 
             // consume offer and make answer on click
-            els_party.remoteOfferBtn.onclick = () => {
-                pendingJoinCon?.consumeOfferAndGetAnswer(els_party.remoteOffer.get())
+            page.elements().party.remoteOfferBtn.onclick = () => {
+                pendingJoinCon?.consumeOfferAndGetAnswer(page.elements().party.remoteOffer.get())
                     .then(answer => {
                         console.debug("consumeOfferAndGetAnswer ok");
-                        els_party.localAnswer.set(answer);
+                        page.elements().party.localAnswer.set(answer);
                     })
                     .catch(reason => {
                         console.error("consumeOfferAndGetAnswer error", reason);
-                        els_party.joinStatus.set("error", null, true);
+                        page.elements().party.joinStatus.set("error", null, true);
                         pendingJoinCon = null;
                     });
             }
@@ -639,7 +514,7 @@ const app = function () {
         connection.onPingChange = update;
         update();
 
-        els_party.list.add(div);
+        page.elements().party.list.add(div);
     }
 
 
@@ -653,21 +528,21 @@ const app = function () {
         if (players.length <= 1)
             throw new Error("a game must have at least 2 players");
 
-        showGame();
+        page.showGame();
 
         let gridSize = getSelectedGridSize();
         let game = new gm.Game(players, gridSize.w, gridSize.h);
 
         // setup graphs
-        let graphProduction = new cgraph.CGraph2D(els_game.graphProduction);
-        let graphStorage = new cgraph.CGraph2D(els_game.graphStorage);
+        let graphProduction = new cgraph.CGraph2D(page.elements().game.graphProduction);
+        let graphStorage = new cgraph.CGraph2D(page.elements().game.graphStorage);
         for (let player of players) {
             graphProduction.addDataset(player.productionHistory);
             graphStorage.addDataset(player.storageHistory);
         }
 
         // setup main canvas
-        sandbox = new ui.Sandbox(el_sandbox);
+        sandbox = new ui.Sandbox(page.elements().sandbox);
         sandbox.unitViewed = Math.max(gridSize.w + 1, gridSize.h + 1);
         sandbox.resized();
 
@@ -677,10 +552,10 @@ const app = function () {
         // setup DOM buttons
         let skipTurn = () => board.skipTurn();
         let surrender = () => board.surrender();
-        els_game.btnSkipTurn.addEventListener("click", skipTurn);
-        els_game.btnSurrender.addEventListener("click", surrender);
-        els_game.btnSurrender.disabled = false;
-        els_game.btnSkipTurn.disabled = false;
+        page.elements().game.btnSkipTurn.addEventListener("click", skipTurn);
+        page.elements().game.btnSurrender.addEventListener("click", surrender);
+        page.elements().game.btnSurrender.disabled = false;
+        page.elements().game.btnSkipTurn.disabled = false;
 
         // setup stats grid
         let statsGridEls = makeStatsGridElements(game);
@@ -702,15 +577,15 @@ const app = function () {
             if (game.terminated == false) {
                 sandbox.paint();
             } else {
-                el_winner.textContent = game.winner?.name ?? "Nobody";
-                el_winner.style.color = `#${game.winner?.color ?? "FFFFFF"}`;
+                page.elements().winner.textContent = game.winner?.name ?? "Nobody";
+                page.elements().winner.style.color = `#${game.winner?.color ?? "FFFFFF"}`;
 
-                els_game.btnSurrender.disabled = true;
-                els_game.btnSkipTurn.disabled = true;
-                els_game.btnSkipTurn.removeEventListener("click", skipTurn);
-                els_game.btnSurrender.removeEventListener("click", surrender);
+                page.elements().game.btnSurrender.disabled = true;
+                page.elements().game.btnSkipTurn.disabled = true;
+                page.elements().game.btnSkipTurn.removeEventListener("click", skipTurn);
+                page.elements().game.btnSurrender.removeEventListener("click", surrender);
 
-                showAfterGame();
+                page.showAfterGame();
             }
         };
         game.signalChange();
@@ -727,66 +602,14 @@ const app = function () {
     }
 
     function reset() {
-        showPreGame();
+        page.showPreGame();
         cleanup();
     }
 
-    /* First page controls */
-
-    function rmPlayer(el) {
-        el.parentNode.remove();
-    }
-
-    function addLocalPlayer(el) {
-        let section = el.parentNode.parentNode;
-        let newDiv = document.createElement("div");
-        newDiv.innerHTML =
-            `<input class="player local" value="noname" />
-            <button class="btn" onclick="app.rmPlayer(this);"><i class="fas fa-trash-alt"></i></button>`;
-        section.appendChild(newDiv);
-    }
-
-    function selectRadio(el) {
-        let section = el.parentNode;
-        for (let button of section.querySelectorAll("button")) {
-            if (button == el) {
-                button.classList.add("selected");
-            } else {
-                button.classList.remove("selected");
-            }
-        }
-    }
-
-    function showTab(el) {
-        selectRadio(el);
-        for (let target of document.querySelectorAll(el.dataset["target"])) {
-            for (let tab of target.parentElement.querySelectorAll(`.tab-content`)) {
-                setEnabled(tab, false);
-            }
-            setEnabled(target, true);
-        }
-    }
-
-    function hideTarget(el) {
-        for (let target of document.querySelectorAll(el.dataset["target"])) {
-            setEnabled(target, false);
-        }
-    }
-
     return {
-        setup: setup,
         reset: reset,
         startGame: startGame,
-        rmPlayer: rmPlayer,
-        addLocalPlayer: addLocalPlayer,
-        selectRadio: selectRadio,
-        showTab: showTab,
-        hideTarget: hideTarget,
         invite: invite,
         join: join,
     }
 }();
-
-document.addEventListener("DOMContentLoaded", (e) => {
-    app.setup();
-});

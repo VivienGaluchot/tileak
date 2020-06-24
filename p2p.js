@@ -1,5 +1,11 @@
-const p2p = function () {
+/**
+ * Peer to peer networking
+ */
 
+"use strict";
+
+
+const p2p = function () {
     class PeerConnection {
         constructor() {
             const config = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };

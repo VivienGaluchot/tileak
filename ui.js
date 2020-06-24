@@ -2,6 +2,8 @@
  * User interface basics
  */
 
+"use strict";
+
 
 const ui = function () {
     class Widget {

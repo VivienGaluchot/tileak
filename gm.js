@@ -2,6 +2,9 @@
  * This JS module implements the game structures and logics.
  */
 
+"use strict";
+
+
 const gm = function () {
     class Player {
         constructor(name) {

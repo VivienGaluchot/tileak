@@ -2,6 +2,9 @@
  * Math utility
  */
 
+"use strict";
+
+
 const mt = function () {
     function checkNumber(a) {
         if (typeof a != "number")

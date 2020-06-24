@@ -340,7 +340,7 @@ footer a {
 .pending-con-status {
     border: 1px solid #ffffff11;
     background-color: #ffffff11;
-    font-family: monospace;
+    font-family: 'Roboto Mono', monospace;
     padding: .2rem;
     border-radius: .2rem;
 }
@@ -481,6 +481,34 @@ footer a {
     border-radius: .2rem .2rem 0 0;
 }
 
+/* copy */
+
+a.copy::before {
+    content: "copy";
+    position: absolute;
+    font-family: 'Roboto', sans-serif;
+    font-size: 1rem;
+    z-index: 100;
+    background-color: hsl(34, 36%, 18%);
+    color: hsl(34, 100%, 75%);
+    border: 1px solid hsl(34, 100%, 75%);
+    padding: .2rem;
+    margin: .5rem;
+    border-radius: .2rem;
+    opacity: 0;
+}
+
+a.copy:hover::before {
+    opacity: 1;
+}
+
+a.copied::before {
+    content: "copy";
+    color: #9eff81;
+    border: 1px solid #9eff81;
+    background-color: #253d1d;
+}
+
 /* js manipulators */
 
 .js-hidden {
@@ -492,11 +520,22 @@ footer a {
 .b64 {
     max-width: 64ch;
     word-break: break-all;
-    font-family: monospace;
+    font-family: 'Roboto Mono', monospace;
     background-color: #00000066;
     color: #FFFFFF88;
     padding: 1rem;
     border-radius: .2rem;
+    font-size: .8rem;
+}
+
+.b64 a {
+    color: #FFFFFF88;
+    text-decoration: none;
+}
+
+.b64 a:hover {
+    color: #FFFFFFAA;
+    text-decoration: none;
 }
 
 textarea.b64 {
@@ -509,4 +548,9 @@ textarea.b64 {
 
 textarea.b64:focus {
     background-color: #00000088;
+}
+
+.grid-2 {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
 }
