@@ -93,6 +93,11 @@ const page = function () {
                 disable: () => {
                     setEnabled(document.getElementById("tab-party-join"), false);
                 }
+            },
+            localId: {
+                set: value => {
+                    document.getElementById("local-id").innerText = value;
+                }
             }
         };
 
@@ -268,8 +273,3 @@ const page = function () {
         copyContent: copyContent,
     }
 }();
-
-
-document.addEventListener("DOMContentLoaded", (e) => {
-    page.setup();
-});

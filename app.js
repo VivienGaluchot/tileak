@@ -304,7 +304,11 @@ const app = function () {
         }
     }
 
-    // DOM elements() manipulation
+    // DOM elements manipulation
+
+    function setup() {
+        page.elements().party.localId.set(getLocalId());
+    }
 
     function makeStatsGridElements(game) {
         let rows = [];
@@ -613,10 +617,16 @@ const app = function () {
     }
 
     return {
+        setup: setup,
         reset: reset,
         startGame: startGame,
-        getLocalId: getLocalId,
         invite: invite,
         join: join,
     }
 }();
+
+
+document.addEventListener("DOMContentLoaded", (e) => {
+    page.setup();
+    app.setup();
+});

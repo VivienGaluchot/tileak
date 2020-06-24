@@ -85,33 +85,31 @@ const p2p = function () {
 
             // mgt channels
 
-            const pingChan = this.createDataChannel("p2p-ping", { negotiated: true, id: 0 });
-            this.pingChanHandler = new PingChannelHandler(localEndpoint, pingChan);
+            this.pingChanHandler = new PingHandler(this.localEndpoint);
             this.pingChanHandler.onPingChange = () => {
                 this.onPingChange?.();
             };
             this.pingChanHandler.onStateChange = () => {
-                this.onStateChange?.();
+                this.onStateChange?.(this);
             };
+            this.registerDataChannel("p2p-ping", { negotiated: true, id: 0 }, this.pingChanHandler);
 
-            const handshakeChan = this.createDataChannel("p2p-handshake", { negotiated: true, id: 1 });
-            handshakeChan.onopen = () => {
-                handshakeChan.send(JSON.stringify({
-                    endpoint: this.localEndpoint.serialize(),
-                }));
+            const handshake = new HandshakeHandler(this.localEndpoint);
+            handshake.onHandshake = remoteEndpoint => {
+                this.setRemoteEndpoint(remoteEndpoint);
             };
-            handshakeChan.onmessage = (evt) => {
-                let data = JSON.parse(evt.data);
-                if (data.endpoint == undefined) {
-                    throw new Error(`unexpected data received '${data}'`);
-                }
-                if (this.remoteEndpoint != null) {
-                    throw new Error(`remote endpoint already set '${data}'`);
-                }
-                this.remoteEndpoint = RemoteEndpoint.deserialize(data.endpoint);
-                console.debug(`remote endpoint set`);
-                this.onStateChange?.();
-            };
+            this.registerDataChannel("p2p-handshake", { negotiated: true, id: 1 }, handshake);
+        }
+
+        // init
+
+        setRemoteEndpoint(remoteEndpoint) {
+            if (this.remoteEndpoint != null) {
+                throw new Error(`remote endpoint already set`);
+            }
+            this.remoteEndpoint = remoteEndpoint;
+            this.onStateChange?.(this);
+            console.debug(`remote endpoint set`);
         }
 
         // monitoring
@@ -130,10 +128,16 @@ const p2p = function () {
 
         // channels
 
-        createDataChannel(label, dataChannelDict) {
+        registerDataChannel(label, dataChannelDict, handler) {
             if (this.isInitiator != null)
                 console.error("channels must be created before initialization");
-            return this.pc.createDataChannel(label, dataChannelDict);
+            if (handler.connection != this)
+                console.error("handler registered on wrong connection");
+
+            const chan = this.pc.createDataChannel(label, dataChannelDict);
+            chan.onopen = () => handler.onopen(chan);
+            chan.onmessage = (evt) => handler.onmessage(chan, evt);
+            chan.onclose = () => handler.onclose(chan);
         }
 
         // terminate
@@ -223,8 +227,47 @@ const p2p = function () {
 
     // Channels utility
 
-    class PingChannelHandler {
-        constructor(localEndpoint, channel) {
+    class ChannelHandler {
+        constructor() { }
+
+        onopen(chan) {
+            console.debug(`channel opened`);
+        }
+
+        onmessage(chan, evt) { }
+
+        onclose(chan) {
+            console.debug(`channel closed`);
+        }
+    }
+
+    class HandshakeHandler extends ChannelHandler {
+        constructor(localEndpoint) {
+            super();
+            this.localEndpoint = localEndpoint;
+
+            // callbacks
+            this.onHandshake = remoteEndpoint => { };
+        }
+
+        onopen(chan) {
+            chan.send(JSON.stringify({
+                endpoint: this.localEndpoint.serialize(),
+            }));
+        }
+
+        onmessage(chan, evt) {
+            let data = JSON.parse(evt.data);
+            if (data.endpoint == undefined) {
+                throw new Error(`unexpected data received '${data}'`);
+            }
+            this.onHandshake?.(RemoteEndpoint.deserialize(data.endpoint));
+        }
+    }
+
+    class PingHandler extends ChannelHandler {
+        constructor(localEndpoint) {
+            super();
             this.localId = localEndpoint.id;
 
             // state
@@ -244,62 +287,62 @@ const p2p = function () {
             };
 
             // internals
-            let pingTimer = null;
-            let pingValue = null
-            let pingSendTime = null;
+            this.pingTimer = null;
+            this.pingValue = null
+            this.pingSendTime = null;
+        }
 
-            channel.onopen = () => {
-                this.isConnected = true;
-                this.onStateChange?.(this);
+        onopen(chan) {
+            this.isConnected = true;
+            this.onStateChange?.(this);
 
-                const sendPing = () => {
-                    if (pingValue != null) {
-                        console.debug("ping timeout");
-                        this.pingTime = null;
-                        this.onPingChange?.(this);
-                    }
-
-                    pingValue = mt.getRandomInt(0, 2 ** 32);
-                    pingSendTime = Date.now();
-
-                    channel.send(JSON.stringify({
-                        type: "ping",
-                        src: this.localId,
-                        ctr: pingValue
-                    }));
-
-                    pingTimer = window.setTimeout(function () { sendPing() }, 5000);
-                }
-                sendPing();
-            };
-
-            channel.onmessage = evt => {
-                let data = JSON.parse(evt.data);
-                if (data.type == undefined || data.type != "ping") {
-                    throw new Error(`unexpected data received '${data}'`);
+            const sendPing = () => {
+                if (this.pingValue != null) {
+                    console.debug("ping timeout");
+                    this.pingTime = null;
+                    this.onPingChange?.(this);
                 }
 
-                if (data.src == undefined) {
-                    throw new Error(`unexpected data received '${data}'`);
-                }
-                if (data.src == this.localId) {
-                    // ping sent from local peer
-                    if (data.ctr == pingValue) {
-                        pingValue = null;
-                        this.pingDelay = Date.now() - pingSendTime;
-                        this.onPingChange?.(this);
-                    }
-                } else {
-                    // ping from remote peer
-                    channel.send(evt.data);
-                }
-            };
+                this.pingValue = mt.getRandomInt(0, 2 ** 32);
+                this.pingSendTime = Date.now();
 
-            channel.onclose = () => {
-                this.isConnected = false;
-                this.onStateChange?.(this);
-                clearTimeout(pingTimer);
-            };
+                chan.send(JSON.stringify({
+                    type: "ping",
+                    src: this.localId,
+                    ctr: this.pingValue
+                }));
+
+                this.pingTimer = window.setTimeout(function () { sendPing() }, 5000);
+            }
+            sendPing();
+        }
+
+        onmessage(chan, evt) {
+            let data = JSON.parse(evt.data);
+            if (data.type == undefined || data.type != "ping") {
+                throw new Error(`unexpected data received '${data}'`);
+            }
+
+            if (data.src == undefined) {
+                throw new Error(`unexpected data received '${data}'`);
+            }
+            if (data.src == this.localId) {
+                // ping sent from local peer
+                if (data.ctr == this.pingValue) {
+                    this.pingValue = null;
+                    this.pingDelay = Date.now() - this.pingSendTime;
+                    this.onPingChange?.(this);
+                }
+            } else {
+                // ping from remote peer
+                chan.send(evt.data);
+            }
+        }
+
+        onclose(chan) {
+            this.isConnected = false;
+            this.onStateChange?.(this);
+            clearTimeout(this.pingTimer);
         }
     }
 
