@@ -14,6 +14,10 @@ const p2p = function () {
             this.id = id;
         }
 
+        get shortId() {
+            return this.id?.substr(0, 8);
+        }
+
         serialize() {
             return {
                 id: this.id

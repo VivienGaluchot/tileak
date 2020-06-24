@@ -306,10 +306,6 @@ const app = function () {
 
     // DOM elements manipulation
 
-    function setup() {
-        page.elements().party.localId.set(getLocalId());
-    }
-
     function makeStatsGridElements(game) {
         let rows = [];
         for (let player of game.players) {
@@ -408,7 +404,7 @@ const app = function () {
     let pendingJoinCon = null;
 
     function getLocalId() {
-        return localEndpoint.id;
+        return localEndpoint.shortId;
     }
 
     function invite() {
@@ -500,22 +496,50 @@ const app = function () {
         }
     }
 
+
+    class ChatHandler extends p2p.ChannelHandler {
+        constructor() {
+            super();
+            this.chanMap = new Map();
+        }
+
+        broadcast(data) {
+            for (let [id, chan] of this.chanMap) {
+                chan.send(data);
+            }
+        }
+
+        onopen(connection, chan) {
+            this.chanMap.set(connection.remoteEndpoint.id, chan);
+        }
+
+        onmessage(connection, chan, evt) {
+            page.elements().chat.addHistory(connection.remoteEndpoint.id, evt.data);
+        }
+
+        onclose(connection, chan) {
+            this.chanMap.delete(connection.remoteEndpoint.id);
+        }
+    }
+
+    const chat = new ChatHandler();
     const hub = new p2p.Hub(localEndpoint);
 
     function completedConnection(connection) {
         console.debug("connection registered");
         connection.registerDataChannel("hub", { negotiated: true, id: 100 }, hub);
+        connection.registerDataChannel("chat", { negotiated: true, id: 101 }, chat);
 
         let div = document.createElement("div");
         let update = () => {
             if (connection.isConnected) {
                 div.innerHTML =
-                    `<div class="player remote">${connection.remoteEndpoint?.id ?? "?"}</div>
+                    `<div class="player-id remote">${connection.remoteEndpoint?.shortId ?? "?"}</div>
                     <div>${connection.pingDelay ?? "-"} ms</div>
                     <div class="con-status ok"><i class="fas fa-check-circle"></i></div>`;
             } else {
                 div.innerHTML =
-                    `<div class="player remote">${connection.remoteEndpoint?.id ?? "?"}</div>
+                    `<div class="player-id remote">${connection.remoteEndpoint?.shortId ?? "?"}</div>
                     <div class="con-status ko"><i class="fas fa-times-circle"></i></div>`;
             }
         };
@@ -526,7 +550,6 @@ const app = function () {
 
         page.elements().party.list.add(div);
     }
-
 
     /* Game mgt */
 
@@ -614,6 +637,13 @@ const app = function () {
     function reset() {
         page.showPreGame();
         cleanup();
+    }
+
+    function setup() {
+        page.elements().party.localId.set(getLocalId());
+        page.elements().chat.onMessage = msg => {
+            chat.broadcast(msg);
+        }
     }
 
     return {

@@ -284,6 +284,13 @@ footer a {
     color: #ffffff;
 }
 
+.block-list .player-id {
+    flex-grow: 1;
+    text-align: left;
+    color: #ffffff88;
+    font-family: 'Roboto Mono', monospace;
+}
+
 .block-list input.player {
     background-color: #ffffff22;
     font-family: inherit;
@@ -513,9 +520,13 @@ a.copied::before {
 
 .chat {
     text-align: left;
+    display: inline-block;
+    width: 25rem;
+    max-width: 100%;
 }
 
 .chat-history {
+    width: 100%;
     min-height: 5rem;
     max-height: 10rem;
     overflow-y: auto;
