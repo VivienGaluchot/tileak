@@ -145,17 +145,23 @@ const page = function () {
             }
         };
         let chatInput = document.getElementById("chat-input");
-        chatInput.onkeypress = function (event) {
+        chatInput.onkeyup = event => {
+            chatInput.style.height = "1px";
+            chatInput.style.height = (chatInput.scrollHeight) + "px";
+        };
+        chatInput.onkeypress = event => {
+            let prevent = false;
             if (event.keyCode == 13) {
                 if (event.shiftKey) {
                     chatInput.value = chatInput.value + "\n";
-                } else {
+                } else if (chatInput.value != "") {
                     chat.onMessage(chatInput.value);
                     chat.addHistory("you", chatInput.value);
                     chatInput.value = "";
                 }
-                return false;
+                prevent = true;
             }
+            return !prevent;
         };
 
         elements = {

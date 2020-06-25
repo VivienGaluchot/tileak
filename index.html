@@ -44,101 +44,107 @@
                     <p>Players can be on the same PC or remote linked via peer to peer link.</p>
                 </section>
                 <section>
+                    <h3>Network party</h3>
+                    <p>Play with people over network.</p>
+                    <div class="btn-group">
+                        <button class="btn" onclick="app.invite();page.showTab(this);"
+                            data-target="#tab-party-invite">Invite</button>
+                        <button class="btn" onclick="app.join();page.showTab(this);"
+                            data-target="#tab-party-join">Join</button>
+                    </div>
+                    <div>
+                        <div id="tab-party-invite" class="tab-content js-hidden">
+                            <div class="modal">
+                                <div class="modal-content">
+                                    <div class="card">
+                                        <div class="header">
+                                            <div class="title">
+                                                Invite an other peer
+                                            </div>
+                                            <button class="btn dismiss" onclick="page.hideTarget(this);"
+                                                data-target="#tab-party-invite"><i class="fas fa-times"></i></button>
+                                        </div>
+                                        <div class="content">
+                                            <p>1. Send your local TAG to the peer you want to invite</p>
+                                            <div class="b64"><a href="#" class="copy" id="local-offer"
+                                                    onclick="page.copyContent(this);return false;"></a></div>
+                                            <p>2. Paste the peer's TAG and press "done"</p>
+                                            <p><textarea id="remote-answer" class="b64" spellcheck="false"></textarea>
+                                            </p>
+                                            <button id="remote-answer-btn" class="btn">done</button>
+                                        </div>
+                                        <div class="footer">
+                                            <p>
+                                                Connection status
+                                            </p>
+                                            <p>
+                                                <span id="invite-ok" class="con-status ok js-hidden"><i
+                                                        class="fas fa-check-circle"></i></span>
+                                                <span id="invite-ko" class="con-status ko js-hidden"><i
+                                                        class="fas fa-times-circle"></i></span>
+                                                <span id="invite-status" class="pending-con-status"></span>
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="tab-party-join" class="tab-content js-hidden">
+                            <div class="modal">
+                                <div class="modal-content">
+                                    <div class="card">
+                                        <div class="header">
+                                            <div class="title">
+                                                Join an other peer
+                                            </div>
+                                            <button class="btn dismiss" onclick="page.hideTarget(this);"
+                                                data-target="#tab-party-join"><i class="fas fa-times"></i></button>
+                                        </div>
+                                        <div class="content">
+                                            <p>1. Paste the joined peer's TAG and press "done"</p>
+                                            <p><textarea id="remote-offer" class="b64" spellcheck="false"></textarea>
+                                            </p>
+                                            <button id="remote-offer-btn" class="btn">done</button>
+                                            <p>2. Send your TAG back to the peer</p>
+                                            <div class="b64"><a href="#" class="copy" id="local-answer"
+                                                    onclick="page.copyContent(this);return false;"></a></div>
+                                        </div>
+                                        <div class="footer">
+                                            <p>
+                                                Connection status
+                                            </p>
+                                            <p>
+                                                <span id="join-ok" class="con-status ok js-hidden"><i
+                                                        class="fas fa-check-circle"></i></span>
+                                                <span id="join-ko" class="con-status ko js-hidden"><i
+                                                        class="fas fa-times-circle"></i></span>
+                                                <span id="join-status" class="pending-con-status"></span>
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="party-list" class="block-list">
+                        <div>
+                            <div id="local-id" class="player-id"></div>
+                            <div>local</div>
+                        </div>
+                    </div>
+                </section>
+                <section>
+                    <div class="chat">
+                        <div id="chat-history" class="chat-history"></div>
+                        <textarea id="chat-input" placeholder="chat with other players"></textarea>
+                    </div>
+                </section>
+                <section>
                     <h3>Grid</h3>
                     <div id="js-grid_size" class="btn-group">
                         <button class="btn radio" onclick="page.selectRadio(this);">8x8</button>
                         <button class="btn radio selected" onclick="page.selectRadio(this);">6x6</button>
                         <button class="btn radio" onclick="page.selectRadio(this);">4x4</button>
-                    </div>
-                </section>
-                <!-- <section class="grid-2"> -->
-                <section>
-                    <div>
-                        <h3>Network party</h3>
-                        <p>Play with people over network.</p>
-                        <div class="btn-group">
-                            <button class="btn" onclick="app.invite();page.showTab(this);"
-                                data-target="#tab-party-invite">Invite</button>
-                            <button class="btn" onclick="app.join();page.showTab(this);"
-                                data-target="#tab-party-join">Join</button>
-                        </div>
-                        <div>
-                            <div id="tab-party-invite" class="tab-content js-hidden">
-                                <div class="card">
-                                    <div class="header">
-                                        <div class="title">
-                                            Invite peer
-                                        </div>
-                                        <button class="btn dismiss" onclick="page.hideTarget(this);"
-                                            data-target="#tab-party-invite"><i class="fas fa-times"></i></button>
-                                    </div>
-                                    <div class="content">
-                                        <p>1. Send your local TAG to the peer you want to invite</p>
-                                        <div class="b64"><a href="#" class="copy" id="local-offer"
-                                                onclick="page.copyContent(this);return false;"></a></div>
-                                        <p>2. Paste the peer's TAG and press "done"</p>
-                                        <p><textarea id="remote-answer" class="b64" spellcheck="false"></textarea></p>
-                                        <button id="remote-answer-btn" class="btn">done</button>
-                                    </div>
-                                    <div class="footer">
-                                        <p>
-                                            Connection status
-                                        </p>
-                                        <p>
-                                            <span id="invite-ok" class="con-status ok js-hidden"><i
-                                                    class="fas fa-check-circle"></i></span>
-                                            <span id="invite-ko" class="con-status ko js-hidden"><i
-                                                    class="fas fa-times-circle"></i></span>
-                                            <span id="invite-status" class="pending-con-status"></span>
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div id="tab-party-join" class="tab-content js-hidden">
-                                <div class="card">
-                                    <div class="header">
-                                        <div class="title">
-                                            Join peer
-                                        </div>
-                                        <button class="btn dismiss" onclick="page.hideTarget(this);"
-                                            data-target="#tab-party-join"><i class="fas fa-times"></i></button>
-                                    </div>
-                                    <div class="content">
-                                        <p>1. Paste the joined peer's TAG and press "done"</p>
-                                        <p><textarea id="remote-offer" class="b64" spellcheck="false"></textarea></p>
-                                        <button id="remote-offer-btn" class="btn">done</button>
-                                        <p>2. Send your TAG back to the peer</p>
-                                        <div class="b64"><a href="#" class="copy" id="local-answer"
-                                                onclick="page.copyContent(this);return false;"></a></div>
-                                    </div>
-                                    <div class="footer">
-                                        <p>
-                                            Connection status
-                                        </p>
-                                        <p>
-                                            <span id="join-ok" class="con-status ok js-hidden"><i
-                                                    class="fas fa-check-circle"></i></span>
-                                            <span id="join-ko" class="con-status ko js-hidden"><i
-                                                    class="fas fa-times-circle"></i></span>
-                                            <span id="join-status" class="pending-con-status"></span>
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div id="party-list" class="block-list">
-                            <div>
-                                <div id="local-id" class="player-id"></div>
-                                <div>local</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div>
-                        <h3>Chat</h3>
-                        <div class="chat">
-                            <div id="chat-history" class="chat-history"></div>
-                            <textarea id="chat-input" placeholder="chat with the party"></textarea>
-                        </div>
                     </div>
                 </section>
                 <section>
