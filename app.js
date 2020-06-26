@@ -524,8 +524,10 @@ const app = function () {
 
     const chat = new ChatHandler();
     const hub = new p2p.Hub(localEndpoint);
+    hub.onAutoConnect = connection => {
+        completedConnection(connection);
+    };
 
-    // TODO register this as "new peer" callback from HUB and not only from invite-join UI
     function completedConnection(connection) {
         console.debug("connection registered");
         connection.registerDataChannel("hub", { negotiated: true, id: 100 }, hub);

@@ -18,7 +18,7 @@ const p2p = function () {
 
     function onTypedFrame(frameData, type, handler) {
         if (frameData.type == undefined || frameData.data == undefined)
-            throw new Error(`unexpected typed frame data ${frameData}`);
+            throw new Error(`unexpected typed frame data '${JSON.stringify(frameData)}'`);
         if (frameData.type == type) {
             handler(frameData.data);
             return true;
@@ -68,7 +68,7 @@ const p2p = function () {
 
         static deserialize(data) {
             if (data.id == undefined) {
-                throw new Error(`unexpected data received '${data}'`);
+                throw new Error(`unexpected input '${JSON.stringify(data)}'`);
             } else {
                 return new RemoteEndpoint(data.id);
             }
@@ -295,7 +295,7 @@ const p2p = function () {
         onmessage(connection, chan, evt) {
             let frameData = deserializeFrame(evt.data);
             if (frameData.endpoint == undefined) {
-                throw new Error(`unexpected data received '${frameData}'`);
+                throw new Error(`unexpected data received '${JSON.stringify(frameData)}'`);
             }
             this.onHandshake?.(RemoteEndpoint.deserialize(frameData.endpoint));
         }
@@ -357,7 +357,7 @@ const p2p = function () {
             let frameData = deserializeFrame(evt.data);
             let handled = onTypedFrame(frameData, "ping", data => {
                 if (data.src == undefined) {
-                    throw new Error(`unexpected data received '${data}'`);
+                    throw new Error(`unexpected data received '${JSON.stringify(data)}'`);
                 }
                 if (data.src == connection.localEndpoint.id) {
                     // ping sent from local peer
@@ -373,7 +373,7 @@ const p2p = function () {
             });
 
             if (!handled)
-                throw new Error(`unexpected data received '${data}'`);
+                throw new Error(`unexpected data received '${JSON.stringify(data)}'`);
         }
 
         onclose(connection, chan) {
@@ -390,9 +390,11 @@ const p2p = function () {
             super();
 
             this.localEndpoint = localEndpoint;
+            // remote id -> (connection, channel)
             this.peerMap = new Map();
 
-            this.pendingInitiatedConnections = [];
+            // remote id -> connection
+            this.pendingConnections = new Map();
 
             // callbacks
 
@@ -402,22 +404,25 @@ const p2p = function () {
                     console.debug(con.remoteEndpoint.id);
                 }
             };
+
+            this.onAutoConnect = connection => { console.debug(`auto connected to peer ${connection.remoteEndpoint.id}`); };
         }
 
-        addConnection(connection) {
+        addConnection(connection, chan) {
             if (connection.localEndpoint.id != this.localEndpoint.id) {
                 throw new Error("unexpected local endpoint");
             }
             if (this.peerMap.has(connection.remoteEndpoint.id)) {
                 throw new Error(`endpoint already registered ${connection.remoteEndpoint.id}`);
             }
-            this.peerMap.set(connection.remoteEndpoint.id, connection);
+            let peer = { connection: connection, chan: chan };
+            this.peerMap.set(connection.remoteEndpoint.id, peer);
             this.onChange?.(this);
         }
 
         * connections() {
-            for (let [id, connection] of this.peerMap) {
-                yield connection;
+            for (let [id, peer] of this.peerMap) {
+                yield peer.connection;
             }
         }
 
@@ -427,25 +432,110 @@ const p2p = function () {
             }
         }
 
-        // connection handling
+        // routing
 
-        sendRoutedOffer(connection, chan, targetId) {
-            let pendingConnection = new PeerConnection(connection.localDescription);
-            pendingConnection.createOffer()
+        sendRouted(chan, dst, payload) {
+            let routedData = {
+                src: this.localEndpoint.id,
+                dst: dst,
+                payload: payload
+            };
+            let frameData = makeTypedFrame("routed", routedData)
+            chan.send(serializeFrame(frameData));
+            console.debug("send routed data", frameData);
+        }
+
+        // auto connection handling
+
+        // TODO fix concurrency errors
+        // * when two already connected groups merge togethers
+        //   - Error: endpoint already registered 6bf6c1adfde3d66abbbf847f3f8cdd31 p2p.js:416:23
+        //   - Error: unexpected state p2p.js:493:23
+
+        offerRoutedConnection(chan, targetId) {
+            let connection = new PeerConnection(this.localEndpoint);
+            connection.onStateChange = () => {
+                if (connection.isConnected) {
+                    console.debug(`auto connected to peer ${connection.remoteEndpoint.id}`);
+                    this.pendingConnections.delete(targetId);
+                    connection.onStateChange = null;
+                    this.onAutoConnect(connection);
+                }
+            }
+
+            // register the connection
+            if (this.pendingConnections.has(targetId))
+                throw new Error("unexpected state");
+            this.pendingConnections.set(targetId, connection);
+
+            connection.createOffer()
                 .then((offer) => {
                     console.debug("createOffer ok");
-                    // TODO send the offer to targetId via a common peer
+                    // send the offer to targetId via a common peer
+                    let offerData = {
+                        srcId: this.localEndpoint.id,
+                        offer: offer
+                    };
+                    this.sendRouted(chan, targetId, makeTypedFrame("connection-offered", offerData));
                 })
                 .catch(reason => {
                     console.error("createOffer error", reason);
+                    this.pendingConnections.delete(targetId);
                 });
         }
+
+        answerRoutedConnection(chan, targetId, offer) {
+            let connection = new PeerConnection(this.localEndpoint);
+            connection.onStateChange = () => {
+                if (connection.isConnected) {
+                    console.debug(`auto connected to peer ${connection.remoteEndpoint.id}`);
+                    this.pendingConnections.delete(targetId);
+                    connection.onStateChange = null;
+                    this.onAutoConnect(connection);
+                }
+            }
+
+            // register the connection
+            if (this.pendingConnections.has(targetId))
+                throw new Error("unexpected state");
+            this.pendingConnections.set(targetId, connection);
+
+            connection.consumeOfferAndGetAnswer(offer)
+                .then(answer => {
+                    console.debug("consumeOfferAndGetAnswer ok");
+                    // send back the answer to targetId via a common peer
+                    let answerData = {
+                        srcId: this.localEndpoint.id,
+                        answer: answer
+                    };
+                    this.sendRouted(chan, targetId, makeTypedFrame("connection-answered", answerData));
+                })
+                .catch(reason => {
+                    console.error("consumeOfferAndGetAnswer error", reason);
+                    this.pendingConnections.delete(targetId);
+                });
+        }
+
+        completeRoutedConnection(targetId, answer) {
+            let connection = this.pendingConnections.get(targetId);
+            if (connection == undefined)
+                throw new Error("unexpected state");
+
+            connection.consumeAnswer(answer)
+                .then(() => {
+                    console.debug("consumeAnswer ok");
+                })
+                .catch(reason => {
+                    console.error("consumeAnswer error", reason);
+                    this.pendingConnections.delete(targetId);
+                });
+        }
+
 
         // channel handling
 
         onopen(connection, chan) {
-            this.addConnection(connection);
-
+            this.addConnection(connection, chan);
             // send already known peers to the new peer
             // the new peer will be in charge to initiate the connection through a common peer if needed
             let knownPeers = Array.from(this.peersId()).filter(id => id != connection.remoteEndpoint.id);
@@ -457,29 +547,53 @@ const p2p = function () {
 
         onmessage(connection, chan, evt) {
             let frameData = deserializeFrame(evt.data);
+            this.handleMessage(chan, evt, frameData);
+        }
 
+        handleMessage(chan, evt, frameData) {
             let handled = onTypedFrame(frameData, "routed", data => {
-                // TODO forward the data to the dest
+                console.debug("onmessage routed", data);
+
+                if (data.dst == this.localEndpoint.id) {
+                    // message is for local peer
+                    this.handleMessage(chan, evt, data.payload);
+                } else {
+                    // forward the data to the dst peer
+                    let dstPeer = this.peerMap.get(data.dst);
+                    if (dstPeer == undefined) {
+                        console.warn(`can't route message, dst unknown`, data);
+                    } else {
+                        dstPeer.chan.send(evt.data);
+                    }
+                }
 
             }) || onTypedFrame(frameData, "known-peers", data => {
-                console.debug("known-peers frame received", data);
+                console.debug("onmessage known-peers", data);
+
+                // try to connect with unknown peers
                 for (let id of data.ids) {
                     if (!this.peerMap.has(id)) {
                         console.debug(`require connection to ${id}`);
-                        this.sendRoutedOffer(connection, chan, id);
+                        this.offerRoutedConnection(chan, id);
                     }
                 }
 
             }) || onTypedFrame(frameData, "connection-offered", data => {
-                // TODO reply to the offer with an answer to establish a connection
+                console.debug("onmessage connection-offered", data);
+
+                // reply to the offer with an answer to establish a connection
+                this.answerRoutedConnection(chan, data.srcId, data.offer);
 
             }) || onTypedFrame(frameData, "connection-answered", data => {
-                // TODO complete the connection, add it to the hub when successfully connected
+                console.debug("onmessage connection-answered", data);
+
+                // complete the connection, add it to the hub when successfully connected
+                this.completeRoutedConnection(data.srcId, data.answer);
 
             });
 
             if (!handled)
-                throw new Error(`unexpected data received '${data}'`);
+                throw new Error(`unexpected data received '${JSON.stringify(data)}'`);
         }
 
         onclose(connection, chan) {
