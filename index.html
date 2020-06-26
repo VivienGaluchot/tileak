@@ -21,7 +21,7 @@
             <div class="logo"></div>
             tileak
         </h1>
-        <div class="error" id="masked_error" style="display:none;">
+        <div id="masked_error" class="alert error" style="display:none;">
             <p>
                 An error have been encountered.<br>
                 Your browser may not be supported by the application.
@@ -106,6 +106,13 @@
                                             </p>
                                             <button id="remote-offer-btn" class="btn">done</button>
                                             <p>2. Send your TAG back to the peer</p>
+                                            <p class="alert warning"><b>Warning</b> : on Firefox the time to transmit
+                                                back this
+                                                TAG is
+                                                short (5s)<br>
+                                                but can be changed. See <a
+                                                    href="https://bugzilla.mozilla.org/show_bug.cgi?id=1647289">more</a>.
+                                            </p>
                                             <div class="b64"><a href="#" class="copy" id="local-answer"
                                                     onclick="page.copyContent(this);return false;"></a></div>
                                         </div>

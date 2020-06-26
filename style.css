@@ -130,24 +130,16 @@ footer a {
     width: 2rem;
 }
 
-.error {
-    background-color: rgba(255, 0, 0, 0.281);
-    border: 1px solid red;
-    margin: 2rem .8rem;
-    border-radius: .5rem;
-}
-
-.error a {
-    color: white;
-    font-weight: normal;
-}
-
-.error p {
-    margin: 1.2rem;
-}
-
 .text-center {
     text-align: center;
+}
+
+a {
+    color: rgb(165, 206, 243);
+}
+
+a:hover {
+    color: rgb(107, 156, 199);
 }
 
 /* generic btn */
@@ -182,6 +174,34 @@ footer a {
 
 .btn:disabled {
     color: #ffffff44;
+}
+
+/* alert */
+
+.alert {
+    background-color: rgba(255, 255, 255, 0.281);
+    border: 1px solid white;
+    border-radius: .5rem;
+    padding: 1rem
+}
+
+.alert a {
+    color: white;
+    font-weight: normal;
+}
+
+.alert a:hover {
+    color: rgb(209, 209, 209);
+}
+
+.alert.warning {
+    background-color: rgba(255, 187, 0, 0.281);
+    border: 1px solid rgb(255, 187, 0);
+}
+
+.alert.error {
+    background-color: rgba(255, 0, 0, 0.281);
+    border: 1px solid red;
 }
 
 /* cards */
