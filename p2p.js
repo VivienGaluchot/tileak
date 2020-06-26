@@ -7,6 +7,34 @@
 
 const p2p = function () {
 
+    // Frame handling
+
+    function makeTypedFrame(type, data) {
+        return {
+            type: type,
+            data: data
+        }
+    }
+
+    function onTypedFrame(frameData, type, handler) {
+        if (frameData.type == undefined || frameData.data == undefined)
+            throw new Error(`unexpected typed frame data ${frameData}`);
+        if (frameData.type == type) {
+            handler(frameData.data);
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    function serializeFrame(frame) {
+        return JSON.stringify(frame);
+    }
+
+    function deserializeFrame(frame) {
+        return JSON.parse(frame);
+    }
+
     // Network node
 
     class Endpoint {
@@ -258,17 +286,18 @@ const p2p = function () {
         }
 
         onopen(connection, chan) {
-            chan.send(JSON.stringify({
+            let frameData = {
                 endpoint: connection.localEndpoint.serialize(),
-            }));
+            };
+            chan.send(serializeFrame(frameData));
         }
 
         onmessage(connection, chan, evt) {
-            let data = JSON.parse(evt.data);
-            if (data.endpoint == undefined) {
-                throw new Error(`unexpected data received '${data}'`);
+            let frameData = deserializeFrame(evt.data);
+            if (frameData.endpoint == undefined) {
+                throw new Error(`unexpected data received '${frameData}'`);
             }
-            this.onHandshake?.(RemoteEndpoint.deserialize(data.endpoint));
+            this.onHandshake?.(RemoteEndpoint.deserialize(frameData.endpoint));
         }
     }
 
@@ -312,11 +341,12 @@ const p2p = function () {
                 this.pingValue = mt.getRandomInt(0, 2 ** 32);
                 this.pingSendTime = Date.now();
 
-                chan.send(JSON.stringify({
-                    type: "ping",
-                    src: connection.localEndpoint.id,
-                    ctr: this.pingValue
-                }));
+                let frameData = makeTypedFrame("ping",
+                    {
+                        src: connection.localEndpoint.id,
+                        ctr: this.pingValue
+                    });
+                chan.send(serializeFrame(frameData));
 
                 this.pingTimer = window.setTimeout(function () { sendPing() }, 5000);
             }
@@ -324,25 +354,26 @@ const p2p = function () {
         }
 
         onmessage(connection, chan, evt) {
-            let data = JSON.parse(evt.data);
-            if (data.type == undefined || data.type != "ping") {
-                throw new Error(`unexpected data received '${data}'`);
-            }
-
-            if (data.src == undefined) {
-                throw new Error(`unexpected data received '${data}'`);
-            }
-            if (data.src == connection.localEndpoint.id) {
-                // ping sent from local peer
-                if (data.ctr == this.pingValue) {
-                    this.pingValue = null;
-                    this.pingDelay = Date.now() - this.pingSendTime;
-                    this.onPingChange?.(this);
+            let frameData = deserializeFrame(evt.data);
+            let handled = onTypedFrame(frameData, "ping", data => {
+                if (data.src == undefined) {
+                    throw new Error(`unexpected data received '${data}'`);
                 }
-            } else {
-                // ping from remote peer
-                chan.send(evt.data);
-            }
+                if (data.src == connection.localEndpoint.id) {
+                    // ping sent from local peer
+                    if (data.ctr == this.pingValue) {
+                        this.pingValue = null;
+                        this.pingDelay = Date.now() - this.pingSendTime;
+                        this.onPingChange?.(this);
+                    }
+                } else {
+                    // ping from remote peer
+                    chan.send(evt.data);
+                }
+            });
+
+            if (!handled)
+                throw new Error(`unexpected data received '${data}'`);
         }
 
         onclose(connection, chan) {
@@ -360,6 +391,8 @@ const p2p = function () {
 
             this.localEndpoint = localEndpoint;
             this.peerMap = new Map();
+
+            this.pendingInitiatedConnections = [];
 
             // callbacks
 
@@ -388,18 +421,65 @@ const p2p = function () {
             }
         }
 
+        * peersId() {
+            for (let con of this.connections()) {
+                yield con.remoteEndpoint.id;
+            }
+        }
+
+        // connection handling
+
+        sendRoutedOffer(connection, chan, targetId) {
+            let pendingConnection = new PeerConnection(connection.localDescription);
+            pendingConnection.createOffer()
+                .then((offer) => {
+                    console.debug("createOffer ok");
+                    // TODO send the offer to targetId via a common peer
+                })
+                .catch(reason => {
+                    console.error("createOffer error", reason);
+                });
+        }
+
         // channel handling
 
         onopen(connection, chan) {
             this.addConnection(connection);
-            // TODO 
-            // - connect to the other peer hub
-            // - share the new peer to the rest of the hub
+
+            // send already known peers to the new peer
+            // the new peer will be in charge to initiate the connection through a common peer if needed
+            let knownPeers = Array.from(this.peersId()).filter(id => id != connection.remoteEndpoint.id);
+            if (knownPeers.length > 0) {
+                let frameData = makeTypedFrame("known-peers", { ids: knownPeers });
+                chan.send(serializeFrame(frameData));
+            }
         }
 
         onmessage(connection, chan, evt) {
-            // TODO
-            // - handle announced peer
+            let frameData = deserializeFrame(evt.data);
+
+            let handled = onTypedFrame(frameData, "routed", data => {
+                // TODO forward the data to the dest
+
+            }) || onTypedFrame(frameData, "known-peers", data => {
+                console.debug("known-peers frame received", data);
+                for (let id of data.ids) {
+                    if (!this.peerMap.has(id)) {
+                        console.debug(`require connection to ${id}`);
+                        this.sendRoutedOffer(connection, chan, id);
+                    }
+                }
+
+            }) || onTypedFrame(frameData, "connection-offered", data => {
+                // TODO reply to the offer with an answer to establish a connection
+
+            }) || onTypedFrame(frameData, "connection-answered", data => {
+                // TODO complete the connection, add it to the hub when successfully connected
+
+            });
+
+            if (!handled)
+                throw new Error(`unexpected data received '${data}'`);
         }
 
         onclose(connection, chan) {

@@ -439,7 +439,7 @@ const app = function () {
                 .catch(reason => {
                     console.error("createOffer error", reason);
                     page.elements().party.inviteStatus.set("error", null, true);
-                    con = null;
+                    pendingInviteCon = null;
                 });
 
             // consume answer on click
@@ -514,7 +514,7 @@ const app = function () {
         }
 
         onmessage(connection, chan, evt) {
-            page.elements().chat.addHistory(connection.remoteEndpoint.id, evt.data);
+            page.elements().chat.addHistory(connection.remoteEndpoint.shortId, evt.data);
         }
 
         onclose(connection, chan) {
@@ -525,6 +525,7 @@ const app = function () {
     const chat = new ChatHandler();
     const hub = new p2p.Hub(localEndpoint);
 
+    // TODO register this as "new peer" callback from HUB and not only from invite-join UI
     function completedConnection(connection) {
         console.debug("connection registered");
         connection.registerDataChannel("hub", { negotiated: true, id: 100 }, hub);
