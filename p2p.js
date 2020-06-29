@@ -49,7 +49,7 @@ const p2p = function () {
         serialize() {
             return {
                 id: this.id
-            };;
+            };
         }
     }
 
@@ -95,7 +95,8 @@ const p2p = function () {
 
             this.isInitiator = null;
 
-            const config = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
+            // const config = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
+            const config = {};
             this.pc = new RTCPeerConnection(config);
 
             this.pc.oniceconnectionstatechange = (evt) => {
@@ -274,6 +275,27 @@ const p2p = function () {
 
         onclose(connection, chan) {
             console.debug(`channel closed`);
+        }
+    }
+    class BroadcastHandler extends ChannelHandler {
+        constructor() {
+            super();
+            // remote id -> channel
+            this.chanMap = new Map();
+        }
+
+        broadcast(data) {
+            for (let [id, chan] of this.chanMap) {
+                chan.send(data);
+            }
+        }
+
+        onopen(connection, chan) {
+            this.chanMap.set(connection.remoteEndpoint.id, chan);
+        }
+
+        onclose(connection, chan) {
+            this.chanMap.delete(connection.remoteEndpoint.id);
         }
     }
 
@@ -607,6 +629,7 @@ const p2p = function () {
         RemoteEndpoint: RemoteEndpoint,
         PeerConnection: PeerConnection,
         ChannelHandler: ChannelHandler,
+        BroadcastHandler: BroadcastHandler,
         Hub: Hub
     }
 }();

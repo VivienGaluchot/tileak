@@ -98,7 +98,16 @@ const page = function () {
                 set: value => {
                     document.getElementById("local-id").innerText = value;
                 }
+            },
+            localName: {
+                get: () => {
+                    return document.getElementById("local-name").value;
+                },
+                onChange: name => { console.debug(`local name changed to ${name}`) }
             }
+        };
+        document.getElementById("local-name").onchange = () => {
+            party.localName.onChange?.(party.localName.get());
         };
 
         let game = {

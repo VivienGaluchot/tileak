@@ -325,7 +325,7 @@ a:hover {
 }
 
 .block-list .player-id {
-    flex-grow: 1;
+    /* flex-grow: 1; */
     text-align: left;
     color: #ffffff88;
     font-family: 'Roboto Mono', monospace;

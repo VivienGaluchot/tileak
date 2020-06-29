@@ -496,53 +496,81 @@ const app = function () {
         }
     }
 
-
-    class ChatHandler extends p2p.ChannelHandler {
-        constructor() {
-            super();
-            this.chanMap = new Map();
-        }
-
-        broadcast(data) {
-            for (let [id, chan] of this.chanMap) {
-                chan.send(data);
-            }
-        }
-
-        onopen(connection, chan) {
-            this.chanMap.set(connection.remoteEndpoint.id, chan);
-        }
-
-        onmessage(connection, chan, evt) {
-            page.elements().chat.addHistory(connection.remoteEndpoint.shortId, evt.data);
-        }
-
-        onclose(connection, chan) {
-            this.chanMap.delete(connection.remoteEndpoint.id);
-        }
-    }
-
-    const chat = new ChatHandler();
     const hub = new p2p.Hub(localEndpoint);
     hub.onAutoConnect = connection => {
         completedConnection(connection);
     };
 
+    class NameHandler extends p2p.BroadcastHandler {
+        constructor() {
+            super();
+            // remote id -> name
+            this.nameMap = new Map();
+            // remote id -> change handler
+            this.handlerMap = new Map();
+        }
+
+        setLocalName(name) {
+            this.broadcast(name);
+        }
+
+        setOnChange(id, handler) {
+            this.handlerMap.set(id, handler);
+        }
+
+        getName(id) {
+            if (id == null)
+                return null;
+            return this.nameMap.get(id);
+        }
+
+        onopen(connection, chan) {
+            super.onopen(connection, chan);
+            this.broadcast(page.elements().party.localName.get());
+        }
+
+        onmessage(connection, chan, evt) {
+            this.nameMap.set(connection.remoteEndpoint.id, evt.data);
+            this.handlerMap.get(connection.remoteEndpoint.id)?.();
+        }
+
+        onclose(connection, chan) {
+            super.onclose(connection, chan);
+            this.nameMap.delete(connection.remoteEndpoint.id);
+            this.handlerMap.delete(connection.remoteEndpoint.id);
+        }
+    }
+    const names = new NameHandler();
+
+    class ChatHandler extends p2p.BroadcastHandler {
+        constructor() {
+            super();
+        }
+
+        onmessage(connection, chan, evt) {
+            page.elements().chat.addHistory(names.getName(connection.remoteEndpoint?.id), evt.data);
+        }
+    }
+    const chat = new ChatHandler();
+
     function completedConnection(connection) {
         console.debug("connection registered");
         connection.registerDataChannel("hub", { negotiated: true, id: 100 }, hub);
         connection.registerDataChannel("chat", { negotiated: true, id: 101 }, chat);
+        connection.registerDataChannel("names", { negotiated: true, id: 102 }, names);
 
         let div = document.createElement("div");
         let update = () => {
             if (connection.isConnected) {
                 div.innerHTML =
                     `<div class="player-id remote">${connection.remoteEndpoint?.shortId ?? "?"}</div>
+                    <div class="player remote">${names.getName(connection.remoteEndpoint?.id) ?? "?"}</div>
                     <div>${connection.pingDelay ?? "-"} ms</div>
                     <div class="con-status ok"><i class="fas fa-check-circle"></i></div>`;
             } else {
                 div.innerHTML =
                     `<div class="player-id remote">${connection.remoteEndpoint?.shortId ?? "?"}</div>
+                    <div class="player remote">${names.getName(connection.remoteEndpoint?.id) ?? "?"}</div>
                     <div class="con-status ko">connection lost <i class="fas fa-times-circle"></i></div>
                     <button class="btn" onclick="page.rmListEl(this);"><i class="fas fa-trash-alt"></i></button>`;
             }
@@ -550,8 +578,9 @@ const app = function () {
 
         connection.onStateChange = update;
         connection.onPingChange = update;
-        update();
+        names.setOnChange(connection.remoteEndpoint.id, update);
 
+        update();
         page.elements().party.list.add(div);
     }
 
@@ -645,6 +674,9 @@ const app = function () {
 
     function setup() {
         page.elements().party.localId.set(getLocalId());
+        page.elements().party.localName.onChange = name => {
+            names.setLocalName(name);
+        };
         page.elements().chat.onMessage = msg => {
             chat.broadcast(msg);
         }
