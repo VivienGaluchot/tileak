@@ -45,7 +45,7 @@
                 </section>
                 <section>
                     <h3>Network party</h3>
-                    <p>Play with people over network.</p>
+                    <p>Add remote players.</p>
                     <div class="btn-group">
                         <button class="btn" onclick="app.invite();page.showTab(this);"
                             data-target="#tab-party-invite">Invite</button>
@@ -65,9 +65,18 @@
                                                 data-target="#tab-party-invite"><i class="fas fa-times"></i></button>
                                         </div>
                                         <div class="content">
-                                            <p>1. Send your local TAG to the peer you want to invite</p>
+                                            <p>
+                                                1. Send your local TAG to the peer you want to invite
+                                                <br />
+                                            </p>
                                             <div class="b64"><a href="#" class="copy" id="local-offer"
                                                     onclick="page.copyContent(this);return false;"></a></div>
+                                            <small>This TAG can be used once, an other will be generated after this
+                                                connection is completed.
+                                                <br>Before sharing it be aware that it contains data about your
+                                                network location.</small>
+                                        </div>
+                                        <div class="content">
                                             <p>2. Paste the peer's TAG and press "done"</p>
                                             <p><textarea id="remote-answer" class="b64" spellcheck="false"></textarea>
                                             </p>
@@ -105,16 +114,20 @@
                                             <p><textarea id="remote-offer" class="b64" spellcheck="false"></textarea>
                                             </p>
                                             <button id="remote-offer-btn" class="btn">done</button>
+                                        </div>
+                                        <div class="content">
                                             <p>2. Send your TAG back to the peer</p>
                                             <p class="alert warning"><b>Warning</b> : on Firefox the time to transmit
-                                                back this
-                                                TAG is
-                                                short (5s)<br>
-                                                but can be changed. See <a
-                                                    href="https://bugzilla.mozilla.org/show_bug.cgi?id=1647289">more</a>.
+                                                back this TAG is short (5s)<br> but can be changed.
+                                                See <a
+                                                    href="https://bugzilla.mozilla.org/show_bug.cgi? id=1647289">more</a>.
                                             </p>
                                             <div class="b64"><a href="#" class="copy" id="local-answer"
                                                     onclick="page.copyContent(this);return false;"></a></div>
+                                            <small>This TAG can be used once, an other will be generated after this
+                                                connection is completed.
+                                                <br>Before sharing it be aware that it contains data about your
+                                                network location.</small>
                                         </div>
                                         <div class="footer">
                                             <p>
