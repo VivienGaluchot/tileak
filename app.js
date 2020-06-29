@@ -382,20 +382,6 @@ const app = function () {
         return players;
     }
 
-    function getSelectedGridSize() {
-        let selected = page.elements().gridSize.querySelector("button.selected");
-        let size = selected.innerText;
-        if (size == "8x8") {
-            return { w: 8, h: 8 }
-        } else if (size == "6x6") {
-            return { w: 6, h: 6 }
-        } else if (size == "4x4") {
-            return { w: 4, h: 4 }
-        } else {
-            throw new Error("unexpected grid size");
-        }
-    }
-
     /* Network mgt */
 
     const localEndpoint = new p2p.LocalEndpoint();
@@ -553,11 +539,36 @@ const app = function () {
     }
     const chat = new ChatHandler();
 
+    class PregameHandler extends p2p.BroadcastHandler {
+        constructor() {
+            super();
+            // synchronize between peers
+            // * selected grid size
+            // * player order
+            // * ready player set
+            // * game launch
+
+            // TODO ensure consistencies between remote states to avoid issue with message crossing
+            // use a distributed logic clock
+        }
+
+        setGridSize(size) {
+            this.broadcast(JSON.stringify(size));
+        }
+
+        onmessage(connection, chan, evt) {
+            let size = JSON.parse(evt.data);
+            page.elements().preGame.gridSizeSelector.set(size);
+        }
+    }
+    const pregame = new PregameHandler();
+
     function completedConnection(connection) {
         console.debug("connection registered");
         connection.registerDataChannel("hub", { negotiated: true, id: 100 }, hub);
         connection.registerDataChannel("chat", { negotiated: true, id: 101 }, chat);
         connection.registerDataChannel("names", { negotiated: true, id: 102 }, names);
+        connection.registerDataChannel("pregame", { negotiated: true, id: 103 }, pregame);
 
         let div = document.createElement("div");
         let update = () => {
@@ -596,7 +607,7 @@ const app = function () {
 
         page.showGame();
 
-        let gridSize = getSelectedGridSize();
+        let gridSize = page.elements().preGame.gridSizeSelector.get();
         let game = new gm.Game(players, gridSize.w, gridSize.h);
 
         // setup graphs
@@ -679,6 +690,9 @@ const app = function () {
         };
         page.elements().chat.onMessage = msg => {
             chat.broadcast(msg);
+        }
+        page.elements().preGame.gridSizeSelector.onChange = size => {
+            pregame.setGridSize(size);
         }
     }
 

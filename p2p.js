@@ -95,8 +95,7 @@ const p2p = function () {
 
             this.isInitiator = null;
 
-            // const config = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
-            const config = {};
+            const config = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
             this.pc = new RTCPeerConnection(config);
 
             this.pc.oniceconnectionstatechange = (evt) => {

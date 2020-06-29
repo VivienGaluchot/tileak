@@ -173,17 +173,60 @@ const page = function () {
             return !prevent;
         };
 
+        let preGame = {
+            gridSizeSelector: {
+                get: () => {
+                    let selected = document.getElementById("js-grid_size").querySelector("button.selected");
+                    let size = selected.innerText;
+                    if (size == "8x8") {
+                        return { w: 8, h: 8 }
+                    } else if (size == "6x6") {
+                        return { w: 6, h: 6 }
+                    } else if (size == "4x4") {
+                        return { w: 4, h: 4 }
+                    } else {
+                        throw new Error("unexpected grid size");
+                    }
+                },
+                onChange: size => console.debug(`gridSizeSelector changed to ${size.w}x${size.h}`),
+                set: size => {
+                    let innerText;
+                    if (size.w == 8 && size.h == 8) {
+                        innerText = "8x8";
+                    } else if (size.w == 6 && size.h == 6) {
+                        innerText = "6x6";
+                    } else if (size.w == 4 && size.h == 4) {
+                        innerText = "4x4";
+                    } else {
+                        throw new Error("unexpected grid size");
+                    }
+                    for (let button of document.getElementById("js-grid_size").querySelectorAll("button")) {
+                        if (button.innerText == innerText) {
+                            button.classList.add("selected");
+                        } else {
+                            button.classList.remove("selected");
+                        }
+                    }
+                }
+            }
+        };
+        for (let button of document.getElementById("js-grid_size").querySelectorAll("button")) {
+            button.addEventListener("click", evt => {
+                preGame.gridSizeSelector.onChange?.(preGame.gridSizeSelector.get());
+            });
+        }
+
         elements = {
             // complex
             content: content,
             party: party,
             game: game,
             chat: chat,
+            preGame: preGame,
             // simple
             sandbox: document.getElementById("js-sandbox"),
             winner: document.getElementById("js-winner"),
             players: document.getElementById("js-players"),
-            gridSize: document.getElementById("js-grid_size"),
         };
     }
 
