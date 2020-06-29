@@ -572,7 +572,7 @@ const p2p = function () {
 
                 // try to connect with unknown peers
                 for (let id of data.ids) {
-                    if (!this.peerMap.has(id)) {
+                    if (!this.peerMap.has(id) && !this.pendingConnections.has(id)) {
                         console.debug(`require connection to ${id}`);
                         this.offerRoutedConnection(chan, id);
                     }

@@ -543,7 +543,8 @@ const app = function () {
             } else {
                 div.innerHTML =
                     `<div class="player-id remote">${connection.remoteEndpoint?.shortId ?? "?"}</div>
-                    <div class="con-status ko"><i class="fas fa-times-circle"></i></div>`;
+                    <div class="con-status ko">connection lost <i class="fas fa-times-circle"></i></div>
+                    <button class="btn" onclick="page.rmListEl(this);"><i class="fas fa-trash-alt"></i></button>`;
             }
         };
 

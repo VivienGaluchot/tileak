@@ -204,9 +204,9 @@ const page = function () {
         setEnabled(elements.content.afterGame, true);
     }
 
-    /* Player list mgt */
+    /* list mgt */
 
-    function rmPlayer(el) {
+    function rmListEl(el) {
         el.parentNode.remove();
     }
 
@@ -215,7 +215,7 @@ const page = function () {
         let newDiv = document.createElement("div");
         newDiv.innerHTML =
             `<input class="player local" placeholder="name" value="noname" />
-            <button class="btn" onclick="page.rmPlayer(this);"><i class="fas fa-trash-alt"></i></button>`;
+            <button class="btn" onclick="page.rmListEl(this);"><i class="fas fa-trash-alt"></i></button>`;
         section.appendChild(newDiv);
     }
 
@@ -271,7 +271,7 @@ const page = function () {
         showPreGame: showPreGame,
         showGame: showGame,
         showAfterGame: showAfterGame,
-        rmPlayer: rmPlayer,
+        rmListEl: rmListEl,
         addLocalPlayer: addLocalPlayer,
         selectRadio: selectRadio,
         showTab: showTab,
