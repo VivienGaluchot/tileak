@@ -137,7 +137,7 @@ const appNet = function () {
 
         onopen(connection, chan) {
             super.onopen(connection, chan);
-            this.broadcast(page.elements().party.localName.get());
+            chan.send(page.elements().party.localName.get());
         }
 
         onmessage(connection, chan, evt) {
@@ -177,15 +177,24 @@ const appNet = function () {
 
             // TODO ensure consistencies between remote states to avoid issue with message crossing
             // use a distributed logic clock
+
+            this.clock = 0;
         }
 
         setGridSize(size) {
-            this.broadcast(JSON.stringify(size));
+            let frame = new p2p.Frame("grid-size", size);
+            this.broadcast(frame.serialize());
         }
 
         onmessage(connection, chan, evt) {
-            let size = JSON.parse(evt.data);
-            page.elements().preGame.gridSizeSelector.set(size);
+            let frame = p2p.Frame.deserialize(evt.data);
+            let handler = new p2p.FrameHandler()
+                .on("grid-size", data => {
+                    page.elements().preGame.gridSizeSelector.set(data);
+                }).else(() => {
+
+                });
+            handler.handle(frame);
         }
     }
     const pregame = new PregameHandler();
@@ -233,6 +242,7 @@ const appNet = function () {
             hub: hub,
             names: names,
             chat: chat,
+            pregame: pregame,
         }
     }
 }();
