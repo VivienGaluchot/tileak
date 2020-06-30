@@ -115,6 +115,8 @@ const appNet = function () {
     class NameHandler extends p2p.BroadcastHandler {
         constructor() {
             super();
+            this.localName = null;
+
             // remote id -> name
             this.nameMap = new Map();
             // remote id -> change handler
@@ -122,6 +124,7 @@ const appNet = function () {
         }
 
         setLocalName(name) {
+            this.localName = name;
             this.broadcast(name);
         }
 
@@ -137,10 +140,13 @@ const appNet = function () {
 
         onopen(connection, chan) {
             super.onopen(connection, chan);
-            chan.send(page.elements().party.localName.get());
+            console.debug("names chan", chan);
+            chan.send(this.localName);
+            console.debug("name sent", connection.remoteEndpoint.id, this.localName);
         }
 
         onmessage(connection, chan, evt) {
+            console.debug("name onmessage", connection.remoteEndpoint.id, evt.data, chan);
             this.nameMap.set(connection.remoteEndpoint.id, evt.data);
             this.handlerMap.get(connection.remoteEndpoint.id)?.();
         }
@@ -181,18 +187,54 @@ const appNet = function () {
             this.clock = 0;
         }
 
+        // clock
+
+        localTick() {
+            this.clock++;
+        }
+
+        remoteTick(remoteClock) {
+            this.clock = Math.max(this.clock, remoteClock);
+        }
+
+        isOutdated(clock) {
+            return clock < this.clock;
+        }
+
+        // change state
+
         setGridSize(size) {
-            let frame = new p2p.Frame("grid-size", size);
+            localTick();
+            let frame = new p2p.Frame("grid-size", {
+                clock: this.clock,
+                size: size
+            });
             this.broadcast(frame.serialize());
+        }
+
+        // channel
+
+        onopen(connection, chan) {
+            super.onopen(connection, chan);
+            // vote state
         }
 
         onmessage(connection, chan, evt) {
             let frame = p2p.Frame.deserialize(evt.data);
             let handler = new p2p.FrameHandler()
                 .on("grid-size", data => {
-                    page.elements().preGame.gridSizeSelector.set(data);
+                    let clock = data.clock;
+                    if (!isOutdated(clock)) {
+                        // ok
+                        let size = data.size;
+                        page.elements().preGame.gridSizeSelector.set(data);
+                    } else {
+                        // undecided
+                        console.warn("grid size conflict");
+                    }
+                    remoteTick(clock);
                 }).else(() => {
-
+                    throw new Error("unexpected state");
                 });
             handler.handle(frame);
         }
@@ -202,10 +244,10 @@ const appNet = function () {
 
     function completedConnection(connection) {
         console.debug("connection registered");
-        connection.registerDataChannel("hub", { negotiated: true, id: 100 }, hub);
-        connection.registerDataChannel("chat", { negotiated: true, id: 101 }, chat);
-        connection.registerDataChannel("names", { negotiated: true, id: 102 }, names);
-        connection.registerDataChannel("pregame", { negotiated: true, id: 103 }, pregame);
+        connection.registerDataChannel("hub", hub);
+        connection.registerDataChannel("chat", chat);
+        connection.registerDataChannel("names", names);
+        connection.registerDataChannel("pregame", pregame);
 
         let div = document.createElement("div");
         let lastName = null;

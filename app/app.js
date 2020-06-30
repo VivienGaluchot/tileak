@@ -23,13 +23,21 @@ const app = function () {
     // setup the application callbacks
     function setup() {
         page.setup();
+        // local id
         page.elements().party.localId.set(appNet.getLocalId());
+
+        // name field
         page.elements().party.localName.onChange = name => {
             appNet.channels.names.setLocalName(name);
         };
+        appNet.channels.names.setLocalName(page.elements().party.localName.get());
+
+        // chat 
         page.elements().chat.onMessage = msg => {
             appNet.channels.chat.broadcast(msg);
         }
+
+        // grid size
         page.elements().preGame.gridSizeSelector.onChange = size => {
             appNet.channels.pregame.setGridSize(size);
         }
