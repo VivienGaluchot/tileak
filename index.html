@@ -47,9 +47,9 @@
                     <h3>Network party</h3>
                     <p>Invite or join a group of players.</p>
                     <div class="btn-group">
-                        <button class="btn" onclick="app.invite();page.showTab(this);"
+                        <button class="btn" onclick="appNet.invite();page.showTab(this);"
                             data-target="#tab-party-invite">Invite</button>
-                        <button class="btn" onclick="app.join();page.showTab(this);"
+                        <button class="btn" onclick="appNet.join();page.showTab(this);"
                             data-target="#tab-party-join">Join</button>
                     </div>
                     <div>
@@ -172,8 +172,8 @@
                         <button class="btn radio" onclick="page.selectRadio(this);">4x4</button>
                     </div>
                 </section>
-                <section>
-                    <!-- <div>
+                <!-- <section>
+                    <div>
                         <h3>Local player</h3>
                         <div id="js-players" class="block-list">
                             <div class="action-bar">
@@ -184,8 +184,8 @@
                                 <div>you</div>
                             </div>
                         </div>
-                    </div> -->
-                </section>
+                    </div>
+                </section> -->
                 <section>
                     <button class="btn btn-cta" onclick="app.startGame();"><i class="fas fa-play"></i>
                         Start</button>
@@ -251,15 +251,20 @@
             <a href="https://github.com/VivienGaluchot/tileak">Open-source</a> application.
         </div>
     </footer>
+
     <script type="text/javascript" src="vendor/lz-string.js"></script>
     <script type="text/javascript" src="vendor/clr.js"></script>
-    <script type="text/javascript" src="page.js"></script>
-    <script type="text/javascript" src="mt.js"></script>
-    <script type="text/javascript" src="ui.js"></script>
-    <script type="text/javascript" src="gm.js"></script>
-    <script type="text/javascript" src="cgraph.js"></script>
-    <script type="text/javascript" src="p2p.js"></script>
-    <script type="text/javascript" src="app.js"></script>
+
+    <script type="text/javascript" src="lib/mt.js"></script>
+    <script type="text/javascript" src="lib/ui.js"></script>
+    <script type="text/javascript" src="lib/cgraph.js"></script>
+    <script type="text/javascript" src="lib/p2p.js"></script>
+
+    <script type="text/javascript" src="app/page.js"></script>
+    <script type="text/javascript" src="app/gm.js"></script>
+    <script type="text/javascript" src="app/gm-ui.js"></script>
+    <script type="text/javascript" src="app/app-net.js"></script>
+    <script type="text/javascript" src="app/app.js"></script>
 </body>
 
 </html>
