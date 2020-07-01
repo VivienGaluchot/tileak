@@ -138,8 +138,8 @@ const appNet = function () {
             return this.nameMap.get(id);
         }
 
-        onopen(connection, chan) {
-            super.onopen(connection, chan);
+        onopen(connection, chan, evt) {
+            super.onopen(connection, chan, evt);
             console.debug("NameHandler | onopen", chan);
             chan.send(this.localName);
         }
@@ -150,8 +150,8 @@ const appNet = function () {
             this.handlerMap.get(connection.remoteEndpoint.id)?.();
         }
 
-        onclose(connection, chan) {
-            super.onclose(connection, chan);
+        onclose(connection, chan, evt) {
+            super.onclose(connection, chan, evt);
             this.nameMap.delete(connection.remoteEndpoint.id);
             this.handlerMap.delete(connection.remoteEndpoint.id);
         }
@@ -170,9 +170,8 @@ const appNet = function () {
     }
     const chat = new ChatHandler();
 
-
     class PregameHandler extends p2p.BroadcastHandler {
-        constructor() {
+        constructor(localEndpoint) {
             super();
 
             // synchronized state between peers
@@ -181,91 +180,36 @@ const appNet = function () {
             // * ready player set
             // * game launch
 
-            this.gridSize = null;
-
-            // TODO ensure consistencies between remote states to avoid issue with message crossing
-            // * use a distributed logic clock
-            // * check that state is always synchronized
-
-            this.clock = 0;
-            this.lastRemoteTicker = null;
-        }
-
-        // clock
-
-        localTick() {
-            this.clock++;
-            this.lastRemoteTicker = null;
-        }
-
-        remoteTick(remoteClock, ticker) {
-            this.clock = Math.max(this.clock, remoteClock);
-            this.lastRemoteTicker = ticker;
-        }
-
-        isOutdated(clock) {
-            return clock <= this.clock;
+            this.state = new ccp.SharedState(localEndpoint.id);
+            this.state.onUpdate = data => {
+                page.elements().preGame.gridSizeSelector.set(data.gridSize);
+            };
         }
 
         // change state
 
         setGridSize(size) {
-            this.gridSize = size;
-            this.localTick();
-            this.syncOut();
-        }
-
-        syncOut() {
-            let frame = new p2p.Frame("grid-size", {
-                clock: this.clock,
-                size: this.gridSize
-            });
-            this.broadcast(frame.serialize());
-        }
-
-        syncIn() {
-            page.elements().preGame.gridSizeSelector.set(this.gridSize);
+            this.state.setData({ gridSize: size });
+            this.broadcast(new p2p.Frame("shared-state-update", this.state.frame()).serialize());
         }
 
         // channel
 
-        onopen(connection, chan) {
-            super.onopen(connection, chan);
-            this.localTick();
-            this.syncOut();
+        onopen(connection, chan, evt) {
+            super.onopen(connection, chan, evt)
+            chan.send(new p2p.Frame("shared-state-update", this.state.frame()).serialize());
         }
 
         onmessage(connection, chan, evt) {
             let frame = p2p.Frame.deserialize(evt.data);
             let handler = new p2p.FrameHandler()
-                .on("grid-size", data => {
-                    let clock = data.clock;
-                    let size = data.size;
-                    console.debug("PregameHandler | grid-size update", this.clock, clock, size);
-                    if (!this.isOutdated(clock)) {
-                        // ok
-                        this.gridSize = size;
-                        this.syncIn();
-                    } else {
-                        // conflict
-                        console.debug("PregameHandler | grid size conflict, vote value", clock, this.clock);
-                        let lastTickerId = this.lastRemoteTicker ?? connection.localEndpoint.id;
-                        if (lastTickerId < connection.remoteEndpoint.id) {
-                            console.debug("PregameHandler | keep local value");
-                        } else {
-                            console.debug("PregameHandler | get remote value");
-                            this.gridSize = size;
-                            this.syncIn();
-                        }
-                    }
-                    this.remoteTick(clock, connection.remoteEndpoint.id);
-                }).else(() => {
-                    throw new Error("unexpected state");
+                .on("shared-state-update", data => {
+                    this.state.onFrame(connection.remoteEndpoint.id, data);
                 });
             handler.handle(frame);
         }
     }
-    const pregame = new PregameHandler();
+    const pregame = new PregameHandler(localEndpoint);
 
 
     function completedConnection(connection) {
@@ -281,16 +225,16 @@ const appNet = function () {
             lastName = names.getName(connection.remoteEndpoint?.id) ?? lastName;
             if (connection.isConnected) {
                 div.innerHTML =
-                    `<div class="player-id remote">${connection.remoteEndpoint?.shortId ?? "?"}</div>
-                    <div class="player remote">${lastName ?? "?"}</div>
-                    <div>${connection.pingDelay ?? "-"} ms</div>
-                    <div class="con-status ok"><i class="fas fa-check-circle"></i></div>`;
+                    `<div class= "player-id remote">${connection.remoteEndpoint?.shortId ?? "?"}</div>
+                <div class="player remote">${lastName ?? "?"}</div>
+                <div>${connection.pingDelay ?? "-"} ms</div>
+                <div class="con-status ok"><i class="fas fa-check-circle"></i></div>`;
             } else {
                 div.innerHTML =
-                    `<div class="player-id remote">${connection.remoteEndpoint?.shortId ?? "?"}</div>
-                    <div class="player remote">${lastName ?? "?"}</div>
-                    <div class="con-status ko">connection lost <i class="fas fa-times-circle"></i></div>
-                    <button class="btn" onclick="page.rmListEl(this);"><i class="fas fa-trash-alt"></i></button>`;
+                    `<div class= "player-id remote">${connection.remoteEndpoint?.shortId ?? "?"}</div>
+                <div class="player remote">${lastName ?? "?"}</div>
+                <div class="con-status ko">connection lost <i class="fas fa-times-circle"></i></div>
+                <button class="btn" onclick="page.rmListEl(this);"><i class="fas fa-trash-alt"></i></button>`;
             }
         };
 
