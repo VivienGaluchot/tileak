@@ -198,7 +198,7 @@ const page = function () {
                     } else if (size.w == 4 && size.h == 4) {
                         innerText = "4x4";
                     } else {
-                        throw new Error("unexpected grid size");
+                        throw new Error(`unexpected grid size ${size.w}x${size.h}`);
                     }
                     for (let button of document.getElementById("js-grid_size").querySelectorAll("button")) {
                         if (button.innerText == innerText) {

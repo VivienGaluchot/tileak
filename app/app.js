@@ -41,6 +41,7 @@ const app = function () {
         page.elements().preGame.gridSizeSelector.onChange = size => {
             appNet.channels.pregame.setGridSize(size);
         }
+        appNet.channels.pregame.setGridSize(page.elements().preGame.gridSizeSelector.get());
     }
 
     return {

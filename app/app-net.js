@@ -140,13 +140,12 @@ const appNet = function () {
 
         onopen(connection, chan) {
             super.onopen(connection, chan);
-            console.debug("names chan", chan);
+            console.debug("NameHandler | onopen", chan);
             chan.send(this.localName);
-            console.debug("name sent", connection.remoteEndpoint.id, this.localName);
         }
 
         onmessage(connection, chan, evt) {
-            console.debug("name onmessage", connection.remoteEndpoint.id, evt.data, chan);
+            console.debug("NameHandler | onmessage", connection.remoteEndpoint.id, evt.data, chan);
             this.nameMap.set(connection.remoteEndpoint.id, evt.data);
             this.handlerMap.get(connection.remoteEndpoint.id)?.();
         }
@@ -175,48 +174,65 @@ const appNet = function () {
     class PregameHandler extends p2p.BroadcastHandler {
         constructor() {
             super();
-            // synchronize between peers
+
+            // synchronized state between peers
             // * selected grid size
             // * player order
             // * ready player set
             // * game launch
 
+            this.gridSize = null;
+
             // TODO ensure consistencies between remote states to avoid issue with message crossing
-            // use a distributed logic clock
+            // * use a distributed logic clock
+            // * check that state is always synchronized
 
             this.clock = 0;
+            this.lastRemoteTicker = null;
         }
 
         // clock
 
         localTick() {
             this.clock++;
+            this.lastRemoteTicker = null;
         }
 
-        remoteTick(remoteClock) {
+        remoteTick(remoteClock, ticker) {
             this.clock = Math.max(this.clock, remoteClock);
+            this.lastRemoteTicker = ticker;
         }
 
         isOutdated(clock) {
-            return clock < this.clock;
+            return clock <= this.clock;
         }
 
         // change state
 
         setGridSize(size) {
-            localTick();
+            this.gridSize = size;
+            this.localTick();
+            this.syncOut();
+        }
+
+        syncOut() {
             let frame = new p2p.Frame("grid-size", {
                 clock: this.clock,
-                size: size
+                size: this.gridSize
             });
             this.broadcast(frame.serialize());
+        }
+
+        syncIn() {
+            page.elements().preGame.gridSizeSelector.set(this.gridSize);
         }
 
         // channel
 
         onopen(connection, chan) {
             super.onopen(connection, chan);
-            // vote state
+            this.localTick();
+            this.syncOut();
         }
 
         onmessage(connection, chan, evt) {
@@ -224,15 +240,25 @@ const appNet = function () {
             let handler = new p2p.FrameHandler()
                 .on("grid-size", data => {
                     let clock = data.clock;
-                    if (!isOutdated(clock)) {
+                    let size = data.size;
+                    console.debug("PregameHandler | grid-size update", this.clock, clock, size);
+                    if (!this.isOutdated(clock)) {
                         // ok
-                        let size = data.size;
-                        page.elements().preGame.gridSizeSelector.set(data);
+                        this.gridSize = size;
+                        this.syncIn();
                     } else {
-                        // undecided
-                        console.warn("grid size conflict");
+                        // conflict
+                        console.debug("PregameHandler | grid size conflict, vote value", clock, this.clock);
+                        let lastTickerId = this.lastRemoteTicker ?? connection.localEndpoint.id;
+                        if (lastTickerId < connection.remoteEndpoint.id) {
+                            console.debug("PregameHandler | keep local value");
+                        } else {
+                            console.debug("PregameHandler | get remote value");
+                            this.gridSize = size;
+                            this.syncIn();
+                        }
                     }
-                    remoteTick(clock);
+                    this.remoteTick(clock, connection.remoteEndpoint.id);
                 }).else(() => {
                     throw new Error("unexpected state");
                 });
