@@ -208,6 +208,19 @@ const page = function () {
                         }
                     }
                 }
+            }, startButton: {
+                onclick: evt => console.debug(`start button clicked`),
+                setWaiting: isWaiting => {
+                    let button = document.getElementById("start-button");
+                    if (isWaiting) {
+                        button.disabled = true;
+                        button.dataset["initial"] = button.innerHTML;
+                        button.innerText = "Waiting for all players";
+                    } else {
+                        button.innerHTML = button.dataset["initial"];
+                        button.disabled = false;
+                    }
+                }
             }
         };
         for (let button of document.getElementById("js-grid_size").querySelectorAll("button")) {
@@ -215,6 +228,7 @@ const page = function () {
                 preGame.gridSizeSelector.onChange?.(preGame.gridSizeSelector.get());
             });
         }
+        document.getElementById("start-button").onclick = evt => preGame.startButton.onclick(evt);
 
         elements = {
             // complex

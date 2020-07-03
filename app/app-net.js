@@ -184,29 +184,52 @@ const appNet = function () {
             this.state.onUpdate = data => {
                 page.elements().preGame.gridSizeSelector.set(data.gridSize);
             };
+
+            this.startGame = new ccp.MeetingPoint(localEndpoint.id);
         }
 
         // change state
 
         setGridSize(size) {
             this.state.setData({ gridSize: size });
-            this.broadcast(new p2p.Frame("shared-state-update", this.state.frame()).serialize());
+            this.broadcast(new p2p.Frame("state", this.state.frame()).serialize());
+        }
+
+        waitForStart() {
+            let promise = this.startGame.wait();
+            this.broadcast(new p2p.Frame("start-game", this.startGame.frame()).serialize());
+            return promise;
         }
 
         // channel
 
         onopen(connection, chan, evt) {
             super.onopen(connection, chan, evt)
-            chan.send(new p2p.Frame("shared-state-update", this.state.frame()).serialize());
+
+            // shared state
+            chan.send(new p2p.Frame("state", this.state.frame()).serialize());
+
+            // start game meeting point
+            this.startGame.addRemote(connection.remoteEndpoint.id);
+            if (this.startGame.isWaiting()) {
+                chan.send(new p2p.Frame("start-game", this.startGame.frame()).serialize());
+            }
         }
 
         onmessage(connection, chan, evt) {
             let frame = p2p.Frame.deserialize(evt.data);
             let handler = new p2p.FrameHandler()
-                .on("shared-state-update", data => {
+                .on("state", data => {
                     this.state.onFrame(connection.remoteEndpoint.id, data);
+                }).on("start-game", data => {
+                    this.startGame.onFrame(connection.remoteEndpoint.id, data);
                 });
             handler.handle(frame);
+        }
+
+        onclose(connection, chan, evt) {
+            super.onclose(connection, chan, evt);
+            this.startGame.deleteRemote(connection.remoteEndpoint.id);
         }
     }
     const pregame = new PregameHandler(localEndpoint);

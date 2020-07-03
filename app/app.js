@@ -7,13 +7,6 @@
 
 
 const app = function () {
-
-    // setup a new game, start it and display the game-board component
-    function startGame() {
-        page.showGame();
-        gmUI.startGame();
-    }
-
     // reset the game-board component and show pregame panel
     function reset() {
         page.showPreGame();
@@ -42,12 +35,23 @@ const app = function () {
             appNet.channels.pregame.setGridSize(size);
         }
         appNet.channels.pregame.setGridSize(page.elements().preGame.gridSizeSelector.get());
+
+        // start button
+        page.elements().preGame.startButton.onclick = async evt => {
+            page.elements().preGame.startButton.setWaiting(true);
+            await appNet.channels.pregame.waitForStart();
+
+            console.log("Go !");
+            page.elements().preGame.startButton.setWaiting(false);
+
+            // page.showGame();
+            // gmUI.startGame();
+        };
     }
 
     return {
         setup: setup,
         reset: reset,
-        startGame: startGame
     }
 }();
 
