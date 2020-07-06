@@ -44,8 +44,6 @@ const app = function () {
             let netPlayers = appNet.channels.pregame.players();
             let state = await appNet.channels.pregame.getState();
 
-            console.log("Go !", netPlayers, state);
-
             page.showGame();
             page.elements().preGame.startButton.setWaiting(false);
 
