@@ -41,11 +41,24 @@ const app = function () {
             page.elements().preGame.startButton.setWaiting(true);
             await appNet.channels.pregame.waitForStart();
 
-            console.log("Go !");
+            let playersId = appNet.channels.pregame.playersId();
+            let state = await appNet.channels.pregame.getState();
+
+            console.log("Go !", playersId, state);
+
+            page.showGame();
             page.elements().preGame.startButton.setWaiting(false);
 
-            // page.showGame();
-            // gmUI.startGame();
+            let players = [];
+            let angleIncrement = Math.min(360 / playersId.length, 120);
+            for (let [index, id] of playersId.entries()) {
+                let angle = -1 * angleIncrement * index;
+                let color = clr.changeHue("#44FFFF", angle);
+                let name = appNet.channels.names.getName(id);
+                players.push(new gmUI.Player(name, color.substr(1)));
+            }
+
+            gmUI.startGame(players, state.gridSize);
         };
     }
 

@@ -113,8 +113,9 @@ const appNet = function () {
 
 
     class NameHandler extends p2p.BroadcastHandler {
-        constructor() {
+        constructor(localEndpoint) {
             super();
+            this.localEndpoint = localEndpoint;
             this.localName = null;
 
             // remote id -> name
@@ -125,6 +126,7 @@ const appNet = function () {
 
         setLocalName(name) {
             this.localName = name;
+            this.nameMap.set(this.localEndpoint.id, name);
             this.broadcast(name);
         }
 
@@ -156,7 +158,7 @@ const appNet = function () {
             this.handlerMap.delete(connection.remoteEndpoint.id);
         }
     }
-    const names = new NameHandler();
+    const names = new NameHandler(localEndpoint);
 
 
     class ChatHandler extends p2p.BroadcastHandler {
@@ -173,6 +175,7 @@ const appNet = function () {
     class PregameHandler extends p2p.BroadcastHandler {
         constructor(localEndpoint) {
             super();
+            this.localEndpoint = localEndpoint;
 
             // synchronized state between peers
             // * selected grid size
@@ -185,7 +188,7 @@ const appNet = function () {
                 page.elements().preGame.gridSizeSelector.set(data.gridSize);
             };
 
-            this.startGame = new ccp.MeetingPoint(localEndpoint.id);
+            this.readiness = new ccp.MeetingPoint(localEndpoint.id);
         }
 
         // change state
@@ -196,9 +199,27 @@ const appNet = function () {
         }
 
         waitForStart() {
-            let promise = this.startGame.wait();
-            this.broadcast(new p2p.Frame("start-game", this.startGame.frame()).serialize());
+            // TODO lock the shared state to it's current cycle
+            let promise = this.readiness.wait();
+            this.broadcast(new p2p.Frame("readiness", this.readiness.frame()).serialize());
             return promise;
+        }
+
+        // get state
+
+        getState() {
+            return this.state.getSharedData()
+                .catch(() => { throw new Error("unexpected state") });
+        }
+
+        playersId() {
+            // TODO share the players list to avoid inconsistencies on join / leave
+            let ids = [this.localEndpoint.id];
+            for (let [id, chan] of this.chanMap) {
+                ids.push(id);
+            }
+            ids.sort();
+            return ids;
         }
 
         // channel
@@ -209,10 +230,10 @@ const appNet = function () {
             // shared state
             chan.send(new p2p.Frame("state", this.state.frame()).serialize());
 
-            // start game meeting point
-            this.startGame.addRemote(connection.remoteEndpoint.id);
-            if (this.startGame.isWaiting()) {
-                chan.send(new p2p.Frame("start-game", this.startGame.frame()).serialize());
+            // meeting point
+            this.readiness.addRemote(connection.remoteEndpoint.id);
+            if (this.readiness.isWaiting()) {
+                chan.send(new p2p.Frame("readiness", this.readiness.frame()).serialize());
             }
         }
 
@@ -221,15 +242,15 @@ const appNet = function () {
             let handler = new p2p.FrameHandler()
                 .on("state", data => {
                     this.state.onFrame(connection.remoteEndpoint.id, data);
-                }).on("start-game", data => {
-                    this.startGame.onFrame(connection.remoteEndpoint.id, data);
+                }).on("readiness", data => {
+                    this.readiness.onFrame(connection.remoteEndpoint.id, data);
                 });
             handler.handle(frame);
         }
 
         onclose(connection, chan, evt) {
             super.onclose(connection, chan, evt);
-            this.startGame.deleteRemote(connection.remoteEndpoint.id);
+            this.readiness.deleteRemote(connection.remoteEndpoint.id);
         }
     }
     const pregame = new PregameHandler(localEndpoint);

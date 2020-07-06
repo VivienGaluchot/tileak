@@ -362,32 +362,15 @@ const gmUI = function () {
         }
     }
 
-    /* DOM inputs */
-
-    function makePlayers() {
-        let players = [];
-        let inputs = page.elements().players.querySelectorAll("div>input");
-        let angleIncrement = Math.min(360 / inputs.length, 120);
-        for (let [index, input] of inputs.entries()) {
-            let angle = -1 * angleIncrement * index;
-            let color = clr.changeHue("#44FFFF", angle);
-            let name = input.value.substr(0, 25);
-            players.push(new gmUI.Player(name, color.substr(1)));
-        }
-        return players;
-    }
-
     /* Game mgt */
 
     let sandbox;
     let cleanup;
 
-    function startGame() {
-        let players = makePlayers();
+    function startGame(players, gridSize) {
         if (players.length <= 1)
             throw new Error("a game must have at least 2 players");
 
-        let gridSize = page.elements().preGame.gridSizeSelector.get();
         let game = new gm.Game(players, gridSize.w, gridSize.h);
 
         // setup graphs

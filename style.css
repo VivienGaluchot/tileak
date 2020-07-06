@@ -621,6 +621,8 @@ a.copy.copied::before {
 
 .b64 {
     max-width: 64ch;
+    max-height: 5rem;
+    overflow: auto;
     word-break: break-all;
     font-family: 'Roboto Mono', monospace;
     background-color: #00000066;
