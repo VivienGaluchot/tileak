@@ -16,8 +16,6 @@ const app = function () {
     // setup the application callbacks
     function setup() {
         page.setup();
-        // local id
-        page.elements().party.localId.set(appNet.getLocalId());
 
         // name field
         page.elements().party.localName.onChange = name => {
@@ -38,31 +36,35 @@ const app = function () {
 
         // start button
         page.elements().preGame.startButton.onclick = async evt => {
-            page.elements().preGame.startButton.setWaiting(true);
-            await appNet.channels.pregame.waitForStart();
+            try {
+                page.elements().preGame.startButton.setWaiting(true);
+                await appNet.channels.pregame.waitForStart();
 
-            let netPlayers = appNet.channels.pregame.players();
-            let state = await appNet.channels.pregame.getState();
+                let netPlayers = appNet.channels.pregame.players();
+                let state = await appNet.channels.pregame.getState();
 
-            page.showGame();
-            page.elements().preGame.startButton.setWaiting(false);
+                page.showGame();
+                page.elements().preGame.startButton.setWaiting(false);
 
-            let gmPlayers = [];
-            let angleIncrement = Math.min(360 / netPlayers.length, 120);
-            for (let [index, netPlayer] of netPlayers.entries()) {
-                let name = appNet.channels.names.getName(netPlayer.id);
+                let gmPlayers = [];
+                let angleIncrement = Math.min(360 / netPlayers.length, 120);
+                for (let [index, netPlayer] of netPlayers.entries()) {
+                    let name = appNet.channels.names.getName(netPlayer.id);
 
-                let angle = -1 * angleIncrement * index;
-                let color = clr.changeHue("#44FFFF", angle);
+                    let angle = -1 * angleIncrement * index;
+                    let color = clr.changeHue("#44FFFF", angle);
 
-                let gmPlayer = new gmUI.Player(name, netPlayer.isLocal, color.substr(1));
-                netPlayer.onTurn = turn => gmPlayer.onRemoteTurn(turn);
+                    let gmPlayer = new gmUI.Player(name, netPlayer.isLocal, color.substr(1));
+                    netPlayer.onTurn = turn => gmPlayer.onRemoteTurn(turn);
 
-                gmPlayers.push(gmPlayer);
+                    gmPlayers.push(gmPlayer);
+                }
+
+                let sendTurn = turn => appNet.channels.pregame.sendTurn(turn);
+                gmUI.startGame(gmPlayers, state.gridSize, sendTurn);
+            } catch (error) {
+                reset();
             }
-
-            let sendTurn = turn => appNet.channels.pregame.sendTurn(turn);
-            gmUI.startGame(gmPlayers, state.gridSize, sendTurn);
         };
     }
 

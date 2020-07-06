@@ -11,6 +11,12 @@ window.addEventListener("error", function (e) {
     return false;
 });
 
+window.addEventListener("unhandledrejection", function (e) {
+    document.getElementById("masked_error").style.display = "block";
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    return false;
+});
+
 
 const page = function () {
     let elements = null;
@@ -94,11 +100,6 @@ const page = function () {
                     setEnabled(document.getElementById("tab-party-join"), false);
                 }
             },
-            localId: {
-                set: value => {
-                    document.getElementById("local-id").innerText = value;
-                }
-            },
             localName: {
                 get: () => {
                     return document.getElementById("local-name").value;
@@ -132,18 +133,24 @@ const page = function () {
 
         let chat = {
             onMessage: msg => console.debug(`chat message typed : ${msg}`),
-            addHistory: (src, msg) => {
+            addHistory: (src, msg, isLocal) => {
                 let el = document.getElementById("chat-history");
+
+                let div = document.createElement("div");
+                div.classList.add("msg");
+                if (isLocal) {
+                    div.classList.add("local");
+                }
 
                 let divSrc = document.createElement("div");
                 divSrc.classList.add("src");
                 divSrc.innerText = src;
-                let divData = document.createElement("div");
-                divSrc.classList.add("data");
-                divData.innerText = msg;
-                let div = document.createElement("div");
-                div.classList.add("msg");
                 div.appendChild(divSrc);
+
+                let divData = document.createElement("div");
+                divData.classList.add("data");
+
+                divData.innerText = msg;
                 div.appendChild(divData);
 
                 var doScroll = el.scrollTop > el.scrollHeight - el.clientHeight - 1;
@@ -165,7 +172,7 @@ const page = function () {
                     chatInput.value = chatInput.value + "\n";
                 } else if (chatInput.value != "") {
                     chat.onMessage(chatInput.value);
-                    chat.addHistory("you", chatInput.value);
+                    chat.addHistory("you", chatInput.value, true);
                     chatInput.value = "";
                 }
                 prevent = true;
@@ -276,15 +283,6 @@ const page = function () {
         el.parentNode.remove();
     }
 
-    function addLocalPlayer(el) {
-        let section = el.parentNode.parentNode;
-        let newDiv = document.createElement("div");
-        newDiv.innerHTML =
-            `<input class="player local" placeholder="name" value="noname" />
-            <button class="btn" onclick="page.rmListEl(this);"><i class="fas fa-trash-alt"></i></button>`;
-        section.appendChild(newDiv);
-    }
-
     /* Generic controls */
 
     function setEnabled(element, isEnabled) {
@@ -293,6 +291,10 @@ const page = function () {
         } else {
             element.classList.add("js-hidden");
         }
+    }
+
+    function toggleEnabled(element) {
+        element.classList.toggle("js-hidden");
     }
 
     function selectRadio(el) {
@@ -313,6 +315,12 @@ const page = function () {
                 setEnabled(tab, false);
             }
             setEnabled(target, true);
+        }
+    }
+
+    function toggleTarget(el) {
+        for (let target of document.querySelectorAll(el.dataset["target"])) {
+            toggleEnabled(target);
         }
     }
 
@@ -338,9 +346,10 @@ const page = function () {
         showGame: showGame,
         showAfterGame: showAfterGame,
         rmListEl: rmListEl,
-        addLocalPlayer: addLocalPlayer,
         selectRadio: selectRadio,
         showTab: showTab,
+        toggleTarget: toggleTarget,
+        toggleEnabled: toggleEnabled,
         hideTarget: hideTarget,
         copyContent: copyContent,
     }

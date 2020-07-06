@@ -99,7 +99,7 @@ html content {
 section {
     display: block;
     text-align: center;
-    margin: 3rem;
+    margin: 5rem 1.5rem;
 }
 
 @media (max-width: 600px) {
@@ -132,6 +132,11 @@ footer a {
 
 .text-center {
     text-align: center;
+}
+
+p {
+    line-height: 1.5rem;
+    margin: 1.5rem 0;
 }
 
 a {
@@ -174,6 +179,18 @@ a:hover {
 
 .btn:disabled {
     color: #ffffff44;
+}
+
+.btn-link {
+    border: none;
+    background-color: transparent;
+    color: rgb(165, 206, 243);
+    text-decoration: underline;
+}
+
+.btn-link:hover:not(:disabled) {
+    background-color: transparent;
+    color: rgb(107, 156, 199);
 }
 
 /* alert */
@@ -322,13 +339,6 @@ a:hover {
     flex-grow: 1;
     text-align: left;
     color: #ffffff;
-}
-
-.block-list .player-id {
-    /* flex-grow: 1; */
-    text-align: left;
-    color: #ffffff88;
-    font-family: 'Roboto Mono', monospace;
 }
 
 .block-list input.player {
@@ -581,14 +591,19 @@ a.copy.copied::before {
 
 .chat-history .msg {
     margin: 1rem;
-    display: grid;
-    grid-template-columns: min-content 1fr;
-    row-gap: 1rem;
-    column-gap: 1rem;
+    /* display: grid;
+    grid-template-columns: min-content 1fr; */
+    /* row-gap: 1rem;
+    column-gap: 1rem; */
 }
 
 .chat-history .msg .src {
     color: #ffffff88;
+    font-size: .8rem;
+}
+
+.chat-history .msg.local {
+    text-align: right;
 }
 
 .chat textarea {

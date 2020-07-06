@@ -305,14 +305,12 @@ const appNet = function () {
             lastName = names.getName(connection.remoteEndpoint?.id) ?? lastName;
             if (connection.isConnected) {
                 div.innerHTML =
-                    `<div class= "player-id remote">${connection.remoteEndpoint?.shortId ?? "?"}</div>
-                <div class="player remote">${lastName ?? "?"}</div>
+                    `<div class="player remote">${lastName ?? "?"}</div>
                 <div>${connection.pingDelay ?? "-"} ms</div>
                 <div class="con-status ok"><i class="fas fa-check-circle"></i></div>`;
             } else {
                 div.innerHTML =
-                    `<div class= "player-id remote">${connection.remoteEndpoint?.shortId ?? "?"}</div>
-                <div class="player remote">${lastName ?? "?"}</div>
+                    `<div class="player remote">${lastName ?? "?"}</div>
                 <div class="con-status ko">connection lost <i class="fas fa-times-circle"></i></div>
                 <button class="btn" onclick="page.rmListEl(this);"><i class="fas fa-trash-alt"></i></button>`;
             }

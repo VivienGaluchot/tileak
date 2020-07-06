@@ -410,8 +410,8 @@ const gmUI = function () {
 
     /* Game mgt */
 
-    let sandbox;
-    let cleanup;
+    let sandbox = null;
+    let cleanup = null;
 
     function startGame(players, gridSize, sendTurn) {
         if (players.length <= 1)
@@ -505,7 +505,7 @@ const gmUI = function () {
     }
 
     function reset() {
-        cleanup();
+        cleanup?.();
     }
 
     return {
