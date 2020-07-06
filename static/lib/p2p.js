@@ -578,6 +578,10 @@ const p2p = function () {
             this.onAutoConnect = connection => { console.debug(`Hub | auto connected to peer ${connection.remoteEndpoint.id}`); };
         }
 
+        isPeered(id) {
+            return this.peerMap.has(id);
+        }
+
         addConnection(connection, chan) {
             // register the new chan to the hub
             if (connection.localEndpoint.id != this.localEndpoint.id) {

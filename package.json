@@ -1,0 +1,27 @@
+{
+  "name": "tileak-signaling",
+  "version": "0.0.1",
+  "private": true,
+  "description": "webrtc based multiplayer game",
+  "author": "vgaluchot",
+  "license": "ISC",
+  "dependencies": {
+    "websocket": "^1.0.31"
+  },
+  "engines": {
+    "node": "10.x.x"
+  },
+  "main": "server/app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server/app.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/VivienGaluchot/tileak.git"
+  },
+  "bugs": {
+    "url": "https://github.com/VivienGaluchot/tileak/issues"
+  },
+  "homepage": "https://github.com/VivienGaluchot/tileak#readme"
+}

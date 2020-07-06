@@ -26,11 +26,12 @@ pre {
 
 code {
     font-family: 'Roboto Mono', monospace;
-    color: orangered;
+    color: hsl(51, 100%, 50%);
     font-weight: 500;
     display: inline-block;
-    background-color: rgba(255, 68, 0, 0.1);
+    background-color: hsla(51, 100%, 50%, 0.1);
     padding: 0 .2rem;
+    border-radius: .2rem;
 }
 
 pre code {
@@ -305,7 +306,7 @@ a:hover {
 
 .block-list>div {
     max-width: 100%;
-    margin: .5rem;
+    margin: .5rem 0;
     display: flex;
     justify-content: center;
 }
@@ -333,6 +334,30 @@ a:hover {
 .block-list>div>*:last-child {
     border-top-right-radius: .2rem;
     border-bottom-right-radius: .2rem;
+}
+
+.block-list .id {
+    flex-grow: 1;
+    text-align: left;
+    font-family: 'Roboto Mono', monospace;
+}
+
+.block-list input.id {
+    background-color: #ffffff22;
+    font-family: 'Roboto Mono', monospace;
+    font-size: inherit;
+    min-width: 5rem;
+    color: #ffffff;
+}
+
+.block-list input.id.ok {
+    color: #9eff81;
+    background-color: #9eff8122;
+}
+
+.block-list input.id.ko {
+    color: #ff8192;
+    background-color: #ff819222;
 }
 
 .block-list .player {
@@ -382,6 +407,18 @@ a:hover {
 
 .block-list .action-bar .btn {
     flex-grow: 1;
+}
+
+.block-list label {
+    display: block;
+    text-align: left;
+}
+
+.block-list .btm-help {
+    display: block;
+    margin-bottom: 1.5rem;
+    text-align: left;
+    color: #ffffff88;
 }
 
 /* connection status */
@@ -540,7 +577,21 @@ a:hover {
 
 /* copy */
 
-a.copy:not(:empty)::before {
+.copyable {
+    transition: ease-out .1s;
+}
+
+.copyable.copied {
+    transition: ease-out .1s;
+    color: #9eff81;
+}
+
+code.copyable.copied {
+    color: #9eff81;
+    background-color: rgba(158, 255, 129, 0.1);
+}
+
+.b64 a.copy:not(:empty)::before {
     content: "copy";
     position: absolute;
     font-family: 'Roboto', sans-serif;
@@ -555,15 +606,15 @@ a.copy:not(:empty)::before {
     transition: ease-out .1s;
 }
 
-a.copy:hover::before {
+.b64 a.copy:hover::before {
     background-color: hsl(0, 0%, 10%);
 }
 
-a.copy:active::before {
+.b64 a.copy:active::before {
     box-shadow: 0 0 0 .3rem hsla(0, 0%, 5%, 0.8);
 }
 
-a.copy.copied::before {
+.b64 a.copy.copied::before {
     content: "copy";
     color: #9eff81;
     border: 1px solid #9eff81;

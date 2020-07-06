@@ -12,7 +12,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css"
         integrity="sha256-h20CPZ0QyXlBuAw7A+KluUYx/3pK+c7lYEpqLTlxjYQ=" crossorigin="anonymous" async />
 
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="static/style.css">
 </head>
 
 <body>
@@ -38,34 +38,61 @@
                 <p>Tileak is a tour based, multiplayer strategy game.<br>
                     Your goal is to control all the board and get rid of the opponents.</p>
                 <p>It's still a proof of concept for serverless multiplaying,<br>
-                    and you may encounter issues according to your network setup.</p>
+                    you may encounter issues according to your network setup.</p>
             </section>
             <section>
                 <h3>Players</h3>
                 <div>
-                    <p>
-                        To invite players to your game share this link with them<br>
-                        <code>TODO</code><br>
-                    </p>
-                    <p>
-                        <small>In case of network issue,
+                    <div id="party-list" class="block-list">
+                        <label>Your id</label>
+                        <div>
+                            <code id="invite-link" class="id copyable">...</code>
+                            <button class="btn" onclick="page.copyContent(document.getElementById('invite-link'));">
+                                <i class="far fa-copy"></i> copy
+                            </button>
+                        </div>
+                        <small class="btm-help">To invite players to your game share this id with them.</small>
+                        <label>Remote id</label>
+                        <div>
+                            <input id="signaling-join-id" placeholder="id" class="id">
+                            <button id="signaling-join-btn" class="btn">join</button>
+                        </div>
+                        <small class="btm-help">
+                            To join a player, paste its id and click join.<br>
+                            In case of issue,
                             <a href="#" onclick="page.toggleTarget(this);return false;"
                                 data-target="#serverless-peering">
-                                <i class="fas fa-life-ring"></i> serverless peering</a>
+                                serverless peering</a>
                             may help.
                         </small>
-                    </p>
+                        <label>Connected peers</label>
+                        <div>
+                            <input id="local-name" class="player local" placeholder="name" value="noname">
+                            <div>you</div>
+                        </div>
+                    </div>
                     <div id="serverless-peering" class="js-hidden">
-                        <div class="btn-group">
-                            <div class="card">
-                                <div class="content">
-                                    <p>
-                                        Invite a other peer without the use of a signaling server.
-                                    </p>
-                                    <button class="btn" onclick="appNet.invite();page.showTab(this);"
-                                        data-target="#tab-party-invite">Invite</button>
-                                    <button class="btn" onclick="appNet.join();page.showTab(this);"
-                                        data-target="#tab-party-join">Join</button>
+                        <div class="modal">
+                            <div class="modal-content">
+                                <div class="card">
+                                    <div class="header">
+                                        <div class="title">
+                                            Serverless peering
+                                        </div>
+                                        <button class="btn dismiss" onclick="page.hideTarget(this);"
+                                            data-target="#serverless-peering"><i class="fas fa-times"></i></button>
+                                    </div>
+                                    <div class="content">
+                                        <p>
+                                            Connect to a peer without the use of a signaling server
+                                        </p>
+                                        <div class="btn-group">
+                                            <button class="btn" onclick="appNet.invite();page.showTab(this);"
+                                                data-target="#tab-party-invite">Invite</button>
+                                            <button class="btn" onclick="appNet.join();page.showTab(this);"
+                                                data-target="#tab-party-join">Join</button>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -167,13 +194,6 @@
                                 </div>
                             </div>
                         </div>
-
-                    </div>
-                </div>
-                <div id="party-list" class="block-list">
-                    <div>
-                        <input id="local-name" class="player local" placeholder="name" value="noname">
-                        <div>you</div>
                     </div>
                 </div>
             </section>
@@ -186,19 +206,23 @@
             </section>
             <section>
                 <h3>Game</h3>
-                <div class="card">
-                    <div class="content">
-                        <p>Grid size</p>
-                        <div id="js-grid_size" class="btn-group">
-                            <button class="btn radio" onclick="page.selectRadio(this);">8x8</button>
-                            <button class="btn radio selected" onclick="page.selectRadio(this);">6x6</button>
-                            <button class="btn radio" onclick="page.selectRadio(this);">4x4</button>
+                <div>
+                    <div class="card">
+                        <div class="content">
+                            Grid size
+                        </div>
+                        <div class="footer">
+                            <div id="js-grid_size" class="btn-group">
+                                <button class="btn radio" onclick="page.selectRadio(this);">8x8</button>
+                                <button class="btn radio selected" onclick="page.selectRadio(this);">6x6</button>
+                                <button class="btn radio" onclick="page.selectRadio(this);">4x4</button>
+                            </div>
                         </div>
                     </div>
-                    <div class="footer">
-                        <button id="start-button" class="btn btn-cta"><i class="fas fa-play"></i> Start</button>
-                    </div>
                 </div>
+                <p>
+                    <button id="start-button" class="btn btn-cta"><i class="fas fa-play"></i> Start</button>
+                </p>
             </section>
         </div>
         <div id="js-content-after_game" class="js-hidden">
@@ -206,7 +230,7 @@
                 <div class="result">
                     <h3>End of game</h3>
                     <p><b><span id="js-winner"></span></b> was the very bestest</p>
-                    <button class="btn btn-cta" onclick="app.reset();">Return to lobby</button>
+                    <button id="reset-button" class="btn btn-cta">Return to lobby</button>
                 </div>
                 <hr>
             </section>
@@ -252,20 +276,20 @@
         </div>
     </footer>
 
-    <script type="text/javascript" src="vendor/lz-string.js"></script>
-    <script type="text/javascript" src="vendor/clr.js"></script>
+    <script type="text/javascript" src="static/vendor/lz-string.js"></script>
+    <script type="text/javascript" src="static/vendor/clr.js"></script>
 
-    <script type="text/javascript" src="lib/mt.js"></script>
-    <script type="text/javascript" src="lib/ui.js"></script>
-    <script type="text/javascript" src="lib/cgraph.js"></script>
-    <script type="text/javascript" src="lib/p2p.js"></script>
-    <script type="text/javascript" src="lib/ccp.js"></script>
+    <script type="text/javascript" src="static/lib/mt.js"></script>
+    <script type="text/javascript" src="static/lib/ui.js"></script>
+    <script type="text/javascript" src="static/lib/cgraph.js"></script>
+    <script type="text/javascript" src="static/lib/p2p.js"></script>
+    <script type="text/javascript" src="static/lib/ccp.js"></script>
 
-    <script type="text/javascript" src="app/page.js"></script>
-    <script type="text/javascript" src="app/gm.js"></script>
-    <script type="text/javascript" src="app/gm-ui.js"></script>
-    <script type="text/javascript" src="app/app-net.js"></script>
-    <script type="text/javascript" src="app/app.js"></script>
+    <script type="text/javascript" src="static/app/page.js"></script>
+    <script type="text/javascript" src="static/app/gm.js"></script>
+    <script type="text/javascript" src="static/app/gm-ui.js"></script>
+    <script type="text/javascript" src="static/app/app-net.js"></script>
+    <script type="text/javascript" src="static/app/app.js"></script>
 </body>
 
 </html>
