@@ -61,25 +61,10 @@ const gm = function () {
             }
         }
 
-        drainForTurn(dst) {
-            let turn = new Turn(null, this, dst);
-            this.game.playTurn(turn);
-        }
-
-        undrainForTurn() {
-            let turn = new Turn(null, this, null);
-            this.game.playTurn(turn);
-        }
-
         // own cell for turn
 
         isPlayable() {
             return this.game.waitForTurn && this.owner == null;
-        }
-
-        playForTurn() {
-            let turn = new Turn(this, null, null);
-            this.game.playTurn(turn);
         }
     }
 
@@ -92,6 +77,67 @@ const gm = function () {
             this.drainSrc = drainSrc;
             this.drainDst = drainDst;
             this.surrender = surrender;
+        }
+
+        serialize() {
+            let serializeCell = cell => {
+                if (cell != null) {
+                    return { i: cell.pos.x, j: cell.pos.y };
+                } else {
+                    return null;
+                }
+            };
+            return {
+                ownedCell: serializeCell(this.ownedCell),
+                drainSrc: serializeCell(this.drainSrc),
+                drainDst: serializeCell(this.drainDst),
+                surrender: this.surrender
+            };
+        }
+
+        static deserialize(game, data) {
+            let deserializeCell = data => {
+                if (data != null) {
+                    return game.getCell(data.i, data.j);
+                } else {
+                    return null;
+                }
+            };
+            return new Turn(deserializeCell(data.ownedCell),
+                deserializeCell(data.drainSrc),
+                deserializeCell(data.drainDst),
+                data.surrender
+            );
+        }
+    }
+
+    class SkipTurn extends Turn {
+        constructor() {
+            super();
+        }
+    }
+
+    class OwnTurn extends Turn {
+        constructor(cell) {
+            super(cell);
+        }
+    }
+
+    class DrainTurn extends Turn {
+        constructor(src, dst) {
+            super(null, src, dst);
+        }
+    }
+
+    class UndrainTurn extends Turn {
+        constructor(cell) {
+            super(null, cell);
+        }
+    }
+
+    class SurrenderTurn extends Turn {
+        constructor() {
+            super(null, null, null, true);
         }
     }
 
@@ -369,6 +415,11 @@ const gm = function () {
     return {
         Player: Player,
         Turn: Turn,
+        SkipTurn: SkipTurn,
+        DrainTurn: DrainTurn,
+        UndrainTurn: UndrainTurn,
+        OwnTurn: OwnTurn,
+        SurrenderTurn: SurrenderTurn,
         Game: Game
     }
 }();

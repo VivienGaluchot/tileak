@@ -41,24 +41,30 @@ const app = function () {
             page.elements().preGame.startButton.setWaiting(true);
             await appNet.channels.pregame.waitForStart();
 
-            let playersId = appNet.channels.pregame.playersId();
+            let netPlayers = appNet.channels.pregame.players();
             let state = await appNet.channels.pregame.getState();
 
-            console.log("Go !", playersId, state);
+            console.log("Go !", netPlayers, state);
 
             page.showGame();
             page.elements().preGame.startButton.setWaiting(false);
 
-            let players = [];
-            let angleIncrement = Math.min(360 / playersId.length, 120);
-            for (let [index, id] of playersId.entries()) {
+            let gmPlayers = [];
+            let angleIncrement = Math.min(360 / netPlayers.length, 120);
+            for (let [index, netPlayer] of netPlayers.entries()) {
+                let name = appNet.channels.names.getName(netPlayer.id);
+
                 let angle = -1 * angleIncrement * index;
                 let color = clr.changeHue("#44FFFF", angle);
-                let name = appNet.channels.names.getName(id);
-                players.push(new gmUI.Player(name, color.substr(1)));
+
+                let gmPlayer = new gmUI.Player(name, netPlayer.isLocal, color.substr(1));
+                netPlayer.onTurn = turn => gmPlayer.onRemoteTurn(turn);
+
+                gmPlayers.push(gmPlayer);
             }
 
-            gmUI.startGame(players, state.gridSize);
+            let sendTurn = turn => appNet.channels.pregame.sendTurn(turn);
+            gmUI.startGame(gmPlayers, state.gridSize, sendTurn);
         };
     }
 

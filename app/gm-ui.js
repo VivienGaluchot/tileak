@@ -17,25 +17,57 @@ const gmUI = function () {
     }
 
     class Player extends gm.Player {
-        constructor(name, color) {
+        constructor(name, isLocal, color) {
             super(name);
+            this.isLocal = isLocal;
+
             this.color = color;
 
             this.productionHistory = new cgraph.Dataset2D(name, color);
             this.storageHistory = new cgraph.Dataset2D(name, color);
+
+            this.pendingRemoteTurn = null;
+            this.resolveRemoteTurn = null;
         }
 
         fillHistory(turnCounter) {
             this.productionHistory.addPoint(turnCounter, this.production);
             this.storageHistory.addPoint(turnCounter, this.storage);
         }
+
+        onRemoteTurn(turn) {
+            console.debug("Player | remote turn", turn);
+            if (this.resolveRemoteTurn != null) {
+                this.resolveRemoteTurn(turn);
+            } else {
+                if (this.pendingRemoteTurn != null) {
+                    throw new Error("unexpected state");
+                }
+                this.pendingRemoteTurn = turn;
+            }
+        }
+
+        waitRemoteTurn() {
+            if (this.isLocal) {
+                throw new Error("unexpected state");
+            }
+            return new Promise(resolve => {
+                if (this.pendingRemoteTurn != null) {
+                    resolve(this.pendingRemoteTurn);
+                    this.pendingRemoteTurn = null;
+                } else {
+                    this.resolveRemoteTurn = resolve;
+                }
+            });
+        }
     }
 
     class CellWidget extends ui.BoxWidget {
-        constructor(father, game, cell) {
+        constructor(father, game, cell, playTurn) {
             super(father, getWidgetPos(cell), 1 - gridSpacing, 1 - gridSpacing);
 
             this.game = game;
+            this.playTurn = playTurn;
 
             this.cell = cell;
             if (this.cell.widget != null)
@@ -169,6 +201,11 @@ const gmUI = function () {
         }
 
         getClickAction() {
+            // no action available when remote player
+            if (!this.game.getCurrentPlayer().isLocal) {
+                return null;
+            }
+
             let selected = this.father.selectedBox;
             if (selected != null) {
                 if (selected.cell.drainTo == this.cell) {
@@ -176,7 +213,7 @@ const gmUI = function () {
                     return {
                         "name": "remove_link",
                         "perform": () => {
-                            selected.cell.undrainForTurn();
+                            this.playTurn(new gm.UndrainTurn(selected.cell));
                         }
                     };
                 } else {
@@ -186,7 +223,7 @@ const gmUI = function () {
                             return {
                                 "name": "add_link",
                                 "perform": () => {
-                                    selected.cell.drainForTurn(this.cell);
+                                    this.playTurn(new gm.DrainTurn(selected.cell, this.cell));
                                 }
                             };
                         }
@@ -198,7 +235,7 @@ const gmUI = function () {
                     return {
                         "name": "own_cell",
                         "perform": () => {
-                            this.cell.playForTurn();
+                            this.playTurn(new gm.OwnTurn(this.cell));
                         }
                     };
                 }
@@ -237,11 +274,12 @@ const gmUI = function () {
     }
 
     class GameBoard extends ui.NodeWidget {
-        constructor(father, game) {
+        constructor(father, game, playTurn) {
             super(father, false);
 
             this.selectedBox = null;
             this.game = game;
+            this.playTurn = playTurn;
 
             // grid
             let width = game.height;
@@ -267,19 +305,23 @@ const gmUI = function () {
             }
 
             for (let cell of game.cells()) {
-                this.addWidget(new CellWidget(this, game, cell));
+                this.addWidget(new CellWidget(this, game, cell, playTurn));
             }
         }
 
         skipTurn() {
-            let turn = new gm.Turn();
-            this.game.playTurn(turn);
+            if (!this.game.getCurrentPlayer().isLocal) {
+                return null;
+            }
+            this.playTurn(new gm.SkipTurn());
         }
 
         surrender() {
+            if (!this.game.getCurrentPlayer().isLocal) {
+                return null;
+            }
             if (confirm("Are you sure to surrender ?")) {
-                let turn = new gm.Turn(null, null, null, true);
-                this.game.playTurn(turn);
+                this.playTurn(new gm.SurrenderTurn());
             }
         }
 
@@ -360,6 +402,10 @@ const gmUI = function () {
         for (let el of statsGridEls) {
             el.update();
         }
+
+        let isLocal = game.getCurrentPlayer().isLocal;
+        page.elements().game.btnSurrender.disabled = !isLocal;
+        page.elements().game.btnSkipTurn.disabled = !isLocal;
     }
 
     /* Game mgt */
@@ -367,7 +413,7 @@ const gmUI = function () {
     let sandbox;
     let cleanup;
 
-    function startGame(players, gridSize) {
+    function startGame(players, gridSize, sendTurn) {
         if (players.length <= 1)
             throw new Error("a game must have at least 2 players");
 
@@ -381,12 +427,21 @@ const gmUI = function () {
             graphStorage.addDataset(player.storageHistory);
         }
 
+        // turn handling
+        let playTurn = turn => {
+            if (!game.getCurrentPlayer().isLocal) {
+                throw new Error("unexpected state");
+            }
+            game.playTurn(turn);
+            sendTurn(turn.serialize());
+        };
+
         // setup main canvas
         sandbox = new ui.Sandbox(page.elements().sandbox);
         sandbox.unitViewed = Math.max(gridSize.w + 1, gridSize.h + 1);
         sandbox.resized();
 
-        let board = new gmUI.GameBoard(sandbox.world, game);
+        let board = new GameBoard(sandbox.world, game, playTurn);
         sandbox.world.addWidget(board);
 
         // setup DOM buttons
@@ -403,6 +458,14 @@ const gmUI = function () {
         let lastTurn = null;
         game.onChange = game => {
             updateOutOfCanvasElements(game, statsGridEls);
+
+            // register remote turn callback
+            let player = game.getCurrentPlayer();
+            if (!player.isLocal) {
+                player.waitRemoteTurn().then(turn => {
+                    game.playTurn(gm.Turn.deserialize(game, turn));
+                });
+            }
 
             // at start of a new turn complete graphs
             if (game.turnCounter != lastTurn) {
@@ -447,8 +510,6 @@ const gmUI = function () {
 
     return {
         Player: Player,
-        CellWidget: CellWidget,
-        GameBoard: GameBoard,
         startGame: startGame,
         reset: reset,
     }

@@ -189,6 +189,10 @@ const appNet = function () {
             };
 
             this.readiness = new ccp.MeetingPoint(localEndpoint.id);
+
+            // players
+            // id -> onTurn(turn)
+            this.playersOnTurn = null;
         }
 
         // change state
@@ -212,14 +216,38 @@ const appNet = function () {
                 .catch(() => { throw new Error("unexpected state") });
         }
 
-        playersId() {
+        players() {
+            this.playersOnTurn = new Map();
+
             // TODO share the players list to avoid inconsistencies on join / leave
-            let ids = [this.localEndpoint.id];
+            let players = [{
+                id: this.localEndpoint.id,
+                isLocal: true,
+                onTurn: null
+            }];
             for (let [id, chan] of this.chanMap) {
-                ids.push(id);
+                let player = {
+                    id: id,
+                    isLocal: false,
+                    onTurn: turn => { console.warn("handler not set") }
+                };
+                this.playersOnTurn.set(id, turn => player.onTurn(turn));
+                players.push(player);
             }
-            ids.sort();
-            return ids;
+
+            players.sort((l, r) => {
+                if (l.id > r.id) return 1;
+                else if (l.id < r.id) return -1;
+                return 0;
+            });
+
+            return players;
+        }
+
+        // game management
+
+        sendTurn(turn) {
+            this.broadcast(new p2p.Frame("turn", turn).serialize());
         }
 
         // channel
@@ -244,6 +272,14 @@ const appNet = function () {
                     this.state.onFrame(connection.remoteEndpoint.id, data);
                 }).on("readiness", data => {
                     this.readiness.onFrame(connection.remoteEndpoint.id, data);
+                }).on("turn", data => {
+                    let remoteId = connection.remoteEndpoint.id;
+                    let turn = data;
+                    if (this.playersOnTurn.has(remoteId)) {
+                        this.playersOnTurn.get(remoteId)(turn);
+                    } else {
+                        throw new Error("unexpected state");
+                    }
                 });
             handler.handle(frame);
         }
