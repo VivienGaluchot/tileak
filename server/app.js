@@ -58,6 +58,9 @@ const server = http.createServer(function (request, response) {
                 logError("can't read file, " + err);
                 return;
             }
+            if (pathname.endsWith(".js")) {
+                response.setHeader("Content-Type", "application/javascript");
+            }
             response.writeHead(200);
             response.end(data);
         });

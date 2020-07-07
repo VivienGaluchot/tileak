@@ -166,7 +166,13 @@ const appNet = function () {
     }
 
     function connectToSignaling(localId) {
-        let ws = new WebSocket(`ws://${location.host}/ws`, "tileak-signaling");
+        let wsProtocol;
+        if (window.location.protocol != "http:") {
+            wsProtocol = "wss:";
+        } else {
+            wsProtocol = "ws:";
+        }
+        let ws = new WebSocket(`${wsProtocol}//${location.host}/ws`, "tileak-signaling");
 
         ws.onopen = () => {
             console.debug("signaling | onopen");
