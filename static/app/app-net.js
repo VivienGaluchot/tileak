@@ -306,7 +306,10 @@ const appNet = function () {
         onopen(connection, chan, evt) {
             super.onopen(connection, chan, evt);
             console.debug("NameHandler | onopen", chan);
-            chan.send(this.localName);
+            if (this.localName.length > 0)
+                chan.send(this.localName);
+            else
+                chan.send("noname");
         }
 
         onmessage(connection, chan, evt) {
