@@ -34,34 +34,31 @@ if (!port) {
     logInfo(`defaulting to port ${port}`);
 }
 
+function sendFile(path, response) {
+    fs.readFile(path, (err, data) => {
+        if (err) {
+            response.writeHead(404);
+            response.end();
+            logError("can't read file, " + err);
+            return;
+        }
+
+        if (path.endsWith(".js")) {
+            response.setHeader("Content-Type", "application/javascript");
+        }
+        response.setHeader("Cache-Control", "public,max-age=3600")
+        response.writeHead(200);
+        response.end(data);
+    });
+}
+
 const server = http.createServer(function (request, response) {
     var pathname = url.parse(request.url).pathname;
     // serve static files
     if (pathname == "/" || pathname == "/index.html") {
-        fs.readFile("static/index.html", (err, data) => {
-            if (err) {
-                response.writeHead(404);
-                response.end();
-                logError("can't read file, " + err);
-                return;
-            }
-            response.writeHead(200);
-            response.end(data);
-        });
+        sendFile("static/index.html", response);
     } else if (pathname.startsWith("/static")) {
-        fs.readFile("./" + pathname, (err, data) => {
-            if (err) {
-                response.writeHead(404);
-                response.end();
-                logError("can't read file, " + err);
-                return;
-            }
-            if (pathname.endsWith(".js")) {
-                response.setHeader("Content-Type", "application/javascript");
-            }
-            response.writeHead(200);
-            response.end(data);
-        });
+        sendFile("./" + pathname, response);
     } else {
         logInfo(`request not found ${request.url}`);
         response.writeHead(404);
