@@ -36,7 +36,6 @@ if (!port) {
 
 const server = http.createServer(function (request, response) {
     var pathname = url.parse(request.url).pathname;
-    logInfo(`Received request for ` + pathname);
     // serve static files
     if (pathname == "/" || pathname == "/index.html") {
         fs.readFile("static/index.html", (err, data) => {
@@ -50,7 +49,6 @@ const server = http.createServer(function (request, response) {
             response.end(data);
         });
     } else if (pathname.startsWith("/static")) {
-        logDebug(`Serve static ` + pathname);
         fs.readFile("./" + pathname, (err, data) => {
             if (err) {
                 response.writeHead(404);
@@ -65,6 +63,7 @@ const server = http.createServer(function (request, response) {
             response.end(data);
         });
     } else {
+        logInfo(`request not found ${request.url}`);
         response.writeHead(404);
         response.end();
     }
