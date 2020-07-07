@@ -69,20 +69,7 @@ server.listen(port, function () {
     logInfo(`server listening on port ${port}`);
 });
 
-// web socket
-
-const wsServer = new WebSocketServer({
-    httpServer: server,
-    autoAcceptConnections: false,
-    path: "/ws",
-});
-
-function originIsAllowed(origin) {
-    logInfo("connection origin " + origin);
-    if (origin == "http://127.0.0.1:8080")
-        return true;
-    return true;
-}
+// peers
 
 class PeerSet {
     constructor() {
@@ -113,11 +100,28 @@ class PeerSet {
 
 let set = new PeerSet();
 
+// web socket
+
+const wsServer = new WebSocketServer({
+    httpServer: server,
+    autoAcceptConnections: false,
+    path: "/ws",
+});
+
+function originIsAllowed(origin) {
+    logInfo("connection origin " + origin);
+    if (origin == "http://127.0.0.1:8080")
+        return true;
+    if (origin == "https://tileak.herokuapp.com")
+        return true;
+    return false;
+}
+
 wsServer.on('request', function (request) {
     if (!originIsAllowed(request.origin)) {
         // Make sure we only accept requests from an allowed origin
         request.reject();
-        logInfo(`Connection from origin '${request.origin}' rejected.`);
+        logError(`connection from origin '${request.origin}' rejected.`);
         return;
     }
 
