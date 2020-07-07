@@ -76,17 +76,14 @@ server.listen(port, function () {
 
 const wsServer = new WebSocketServer({
     httpServer: server,
-    // You should not use autoAcceptConnections for production
-    // applications, as it defeats all standard cross-origin protection
-    // facilities built into the protocol and the browser.  You should
-    // *always* verify the connection's origin and decide whether or not
-    // to accept it.
     autoAcceptConnections: false,
     path: "/ws",
 });
 
 function originIsAllowed(origin) {
-    // put logic here to detect whether the specified origin is allowed.
+    logInfo("connection origin " + origin);
+    if (origin == "http://127.0.0.1:8080")
+        return true;
     return true;
 }
 
@@ -105,15 +102,15 @@ class PeerSet {
         if (this.peerMap.has(id)) {
             logError(`peer id collision`);
         } else {
-            logDebug(`peer registered : '${id}'`);
             this.peerMap.set(id, connection);
+            logDebug(`peer registered '${id}', count '${this.peerMap.size}'`);
             connection.id = id;
         }
     }
 
     unregister(id) {
-        logDebug(`peer unregistered : '${id}'`);
         this.peerMap.delete(id);
+        logDebug(`peer unregistered '${id}', count '${this.peerMap.size}'`);
     }
 }
 
@@ -129,10 +126,7 @@ wsServer.on('request', function (request) {
 
     try {
         let connection = request.accept('tileak-signaling', request.origin);
-        logInfo('Connection accepted.');
-
         connection.id = null;
-
         connection.on('message', message => {
             if (message.type === 'binary') {
                 logError(`received binary message of ${message.binaryData.length} bytes`);
@@ -143,14 +137,13 @@ wsServer.on('request', function (request) {
             }
 
             let data = JSON.parse(message.utf8Data);
-
             if (data.id != undefined) {
                 if (connection.id != null) {
                     logError(`connection with id '${connection.id}' already registered`);
                     return;
                 }
-
                 set.register(data.id, connection);
+
             } else if (data.to != undefined && data.data != undefined) {
                 let src = connection;
                 let dst = set.getConnection(data.to);
@@ -163,17 +156,14 @@ wsServer.on('request', function (request) {
                     logError(`prevent forward to '${data.to}', src not identified`);
                     return;
                 }
-
                 logDebug(`forward from '${src.id}'to '${dst.id}' '${JSON.stringify(payload)}'`);
-                dst.sendUTF(JSON.stringify({ from: src.id, data: payload }));
 
+                dst.sendUTF(JSON.stringify({ from: src.id, data: payload }));
             } else {
                 logError(`unexpected data received ${JSON.stringify(data)}`);
             }
         });
-
         connection.on('close', (reasonCode, description) => {
-            logInfo(`Peer ${connection.remoteAddress} disconnected.`);
             if (connection.id) {
                 set.unregister(connection.id);
             }
