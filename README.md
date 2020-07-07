@@ -1,3 +1,8 @@
-Little web-application tile game.
+# Tileak
 
-Try it at https://viviengaluchot.github.io/tileak/
+* web app
+* board game
+* multiplayer
+* serverless (almost)
+
+Live version hosted by heroku https://tileak.herokuapp.com/
