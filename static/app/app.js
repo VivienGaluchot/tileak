@@ -50,11 +50,18 @@ const app = function () {
     function setup() {
         page.setup();
 
+        // add self player and peer object
+        let selfPeer = page.elements().party.list.makeEl(true);
+        let selfPlayer = page.elements().preGame.playerList.makeEl(true);
+
         // name field
-        page.elements().party.localName.onChange = name => {
+        let updateLocalName = name => {
+            selfPeer.update(name);
+            selfPlayer.update(name, "color", false);
             appNet.channels.names.setLocalName(name);
         };
-        appNet.channels.names.setLocalName(page.elements().party.localName.get());
+        page.elements().party.localName.onChange = updateLocalName
+        updateLocalName(page.elements().party.localName.get());
 
         // chat 
         page.elements().chat.onMessage = msg => {

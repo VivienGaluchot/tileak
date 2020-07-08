@@ -475,6 +475,14 @@ a:hover {
     color: #ff8192;
 }
 
+.status.ok {
+    color: #9eff81;
+}
+
+.status.ko {
+    color: #ff8192;
+}
+
 .pending-con-status {
     border: 1px solid #ffffff11;
     background-color: #ffffff11;

@@ -42,7 +42,7 @@ const ccp = function () {
             this.votedData = null;
         }
 
-        setData(data) {
+        setDataAndGetFrame(data) {
             this.clock++;
             this.resetCandidates();
 
@@ -50,6 +50,7 @@ const ccp = function () {
             this.registerCandidate(this.localId, this.data);
 
             this.onUpdate?.(this.data);
+            return this.getStateFrame();
         }
 
         getLocalData() {
@@ -85,14 +86,20 @@ const ccp = function () {
             return voted;
         }
 
+        // sync point
+
+        waitSyncPoint() {
+
+        }
+
         // channels
 
-        frame() {
-            return new p2p.Frame("update", { clock: this.clock, data: this.data });
+        getStateFrame() {
+            return new p2p.Frame("current-state", { clock: this.clock, data: this.data });
         }
 
         onFrame(remoteId, frame) {
-            let handler = new p2p.FrameHandler().on("update", data => {
+            let handler = new p2p.FrameHandler().on("current-state", data => {
                 let remoteClock = data.clock;
                 let remoteData = data.data;
 

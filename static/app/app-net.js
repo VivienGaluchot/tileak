@@ -359,13 +359,15 @@ const appNet = function () {
             // players
             // id -> onTurn(turn)
             this.playersOnTurn = null;
+
+            this.onPlayersChange = () => { console.warn("unregistered handler") };
         }
 
         // change state
 
         setGridSize(size) {
-            this.state.setData({ gridSize: size });
-            this.broadcast(new p2p.Frame("state", this.state.frame()).serialize());
+            let frame = this.state.setDataAndGetFrame({ gridSize: size });
+            this.broadcast(new p2p.Frame("state", frame).serialize());
         }
 
         waitForStart() {
@@ -420,15 +422,14 @@ const appNet = function () {
 
         onopen(connection, chan, evt) {
             super.onopen(connection, chan, evt)
-
             // shared state
-            chan.send(new p2p.Frame("state", this.state.frame()).serialize());
-
+            chan.send(new p2p.Frame("state", this.state.getStateFrame()).serialize());
             // meeting point
             this.readiness.addRemote(connection.remoteEndpoint.id);
             if (this.readiness.isWaiting()) {
                 chan.send(new p2p.Frame("readiness", this.readiness.frame()).serialize());
             }
+            this.onPlayersChange();
         }
 
         onmessage(connection, chan, evt) {
@@ -453,9 +454,20 @@ const appNet = function () {
         onclose(connection, chan, evt) {
             super.onclose(connection, chan, evt);
             this.readiness.deleteRemote(connection.remoteEndpoint.id);
+            this.onPlayersChange();
         }
     }
     const pregame = new PregameHandler(localEndpoint);
+
+    // TODO update player list when players are added / removed
+    pregame.onPlayersChange = () => {
+        for (let player of pregame.players()) {
+            let id = player.id;
+            let isLocal = player.isLocal;
+            // let playerListEl = page.elements().preGame.playerList.makeEl();
+            // playerListEl.update(lastKnownName, "", false);
+        }
+    };
 
 
     function connectionCompleted(connection) {
@@ -469,20 +481,18 @@ const appNet = function () {
         connection.registerDataChannel("names", names);
         connection.registerDataChannel("pregame", pregame);
 
-        let div = document.createElement("div");
-        let lastName = null;
+        let playerListEl = page.elements().preGame.playerList.makeEl();
+        let peerListEl = page.elements().party.list.makeEl();
+
+        let lastKnownName = null;
         let update = () => {
-            lastName = names.getName(connection.remoteEndpoint?.id) ?? lastName;
-            if (connection.isConnected) {
-                div.innerHTML =
-                    `<div class="player remote">${lastName ?? "?"}</div>
-                <div>${connection.pingDelay ?? "-"} ms</div>`;
+            lastKnownName = names.getName(connection.remoteEndpoint?.id) ?? lastKnownName;
+            if (!connection.isConnected) {
+                playerListEl.delete();
             } else {
-                div.innerHTML =
-                    `<div class="player remote">${lastName ?? "?"}</div>
-                <div class="con-status ko">connection lost <i class="fas fa-times-circle"></i></div>
-                <button class="btn" onclick="page.rmListEl(this);"><i class="fas fa-trash-alt"></i></button>`;
+                playerListEl.update(lastKnownName, "", false);
             }
+            peerListEl.update(lastKnownName, connection.isConnected, connection.pingDelay);
         };
 
         connection.onStateChange = update;
@@ -490,7 +500,6 @@ const appNet = function () {
         names.setOnChange(connection.remoteEndpoint.id, update);
 
         update();
-        page.elements().party.list.add(div);
     }
 
     return {

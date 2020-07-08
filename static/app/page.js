@@ -86,8 +86,33 @@ const page = function () {
                 }
             },
             list: {
-                add: el => {
-                    document.getElementById("party-list").appendChild(el);
+                makeEl: (isYou = false) => {
+                    let div = document.createElement("div");
+                    document.getElementById("peer-list").appendChild(div);
+                    if (!isYou) {
+                        return {
+                            update: (lastName, isConnected, pingDelay) => {
+                                div.innerHTML = `<div class="player remote">${lastName ?? "?"}</div>`;
+                                if (isConnected) {
+                                    div.innerHTML += `<div>${pingDelay ?? "-"} ms</div>`;
+                                } else {
+                                    div.innerHTML +=
+                                        `<div class="con-status ko">connection lost <i class="fas fa-times-circle"></i></div>
+                                    <button class="btn" onclick="page.rmListEl(this);"><i class="fas fa-trash-alt"></i></button>`;
+                                }
+                            },
+                            delete: () => {
+                                div.remove();
+                            }
+                        };
+                    } else {
+                        return {
+                            update: (lastName) => {
+                                div.innerHTML = `<div class="player local">${lastName ?? "?"}</div>`;
+                                div.innerHTML += `<div>you</div>`;
+                            }
+                        };
+                    }
                 }
             },
             tabPartyInvite: {
@@ -129,11 +154,8 @@ const page = function () {
             }
         };
         document.getElementById("local-name").onchange = () => {
-            let name = party.localName.get();
-            document.getElementById("local-name-value").innerText = name;
-            party.localName.onChange?.(name);
+            party.localName.onChange?.(party.localName.get());
         };
-        document.getElementById("local-name-value").innerText = party.localName.get();
         document.getElementById("signaling-join-btn").onclick = () => {
             party.signalingJoin.onclick?.(document.getElementById("signaling-join-id").value);
         };
@@ -260,6 +282,28 @@ const page = function () {
             },
             resetButton: {
                 onclick: evt => console.debug(`reset button clicked`)
+            },
+            playerList: {
+                makeEl: (isYou = false) => {
+                    let div = document.createElement("div");
+                    document.getElementById("game-players").appendChild(div);
+                    return {
+                        update: (name, color, isReady) => {
+                            let inner = ""
+                            if (isYou)
+                                inner += `<div>you</div>`
+                            inner += `<div class="player">${name ?? "?"}</div>`;
+                            if (isReady)
+                                inner += `<div class="status ok"><i class="fas fa-circle"></i></div>`;
+                            else
+                                inner += `<div class="status"><i class="far fa-circle"></i></div>`;
+                            div.innerHTML = inner;
+                        },
+                        delete: () => {
+                            div.remove();
+                        }
+                    };
+                }
             }
         };
         for (let button of document.getElementById("js-grid_size").querySelectorAll("button")) {

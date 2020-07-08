@@ -18,32 +18,34 @@ const ccpTest = function () {
         let b = new ccp.SharedState(bId);
         let c = new ccp.SharedState(cId);
 
+        let aFrame, bFrame, cFrame;
+
         let valueCtr = 0;
         let setA = () => {
             console.log("set value by A");
             let v = `set A ${valueCtr++}`;
-            a.setData({ value: v });
+            aFrame = b.setDataAndGetFrame({ value: v });
             return v;
         };
         let setB = () => {
             console.log("set value by B");
             let v = `set B ${valueCtr++}`;
-            b.setData({ value: v });
+            bFrame = b.setDataAndGetFrame({ value: v });
             return v;
         };
         let setC = () => {
             console.log("set value by C");
             let v = `set C ${valueCtr++}`;
-            c.setData({ value: v });
+            cFrame = b.setDataAndGetFrame({ value: v });
             return v;
         };
 
-        let aToB = () => { console.log("A -> B"); b.onFrame(aId, a.frame()); };
-        let aToC = () => { console.log("A -> C"); c.onFrame(aId, a.frame()); };
-        let bToA = () => { console.log("B -> A"); a.onFrame(bId, b.frame()); };
-        let bToC = () => { console.log("B -> C"); c.onFrame(bId, b.frame()); };
-        let cToA = () => { console.log("C -> A"); a.onFrame(cId, c.frame()); };
-        let cToB = () => { console.log("C -> B"); b.onFrame(cId, c.frame()); };
+        let aToB = () => { console.log("A -> B"); b.onFrame(aId, aFrame); };
+        let aToC = () => { console.log("A -> C"); c.onFrame(aId, aFrame); };
+        let bToA = () => { console.log("B -> A"); a.onFrame(bId, bFrame); };
+        let bToC = () => { console.log("B -> C"); c.onFrame(bId, bFrame); };
+        let cToA = () => { console.log("C -> A"); a.onFrame(cId, cFrame); };
+        let cToB = () => { console.log("C -> B"); b.onFrame(cId, cFrame); };
 
         let checkX = (x, value) => {
             if (x.getLocalData().value != value) {
@@ -243,9 +245,9 @@ const ccpTest = function () {
                 peer.set = () => {
                     let v = `${peer.id} ${ctr++} ${peer.id}`;
                     // set value to state
-                    peer.state.setData(v);
+                    let frame = peer.state.setDataAndGetFrame(v);
                     // broadcast frame to other peers
-                    peer.frame = peer.state.frame();
+                    peer.frame = frame;
                     console.debug(`set ${peer.id} to '${v}'`);
                 };
                 peer.sends = Array.from(peers).filter(v => v != peer).map(other => {

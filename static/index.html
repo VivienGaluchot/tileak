@@ -227,27 +227,19 @@
                                 <button class="btn radio selected" onclick="page.selectRadio(this);">6x6</button>
                                 <button class="btn radio" onclick="page.selectRadio(this);">4x4</button>
                             </div>
-                            <small class="btm-help">Small grid = faster game</small>
+                            <small class="btm-help">Choose a smaller grid for shorter game</small>
                             <!-- <label>Game mode</label>
                             <div class="btn-group">
                                 <button class="btn radio selected" onclick="page.selectRadio(this);">Normal</button>
                                 <button class="btn radio" onclick="page.selectRadio(this);">Blitz</button>
                             </div> -->
                         </div>
-                        <div class="block-list">
+                        <div id="game-players" class="block-list">
                             <label>Players</label>
-                            <!-- <div>
-                                <div class="player">pepe</div>
-                                <div>ready</div>
-                            </div>
-                            <div>
-                                <div class="player">pepe</div>
-                                <div>ready</div>
-                            </div> -->
                         </div>
                     </div>
                     <p>
-                        <button id="start-button" class="btn btn-cta"><i class="fas fa-play"></i> Start</button>
+                        <button id="start-button" class="btn btn-cta"><i class="fas fa-play"></i> Ready</button>
                     </p>
                 </section>
             </div>
@@ -300,11 +292,7 @@
             <section>
                 <h3>Peers</h3>
                 <div>
-                    <div id="party-list" class="block-list player-list">
-                        <div>
-                            <div id="local-name-value" class="player local"></div>
-                            <div>you</div>
-                        </div>
+                    <div id="peer-list" class="block-list player-list">
                     </div>
                 </div>
                 <h3>Chat</h3>
