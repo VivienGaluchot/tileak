@@ -109,7 +109,7 @@ content>.main {
 }
 
 content>.sidebar {
-    border-left: 1px solid #FFFFFF11;
+    flex-grow: 0;
 }
 
 content>.sidebar>* {
@@ -201,7 +201,7 @@ a:hover {
 }
 
 .btn:disabled {
-    color: #d2e0577c;
+    color: #ffffff88;
 }
 
 .btn-link {
@@ -456,10 +456,10 @@ a:hover {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
+    margin: -1rem;
 }
 
 .list-container>* {
-    /* border: 1px solid #FFFFFF11; */
     margin: 1rem;
     padding: 1.5rem;
     border-radius: .2rem;
