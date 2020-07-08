@@ -129,8 +129,11 @@ const page = function () {
             }
         };
         document.getElementById("local-name").onchange = () => {
-            party.localName.onChange?.(party.localName.get());
+            let name = party.localName.get();
+            document.getElementById("local-name-value").innerText = name;
+            party.localName.onChange?.(name);
         };
+        document.getElementById("local-name-value").innerText = party.localName.get();
         document.getElementById("signaling-join-btn").onclick = () => {
             party.signalingJoin.onclick?.(document.getElementById("signaling-join-id").value);
         };
@@ -164,12 +167,13 @@ const page = function () {
                 div.classList.add("msg");
                 if (isLocal) {
                     div.classList.add("local");
+                } else {
+                    let divSrc = document.createElement("div");
+                    divSrc.classList.add("src");
+                    divSrc.innerText = src;
+                    div.appendChild(divSrc);
                 }
 
-                let divSrc = document.createElement("div");
-                divSrc.classList.add("src");
-                divSrc.innerText = src;
-                div.appendChild(divSrc);
 
                 let divData = document.createElement("div");
                 divData.classList.add("data");
@@ -196,7 +200,7 @@ const page = function () {
                     chatInput.value = chatInput.value + "\n";
                 } else if (chatInput.value != "") {
                     chat.onMessage(chatInput.value);
-                    chat.addHistory("you", chatInput.value, true);
+                    chat.addHistory("", chatInput.value, true);
                     chatInput.value = "";
                 }
                 prevent = true;

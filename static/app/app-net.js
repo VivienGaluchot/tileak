@@ -476,8 +476,7 @@ const appNet = function () {
             if (connection.isConnected) {
                 div.innerHTML =
                     `<div class="player remote">${lastName ?? "?"}</div>
-                <div>${connection.pingDelay ?? "-"} ms</div>
-                <div class="con-status ok"><i class="fas fa-check-circle"></i></div>`;
+                <div>${connection.pingDelay ?? "-"} ms</div>`;
             } else {
                 div.innerHTML =
                     `<div class="player remote">${lastName ?? "?"}</div>

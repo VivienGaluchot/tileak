@@ -32,43 +32,48 @@
         </div>
     </header>
     <content>
-        <div id="js-content-pre_game">
-            <section>
-                <h2>Play</h2>
-                <p>Tileak is a tour based, multiplayer strategy game.<br>
-                    Your goal is to control all the board and get rid of the opponents.</p>
-                <p>It's still a proof of concept for serverless multiplaying,<br>
-                    you may encounter issues according to your network setup.</p>
-            </section>
-            <section>
-                <h3>Players</h3>
-                <div>
-                    <div id="party-list" class="block-list">
-                        <label>Your id</label>
-                        <div>
-                            <code id="invite-link" class="id copyable">...</code>
-                            <button class="btn" onclick="page.copyContent(document.getElementById('invite-link'));">
-                                <i class="far fa-copy"></i> copy
-                            </button>
+        <div class="main">
+            <div id="js-content-pre_game">
+                <section>
+                    <h2>Play</h2>
+                    <p>Tileak is a tour based, multiplayer strategy game.<br>
+                        Your goal is to control all the board and get rid of the opponents.</p>
+                    <p>It's still a proof of concept for serverless multiplaying,<br>
+                        you may encounter issues according to your network setup.</p>
+                </section>
+                <section>
+                    <div class="list-container">
+                        <div class="block-list">
+                            <label>Name</label>
+                            <div>
+                                <input id="local-name" class="player local" placeholder="name" value="noname">
+                            </div>
+                            <small class="btm-help">Type a name to be identified by others.</small>
                         </div>
-                        <small class="btm-help">To invite players to your game share this id with them.</small>
-                        <label>Remote id</label>
-                        <div>
-                            <input id="signaling-join-id" placeholder="id" class="id">
-                            <button id="signaling-join-btn" class="btn">join</button>
-                        </div>
-                        <small class="btm-help">
-                            To join a player, paste its id and click join.<br>
-                            In case of issue,
-                            <a href="#" onclick="page.toggleTarget(this);return false;"
-                                data-target="#serverless-peering">
-                                serverless peering</a>
-                            may help.
-                        </small>
-                        <label>Connected peers</label>
-                        <div>
-                            <input id="local-name" class="player local" placeholder="name" value="noname">
-                            <div>you</div>
+                        <div class="block-list">
+                            <label>Invite</label>
+                            <div>
+                                <div id="invite-link" class="copyable">...</div>
+                                <button class="btn btn-primary"
+                                    onclick="page.copyContent(document.getElementById('invite-link'));">
+                                    <i class="far fa-copy"></i> copy
+                                </button>
+                            </div>
+                            <small class="btm-help">To invite players to your game share this id with
+                                them.</small>
+                            <label>Join a player</label>
+                            <div>
+                                <input id="signaling-join-id" placeholder="id" class="player">
+                                <button id="signaling-join-btn" class="btn btn-primary">join</button>
+                            </div>
+                            <small class="btm-help">
+                                To join a remote player, paste its id here and click join.<br>
+                                In rare case,
+                                <a href="#" onclick="page.toggleTarget(this);return false;"
+                                    data-target="#serverless-peering">
+                                    serverless peering</a>
+                                may help.
+                            </small>
                         </div>
                     </div>
                     <div id="serverless-peering" class="js-hidden">
@@ -111,14 +116,21 @@
                                             </div>
                                             <div class="content">
                                                 <p>
-                                                    1. Send your local TAG to the peer you want to invite
+                                                    1. Send your local TAG to the peer you want to
+                                                    invite
                                                     <br />
                                                 </p>
                                                 <div class="b64"><a href="#" class="copy" id="local-offer"
-                                                        onclick="page.copyContent(this);return false;"></a></div>
-                                                <small>This TAG can be used once, an other will be generated after this
+                                                        onclick="page.copyContent(this);return false;"></a>
+                                                </div>
+                                                <small>This TAG can be used once, an other will be
+                                                    generated
+                                                    after
+                                                    this
                                                     connection is completed.
-                                                    <br>Before sharing it be aware that it contains data about your
+                                                    <br>Before sharing it be aware that it contains data
+                                                    about
+                                                    your
                                                     network location.</small>
                                             </div>
                                             <div class="content">
@@ -164,17 +176,26 @@
                                             </div>
                                             <div class="content">
                                                 <p>2. Send your TAG back to the peer</p>
-                                                <p class="alert warning"><b>Warning</b> : on Firefox the time allowed to
+                                                <p class="alert warning"><b>Warning</b> : on Firefox the
+                                                    time
+                                                    allowed to
                                                     transmit back this TAG is short (5s).<br>
-                                                    Prefer using Google Chrome if you can't be that fast.
+                                                    Prefer using Google Chrome if you can't be that
+                                                    fast.
                                                     See <a
                                                         href="https://bugzilla.mozilla.org/show_bug.cgi? id=1647289">more</a>.
                                                 </p>
                                                 <div class="b64"><a href="#" class="copy" id="local-answer"
-                                                        onclick="page.copyContent(this);return false;"></a></div>
-                                                <small>This TAG can be used once, an other will be generated after this
+                                                        onclick="page.copyContent(this);return false;"></a>
+                                                </div>
+                                                <small>This TAG can be used once, an other will be
+                                                    generated
+                                                    after
+                                                    this
                                                     connection is completed.
-                                                    <br>Before sharing it be aware that it contains data about your
+                                                    <br>Before sharing it be aware that it contains data
+                                                    about
+                                                    your
                                                     network location.</small>
                                             </div>
                                             <div class="footer">
@@ -195,79 +216,104 @@
                             </div>
                         </div>
                     </div>
-                </div>
-            </section>
-            <section>
-                <h3>Chat</h3>
-                <div class="chat">
-                    <div id="chat-history" class="chat-history"></div>
-                    <textarea id="chat-input" placeholder="chat with other players"></textarea>
-                </div>
-            </section>
-            <section>
-                <h3>Game</h3>
-                <div>
-                    <div class="card">
-                        <div class="content">
-                            Grid size
-                        </div>
-                        <div class="footer">
+                </section>
+                <section>
+                    <h3>Game</h3>
+                    <div class="list-container">
+                        <div class="block-list">
+                            <label>Grid size</label>
                             <div id="js-grid_size" class="btn-group">
                                 <button class="btn radio" onclick="page.selectRadio(this);">8x8</button>
                                 <button class="btn radio selected" onclick="page.selectRadio(this);">6x6</button>
                                 <button class="btn radio" onclick="page.selectRadio(this);">4x4</button>
                             </div>
+                            <small class="btm-help">Small grid = faster game</small>
+                            <!-- <label>Game mode</label>
+                            <div class="btn-group">
+                                <button class="btn radio selected" onclick="page.selectRadio(this);">Normal</button>
+                                <button class="btn radio" onclick="page.selectRadio(this);">Blitz</button>
+                            </div> -->
+                        </div>
+                        <div class="block-list">
+                            <label>Players</label>
+                            <div>
+                                <div class="player">pepe</div>
+                                <div>ready</div>
+                            </div>
+                            <div>
+                                <div class="player">pepe</div>
+                                <div>ready</div>
+                            </div>
                         </div>
                     </div>
-                </div>
-                <p>
-                    <button id="start-button" class="btn btn-cta"><i class="fas fa-play"></i> Start</button>
-                </p>
-            </section>
-        </div>
-        <div id="js-content-after_game" class="js-hidden">
-            <section>
-                <div class="result">
-                    <h3>End of game</h3>
-                    <p><b><span id="js-winner"></span></b> was the very bestest</p>
-                    <button id="reset-button" class="btn btn-cta">Return to lobby</button>
-                </div>
-                <hr>
-            </section>
-        </div>
-        <div id="js-content-game" class="js-hidden">
-            <div class="game-panel">
-                <div class="mainbar">
-                    <div class="header">
-                        <div class="game-header-grid">
-                            <div class="label">Player</div>
-                            <div id="js-game-player_name" class="js-data">noname</div>
-                            <div class="label">Turn</div>
-                            <div id="js-game-turn_count" class="js-data">0</div>
+                    <p>
+                        <button id="start-button" class="btn btn-cta"><i class="fas fa-play"></i> Start</button>
+                    </p>
+                </section>
+            </div>
+            <div id="js-content-after_game" class="js-hidden">
+                <section>
+                    <div class="result">
+                        <h3>End of game</h3>
+                        <p><b><span id="js-winner"></span></b> was the very bestest</p>
+                        <button id="reset-button" class="btn btn-cta">Return to lobby</button>
+                    </div>
+                    <hr>
+                </section>
+            </div>
+            <div id="js-content-game" class="js-hidden">
+                <div class="game-panel">
+                    <div class="mainbar">
+                        <div class="header">
+                            <div class="game-header-grid">
+                                <div class="label">Player</div>
+                                <div id="js-game-player_name" class="js-data">noname</div>
+                                <div class="label">Turn</div>
+                                <div id="js-game-turn_count" class="js-data">0</div>
+                            </div>
+                        </div>
+                        <div class="main">
+                            <canvas id="js-sandbox" height="100" width="100"></canvas>
+                        </div>
+                        <div class="footer">
+                            <button id="js-game-surrender" class="btn" disabled>Surrender</button>
+                            <button id="js-game-skip_turn" class="btn" disabled>Skip turn</button>
                         </div>
                     </div>
-                    <div class="main">
-                        <canvas id="js-sandbox" height="100" width="100"></canvas>
-                    </div>
-                    <div class="footer">
-                        <button id="js-game-surrender" class="btn" disabled>Surrender</button>
-                        <button id="js-game-skip_turn" class="btn" disabled>Skip turn</button>
-                    </div>
-                </div>
-                <div class="sidebar">
-                    <div id="js-game-stats" class="game-stats-grid">
-                        <div class="col-header"></div>
-                        <div class="col-header number">Production</div>
-                        <div class="col-header number">Storage</div>
-                    </div>
-                    <div>
-                        <canvas id="js-game-graph_production" class="game-graph" height="50" width="100"></canvas>
-                        <div class="graph-label">Production</div>
-                        <canvas id="js-game-graph_storage" class="game-graph" height="50" width="100"></canvas>
-                        <div class="graph-label">Storage</div>
+                    <div class="sidebar">
+                        <div id="js-game-stats" class="game-stats-grid">
+                            <div class="col-header"></div>
+                            <div class="col-header number">Production</div>
+                            <div class="col-header number">Storage</div>
+                        </div>
+                        <div>
+                            <canvas id="js-game-graph_production" class="game-graph" height="50" width="100"></canvas>
+                            <div class="graph-label">Production</div>
+                            <canvas id="js-game-graph_storage" class="game-graph" height="50" width="100"></canvas>
+                            <div class="graph-label">Storage</div>
+                        </div>
                     </div>
                 </div>
             </div>
+        </div>
+        <div class="sidebar">
+            <section>
+                <h3>Peers</h3>
+                <div>
+                    <div id="party-list" class="block-list player-list">
+                        <div>
+                            <div id="local-name-value" class="player local"></div>
+                            <div>you</div>
+                        </div>
+                    </div>
+                </div>
+                <h3>Chat</h3>
+                <div class="chat">
+                    <div id="chat-history" class="chat-history">
+                    </div>
+                    <textarea id="chat-input" placeholder="chat with other players"></textarea>
+                </div>
+            </section>
         </div>
     </content>
     <footer>
