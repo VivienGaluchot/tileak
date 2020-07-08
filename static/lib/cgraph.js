@@ -47,6 +47,8 @@ const cgraph = function () {
             var rect = this.canvas.getBoundingClientRect();
             this.canvas.width = rect.width * this.dpr;
             this.canvas.height = rect.height * this.dpr;
+            this.canvas.style.width = rect.width + "px";
+            this.canvas.style.height = rect.height + "px";
 
             this.paint();
         }
