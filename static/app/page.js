@@ -27,7 +27,7 @@ const page = function () {
 
     function setup() {
         let content = {
-            preGame: document.getElementById("js-content-pre_game"),
+            pregame: document.getElementById("js-content-pre_game"),
             game: document.getElementById("js-content-game"),
             afterGame: document.getElementById("js-content-after_game")
         };
@@ -88,17 +88,49 @@ const page = function () {
             list: {
                 makeEl: (isYou = false) => {
                     let div = document.createElement("div");
+
+                    let playerDiv = document.createElement("div");
+                    playerDiv.classList.add("player");
+                    if (isYou) {
+                        playerDiv.classList.add("local");
+                        div.appendChild(playerDiv);
+                        let youDiv = document.createElement("div");
+                        youDiv.innerText = "you";
+                        div.appendChild(youDiv);
+                    } else {
+                        playerDiv.classList.add("remote");
+                        div.appendChild(playerDiv);
+                    }
+
+                    let pingDiv = document.createElement("div");
+
+                    let statusDiv = document.createElement("div");
+                    statusDiv.classList.add("con-status");
+                    statusDiv.classList.add("ko");
+                    statusDiv.innerHTML = `connection lost <i class="fas fa-times-circle"></i>`;
+
+                    let button = document.createElement("button");
+                    button.classList.add("btn");
+                    button.onclick = () => { page.rmListEl(button) };
+                    button.innerHTML = `<i class="fas fa-trash-alt"></i>`;
+
                     document.getElementById("peer-list").appendChild(div);
                     if (!isYou) {
                         return {
                             update: (lastName, isConnected, pingDelay) => {
-                                div.innerHTML = `<div class="player remote">${lastName ?? "?"}</div>`;
+                                playerDiv.innerText = lastName ?? "?";
                                 if (isConnected) {
-                                    div.innerHTML += `<div>${pingDelay ?? "-"} ms</div>`;
+                                    pingDiv.innerText = `${pingDelay ?? "-"} ms`;
+                                    if (statusDiv.parentElement == div)
+                                        div.removeChild(statusDiv);
+                                    if (button.parentElement == div)
+                                        div.removeChild(button);
+                                    div.appendChild(pingDiv);
                                 } else {
-                                    div.innerHTML +=
-                                        `<div class="con-status ko">connection lost <i class="fas fa-times-circle"></i></div>
-                                    <button class="btn" onclick="page.rmListEl(this);"><i class="fas fa-trash-alt"></i></button>`;
+                                    if (pingDiv.parentElement == div)
+                                        div.removeChild(pingDiv);
+                                    div.appendChild(statusDiv);
+                                    div.appendChild(button);
                                 }
                             },
                             delete: () => {
@@ -108,8 +140,7 @@ const page = function () {
                     } else {
                         return {
                             update: (lastName) => {
-                                div.innerHTML = `<div class="player local">${lastName ?? "?"}</div>`;
-                                div.innerHTML += `<div>you</div>`;
+                                playerDiv.innerText = lastName ?? "?";
                             }
                         };
                     }
@@ -129,7 +160,7 @@ const page = function () {
                 get: () => {
                     return document.getElementById("local-name").value;
                 },
-                onChange: name => { console.debug(`local name changed to ${name}`) }
+                onChange: name => { console.debug(`local name changed to ${name} `) }
             },
             inviteLink: {
                 set: url => {
@@ -181,7 +212,7 @@ const page = function () {
         };
 
         let chat = {
-            onMessage: msg => console.debug(`chat message typed : ${msg}`),
+            onMessage: msg => console.debug(`chat message typed: ${msg} `),
             addHistory: (src, msg, isLocal) => {
                 let el = document.getElementById("chat-history");
 
@@ -230,7 +261,7 @@ const page = function () {
             return !prevent;
         };
 
-        let preGame = {
+        let pregame = {
             gridSizeSelector: {
                 get: () => {
                     let selected = document.getElementById("js-grid_size").querySelector("button.selected");
@@ -245,7 +276,7 @@ const page = function () {
                         throw new Error("unexpected grid size");
                     }
                 },
-                onChange: size => console.debug(`gridSizeSelector changed to ${size.w}x${size.h}`),
+                onChange: size => console.debug(`gridSizeSelector changed to ${size.w} x${size.h} `),
                 set: size => {
                     let innerText;
                     if (size.w == 8 && size.h == 8) {
@@ -255,7 +286,7 @@ const page = function () {
                     } else if (size.w == 4 && size.h == 4) {
                         innerText = "4x4";
                     } else {
-                        throw new Error(`unexpected grid size ${size.w}x${size.h}`);
+                        throw new Error(`unexpected grid size ${size.w} x${size.h} `);
                     }
                     for (let button of document.getElementById("js-grid_size").querySelectorAll("button")) {
                         if (button.innerText == innerText) {
@@ -264,6 +295,11 @@ const page = function () {
                             button.classList.remove("selected");
                         }
                     }
+                }
+            },
+            setLock: isLocked => {
+                for (let button of document.getElementById("js-grid_size").querySelectorAll("button")) {
+                    button.disabled = isLocked;
                 }
             },
             startButton: {
@@ -286,19 +322,38 @@ const page = function () {
             playerList: {
                 makeEl: (isYou = false) => {
                     let div = document.createElement("div");
+
+                    if (isYou) {
+                        let youDiv = document.createElement("div");
+                        youDiv.innerText = "you";
+                        div.appendChild(youDiv);
+                    }
+                    let nameDiv = document.createElement("div");
+                    nameDiv.classList.add("player");
+                    div.appendChild(nameDiv);
+                    let statusDiv = document.createElement("div");
+                    statusDiv.classList.add("status");
+                    div.appendChild(statusDiv);
+
                     document.getElementById("game-players").appendChild(div);
+
+                    let setReady = isReady => {
+                        if (isReady) {
+                            statusDiv.innerHTML = `<i class="fas fa-check-circle"></i>`;
+                            statusDiv.classList.add("ok");
+                        } else {
+                            statusDiv.innerHTML = `<i class="far fa-circle"></i>`;
+                            statusDiv.classList.remove("ok");
+                        }
+                    };
+
                     return {
                         update: (name, color, isReady) => {
-                            let inner = ""
-                            if (isYou)
-                                inner += `<div>you</div>`
-                            inner += `<div class="player">${name ?? "?"}</div>`;
-                            if (isReady)
-                                inner += `<div class="status ok"><i class="fas fa-circle"></i></div>`;
-                            else
-                                inner += `<div class="status"><i class="far fa-circle"></i></div>`;
-                            div.innerHTML = inner;
+                            nameDiv.innerText = name ?? "?";
+                            nameDiv.style.color = `#${color} `;
+                            setReady(isReady);
                         },
+                        setReady: setReady,
                         delete: () => {
                             div.remove();
                         }
@@ -308,11 +363,11 @@ const page = function () {
         };
         for (let button of document.getElementById("js-grid_size").querySelectorAll("button")) {
             button.addEventListener("click", evt => {
-                preGame.gridSizeSelector.onChange?.(preGame.gridSizeSelector.get());
+                pregame.gridSizeSelector.onChange?.(pregame.gridSizeSelector.get());
             });
         }
-        document.getElementById("start-button").onclick = evt => preGame.startButton.onclick(evt);
-        document.getElementById("reset-button").onclick = evt => preGame.resetButton.onclick(evt);
+        document.getElementById("start-button").onclick = evt => pregame.startButton.onclick(evt);
+        document.getElementById("reset-button").onclick = evt => pregame.resetButton.onclick(evt);
 
         elements = {
             // complex
@@ -320,7 +375,7 @@ const page = function () {
             party: party,
             game: game,
             chat: chat,
-            preGame: preGame,
+            pregame: pregame,
             // simple
             sandbox: document.getElementById("js-sandbox"),
             winner: document.getElementById("js-winner"),
@@ -333,7 +388,7 @@ const page = function () {
     function showPreGame() {
         console.debug(`showPreGame`);
         window.scrollTo({ top: 0, behavior: 'smooth' });
-        setEnabled(elements.content.preGame, true);
+        setEnabled(elements.content.pregame, true);
         setEnabled(elements.content.game, false);
         setEnabled(elements.content.afterGame, false);
     }
@@ -341,7 +396,7 @@ const page = function () {
     function showGame() {
         console.debug(`showGame`);
         window.scrollTo({ top: 0, behavior: 'smooth' });
-        setEnabled(elements.content.preGame, false);
+        setEnabled(elements.content.pregame, false);
         setEnabled(elements.content.game, true);
         setEnabled(elements.content.afterGame, false);
     }
@@ -349,7 +404,7 @@ const page = function () {
     function showAfterGame() {
         console.debug(`showAfterGame`);
         window.scrollTo({ top: 0, behavior: 'smooth' });
-        setEnabled(elements.content.preGame, false);
+        setEnabled(elements.content.pregame, false);
         setEnabled(elements.content.game, true);
         setEnabled(elements.content.afterGame, true);
     }
@@ -388,7 +443,7 @@ const page = function () {
     function showTab(el) {
         selectRadio(el);
         for (let target of document.querySelectorAll(el.dataset["target"])) {
-            for (let tab of target.parentElement.querySelectorAll(`.tab-content`)) {
+            for (let tab of target.parentElement.querySelectorAll(`.tab - content`)) {
                 setEnabled(tab, false);
             }
             setEnabled(target, true);

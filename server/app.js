@@ -6,12 +6,14 @@
 const WebSocketServer = require('websocket').server;
 const http = require('http');
 const fs = require('fs');
-var url = require("url");
+const url = require("url");
+const path = require('path');
+
 
 // logging
 
 function formatLog(level, msg) {
-    return new Date().toISOString() + ` - ${level} | ${msg}`;
+    return `${new Date().toISOString()} - ${level} | ${msg}`;
 }
 
 function logDebug(msg) {
@@ -34,18 +36,28 @@ if (!port) {
     logInfo(`defaulting to port ${port}`);
 }
 
-function sendFile(path, response) {
-    fs.readFile(path, (err, data) => {
+let mimeMap = new Map();
+mimeMap.set(".js", "application/javascript");
+mimeMap.set(".json", "application/json");
+mimeMap.set(".css", "text/css");
+mimeMap.set(".jpeg", "image/jpeg");
+mimeMap.set(".jpg", "image/jpeg");
+mimeMap.set(".png", "image/png");
+mimeMap.set(".svg", "image/svg+xml");
+
+function sendFile(pathname, response) {
+    fs.readFile(pathname, (err, data) => {
         if (err) {
             response.writeHead(404);
             response.end();
             logError("can't read file, " + err);
             return;
         }
+        let ext = path.extname(pathname);
+        let mime = mimeMap.get(ext);
+        if (mime)
+            response.setHeader("Content-Type", mimeMap.get(ext));
 
-        if (path.endsWith(".js")) {
-            response.setHeader("Content-Type", "application/javascript");
-        }
         response.setHeader("Cache-Control", "public,max-age=3600")
         response.writeHead(200);
         response.end(data);
@@ -68,6 +80,7 @@ const server = http.createServer(function (request, response) {
 server.listen(port, function () {
     logInfo(`server listening on port ${port}`);
 });
+
 
 // peers
 
@@ -99,6 +112,7 @@ class PeerSet {
 }
 
 let set = new PeerSet();
+
 
 // web socket
 

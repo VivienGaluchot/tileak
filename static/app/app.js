@@ -7,35 +7,65 @@
 
 
 const app = function () {
+    // helpers
+    function getPlayerColor(index, count) {
+        let angleIncrement = Math.min(360 / count, 120);
+        let angle = -1 * angleIncrement * index;
+        let color = clr.changeHue("#44FFFF", angle);
+        return color.substr(1);
+    }
+
+    function annotatePlayers(remotePlayerIds) {
+        let playerIds = Array.from(remotePlayerIds);
+        playerIds.push(appNet.getLocalId());
+        playerIds.sort();
+        let annotated = [];
+        for (let [index, playerId] of playerIds.entries()) {
+            annotated.push({
+                id: playerId,
+                name: appNet.names.getName(playerId),
+                isLocal: playerId == appNet.getLocalId(),
+                color: getPlayerColor(index, playerIds.length)
+            });
+        }
+        return annotated;
+    }
+
+
     // start game
     async function start() {
         try {
-            page.elements().preGame.startButton.setWaiting(true);
-            await appNet.channels.pregame.waitForStart();
+            page.elements().pregame.startButton.setWaiting(true);
 
-            let netPlayers = appNet.channels.pregame.players();
-            let state = await appNet.channels.pregame.getState();
+            let syncPoint = await appNet.pregame.waitForStart();
+            let syncState = syncPoint.data;
 
-            page.showGame();
-            page.elements().preGame.startButton.setWaiting(false);
+            let annotatedPlayers = annotatePlayers(syncPoint.syncRemoteIds);
 
-            let gmPlayers = [];
-            let angleIncrement = Math.min(360 / netPlayers.length, 120);
-            for (let [index, netPlayer] of netPlayers.entries()) {
-                let name = appNet.channels.names.getName(netPlayer.id);
+            // id -> gmUI.Player
+            let playersMap = new Map();
 
-                let angle = -1 * angleIncrement * index;
-                let color = clr.changeHue("#44FFFF", angle);
-
-                let gmPlayer = new gmUI.Player(name, netPlayer.isLocal, color.substr(1));
-                netPlayer.onTurn = turn => gmPlayer.onRemoteTurn(turn);
-
-                gmPlayers.push(gmPlayer);
+            let players = [];
+            for (let ann of annotatedPlayers) {
+                let player = new gmUI.Player(ann.name, ann.isLocal, ann.color);
+                playersMap.set(ann.id, player);
+                players.push(player);
             }
 
-            let sendTurn = turn => appNet.channels.pregame.sendTurn(turn);
-            gmUI.startGame(gmPlayers, state.gridSize, sendTurn);
+            appNet.pregame.onPlayerTurn = (remoteId, turn) => {
+                if (!playersMap.has(remoteId)) {
+                    throw new Error("unexpected state");
+                }
+                playersMap.get(remoteId).onRemoteTurn(turn);
+            };
+
+            page.showGame();
+            page.elements().pregame.startButton.setWaiting(false);
+
+            let sendTurn = turn => appNet.pregame.sendTurn(turn);
+            gmUI.startGame(players, syncState.gridSize, sendTurn);
         } catch (error) {
+            console.error("could not start game", error);
             reset();
         }
     }
@@ -46,39 +76,41 @@ const app = function () {
         gmUI.reset();
     }
 
+
     // setup the application callbacks
     function setup() {
         page.setup();
 
         // add self player and peer object
         let selfPeer = page.elements().party.list.makeEl(true);
-        let selfPlayer = page.elements().preGame.playerList.makeEl(true);
 
         // name field
         let updateLocalName = name => {
             selfPeer.update(name);
-            selfPlayer.update(name, "color", false);
-            appNet.channels.names.setLocalName(name);
+            appNet.names.setLocalName(name);
         };
         page.elements().party.localName.onChange = updateLocalName
         updateLocalName(page.elements().party.localName.get());
 
         // chat 
         page.elements().chat.onMessage = msg => {
-            appNet.channels.chat.broadcast(msg);
+            appNet.chat.broadcast(msg);
         };
 
         // grid size
-        page.elements().preGame.gridSizeSelector.onChange = size => {
-            appNet.channels.pregame.setGridSize(size);
+        appNet.pregame.onGridSizeUpdate = size => {
+            page.elements().pregame.gridSizeSelector.set(size);
         };
-        appNet.channels.pregame.setGridSize(page.elements().preGame.gridSizeSelector.get());
+        page.elements().pregame.gridSizeSelector.onChange = size => {
+            appNet.pregame.setGridSize(size);
+        };
+        appNet.pregame.setGridSize(page.elements().pregame.gridSizeSelector.get());
 
         // start button
-        page.elements().preGame.startButton.onclick = evt => start();
+        page.elements().pregame.startButton.onclick = evt => start();
 
         // reset button
-        page.elements().preGame.resetButton.onclick = evt => reset();
+        page.elements().pregame.resetButton.onclick = evt => reset();
 
         // signaling
         appNet.setupSignaling();
@@ -91,6 +123,41 @@ const app = function () {
                     console.error(reason);
                     page.elements().party.signalingJoin.error();
                 });
+        };
+
+        // player list
+        let playerListEls = new Map();
+        let playerReadiness = new Map();
+        let updatePlayerList = playerIds => {
+            // clean previous elements
+            for (let [id, it] of playerListEls) {
+                appNet.names.unsetOnChange(id, it.updateName);
+                it.el.delete();
+            }
+            playerListEls = new Map();
+
+            // update list
+            let annotatedPlayers = annotatePlayers(playerIds);
+            for (let ann of annotatedPlayers) {
+                let isReady = playerReadiness.get(ann.id) ?? false;
+                let listElement = page.elements().pregame.playerList.makeEl(ann.isLocal);
+                listElement.update(ann.name, ann.color, isReady);
+                let updateName = name => {
+                    listElement.update(name, ann.color, isReady);
+                };
+                appNet.names.setOnChange(ann.id, updateName);
+                let it = { el: listElement, updateName: updateName };
+                playerListEls.set(ann.id, it);
+            }
+        };
+        appNet.pregame.onPlayersChange = updatePlayerList;
+        updatePlayerList([]);
+
+        // handle waiting to start
+        appNet.pregame.onPlayerWaitingChange = (playerId, isWaiting) => {
+            page.elements().pregame.setLock(isWaiting);
+            playerListEls.get(playerId)?.el.setReady(isWaiting);
+            playerReadiness.set(playerId, isWaiting);
         };
     }
 

@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>tileak</title>
-    <!-- <link rel="icon" href="icon.svg"> -->
+    <link rel="icon" href="static/icon-sm.svg">
 
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css"
@@ -18,7 +18,7 @@
 <body>
     <header>
         <h1>
-            <div class="logo"></div>
+            <img class="logo" src="static/icon.svg">
             tileak
         </h1>
         <div id="masked_error" class="alert error" style="display:none;">
@@ -53,7 +53,7 @@
                         <div class="block-list">
                             <label>Invite</label>
                             <div>
-                                <div id="invite-link" class="copyable">...</div>
+                                <div id="invite-link" class="id copyable">...</div>
                                 <button class="btn btn-primary"
                                     onclick="page.copyContent(document.getElementById('invite-link'));">
                                     <i class="far fa-copy"></i> copy
@@ -63,7 +63,7 @@
                                 them.</small>
                             <label>Join a player</label>
                             <div>
-                                <input id="signaling-join-id" placeholder="id" class="player">
+                                <input id="signaling-join-id" placeholder="id" class="id">
                                 <button id="signaling-join-btn" class="btn btn-primary">join</button>
                             </div>
                             <small class="btm-help">

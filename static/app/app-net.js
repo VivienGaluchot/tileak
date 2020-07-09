@@ -19,7 +19,6 @@ const appNet = function () {
     // serverless peering
 
     function invite() {
-        console.debug("invite");
         if (pendingInviteCon == null) {
             // clear UI
             page.elements().party.localOffer.clear();
@@ -69,7 +68,6 @@ const appNet = function () {
     }
 
     function join() {
-        console.debug("join");
         if (pendingJoinCon == null) {
             // clear UI
             page.elements().party.localAnswer.clear();
@@ -206,10 +204,11 @@ const appNet = function () {
         ws.onclose = e => {
             console.debug("signaling | onclose.", e.reason);
             signalingForward = null;
-
+            // wait between 1 and 5 secs for retry
+            let timeout = (Math.random() * 4 + 1) * 1000;
             setTimeout(() => {
                 connectToSignaling(localId);
-            }, 1000);
+            }, timeout);
         };
 
         ws.onerror = err => {
@@ -221,44 +220,53 @@ const appNet = function () {
     function joinViaSignaling(targetId) {
         return new Promise((resolve, reject) => {
             if (targetId.length == 0) {
-                console.error("target id undefined");
-                reject();
-            } else if (signalingPendingConnections.has(targetId)) {
-                console.error("unexpected state", targetId);
-                reject();
-            } else {
-                let connection = new p2p.PeerConnection(localEndpoint);
-                signalingPendingConnections.set(targetId, connection);
-
-                connection.onStateChange = () => {
-                    if (connection.isConnected) {
-                        console.debug(`signaling | connected to peer ${connection.remoteEndpoint.id}`);
-                        signalingPendingConnections.delete(targetId);
-                        connection.onStateChange = null;
-                        connectionCompleted(connection);
-                        resolve();
-                    }
-                    // TODO reject when failed
-                }
-                connection.createOffer()
-                    .then((offer) => {
-                        console.debug("signaling | createOffer ok");
-                        let offerData = {
-                            offer: offer
-                        };
-                        if (signalingForward == null) {
-                            console.error("signaling | server not connected, impossible to join via signaling");
-                            reject();
-                        } else {
-                            signalingForward(targetId, new p2p.Frame("connection-offered", offerData));
-                        }
-                    })
-                    .catch(reason => {
-                        console.error("signaling | createOffer error", reason);
-                        signalingPendingConnections.delete(targetId);
-                        reject();
-                    });
+                reject(`target id undefined`);
+                return;
             }
+            if (signalingPendingConnections.has(targetId)) {
+                reject(`pending connection to ${targetId}`);
+                return;
+            }
+            if (targetId == localEndpoint.id) {
+                reject(`can't join local id ${targetId}`);
+                return;
+            }
+            if (hub.isPeered(targetId)) {
+                reject(`peer already connected ${targetId}`);
+                return;
+            }
+
+            let connection = new p2p.PeerConnection(localEndpoint);
+            signalingPendingConnections.set(targetId, connection);
+
+            connection.onStateChange = () => {
+                if (connection.isConnected) {
+                    console.debug(`signaling | connected to peer ${connection.remoteEndpoint.id}`);
+                    signalingPendingConnections.delete(targetId);
+                    connection.onStateChange = null;
+                    connectionCompleted(connection);
+                    resolve();
+                }
+                // TODO reject when failed
+            }
+            connection.createOffer()
+                .then((offer) => {
+                    console.debug("signaling | createOffer ok");
+                    let offerData = {
+                        offer: offer
+                    };
+                    if (signalingForward == null) {
+                        console.error("signaling | server not connected, impossible to join via signaling");
+                        reject();
+                    } else {
+                        signalingForward(targetId, new p2p.Frame("connection-offered", offerData));
+                    }
+                })
+                .catch(reason => {
+                    console.error("signaling | createOffer error", reason);
+                    signalingPendingConnections.delete(targetId);
+                    reject();
+                });
         });
     }
 
@@ -283,7 +291,7 @@ const appNet = function () {
 
             // remote id -> name
             this.nameMap = new Map();
-            // remote id -> change handler
+            // remote id -> Set() of change handler
             this.handlerMap = new Map();
         }
 
@@ -291,10 +299,18 @@ const appNet = function () {
             this.localName = name;
             this.nameMap.set(this.localEndpoint.id, name);
             this.broadcast(name);
+            this.signalChange(this.localEndpoint.id, name);
         }
 
         setOnChange(id, handler) {
-            this.handlerMap.set(id, handler);
+            if (!this.handlerMap.has(id))
+                this.handlerMap.set(id, new Set());
+            this.handlerMap.get(id).add(handler);
+        }
+
+        unsetOnChange(id, handler) {
+            if (this.handlerMap.has(id))
+                this.handlerMap.get(id).delete(handler);
         }
 
         getName(id) {
@@ -315,13 +331,23 @@ const appNet = function () {
         onmessage(connection, chan, evt) {
             console.debug("NameHandler | onmessage", connection.remoteEndpoint.id, evt.data, chan);
             this.nameMap.set(connection.remoteEndpoint.id, evt.data);
-            this.handlerMap.get(connection.remoteEndpoint.id)?.();
+            this.signalChange(connection.remoteEndpoint.id, evt.data);
         }
 
         onclose(connection, chan, evt) {
             super.onclose(connection, chan, evt);
             this.nameMap.delete(connection.remoteEndpoint.id);
             this.handlerMap.delete(connection.remoteEndpoint.id);
+        }
+
+        // internal
+
+        signalChange(id, name) {
+            if (this.handlerMap.has(id)) {
+                for (let handler of this.handlerMap.get(id)) {
+                    handler(name);
+                }
+            }
         }
     }
     const names = new NameHandler(localEndpoint);
@@ -343,79 +369,85 @@ const appNet = function () {
             super();
             this.localEndpoint = localEndpoint;
 
+            // callbacks
+
+            /**
+             * called when grid size is updated
+             */
+            this.onGridSizeUpdate = size => { console.warn("unregistered handler") };
+
+            /**
+             * called when a remote peer is waiting for sync
+             */
+            this.onRemoteSyncWaiting = remoteId => { console.warn("unregistered handler") };
+
+            /**
+             * called when player list is updated
+             */
+            this.onPlayersChange = playerIds => { console.warn("unregistered handler") };
+
+            /**
+             * called when a player waiting state changes
+             */
+            this.onPlayerWaitingChange = (playerId, isWaiting) => { console.warn("unregistered handler") };
+
+            /**
+             * called when a player turn is received
+             */
+            this.onPlayerTurn = (remoteId, turn) => { console.warn("unregistered handler") };
+
+
             // synchronized state between peers
             // * selected grid size
-            // * player order
-            // * ready player set
-            // * game launch
+            // * player list
+            // * synchronize game launch
 
             this.state = new ccp.SharedState(localEndpoint.id);
             this.state.onUpdate = data => {
-                page.elements().preGame.gridSizeSelector.set(data.gridSize);
+                this.onGridSizeUpdate(data.gridSize);
             };
 
-            this.readiness = new ccp.MeetingPoint(localEndpoint.id);
-
-            // players
-            // id -> onTurn(turn)
-            this.playersOnTurn = null;
-
-            this.onPlayersChange = () => { console.warn("unregistered handler") };
+            this.playerWaitingState = new Map();
+            this.state.onRemoteSyncWaitingChanged = (remoteId, isWaiting) => {
+                this.playerWaitingState.set(remoteId, isWaiting);
+                this.onPlayerWaitingChange(remoteId, isWaiting);
+            };
         }
 
         // change state
 
         setGridSize(size) {
-            let frame = this.state.setDataAndGetFrame({ gridSize: size });
-            this.broadcast(new p2p.Frame("state", frame).serialize());
-        }
-
-        waitForStart() {
-            // TODO lock the shared state to it's current cycle
-            let promise = this.readiness.wait();
-            this.broadcast(new p2p.Frame("readiness", this.readiness.frame()).serialize());
-            return promise;
-        }
-
-        // get state
-
-        getState() {
-            return this.state.getSharedData()
-                .catch(() => { throw new Error("unexpected state") });
-        }
-
-        players() {
-            this.playersOnTurn = new Map();
-
-            // TODO share the players list to avoid inconsistencies on join / leave
-            let players = [{
-                id: this.localEndpoint.id,
-                isLocal: true,
-                onTurn: null
-            }];
-            for (let [id, chan] of this.chanMap) {
-                let player = {
-                    id: id,
-                    isLocal: false,
-                    onTurn: turn => { console.warn("handler not set") }
-                };
-                this.playersOnTurn.set(id, turn => player.onTurn(turn));
-                players.push(player);
-            }
-
-            players.sort((l, r) => {
-                if (l.id > r.id) return 1;
-                else if (l.id < r.id) return -1;
-                return 0;
+            this.state.setData({ gridSize: size }, frame => {
+                this.broadcast(new p2p.Frame("state", frame).serialize());
             });
-
-            return players;
         }
 
         // game management
 
         sendTurn(turn) {
             this.broadcast(new p2p.Frame("turn", turn).serialize());
+        }
+
+        // sync management
+
+        isPlayerWaiting(id) {
+            if (this.playerWaitingState.has(id))
+                return this.playerWaitingState.get(id);
+            return false;
+        }
+
+        waitForStart() {
+            this.onPlayerWaitingChange(this.localEndpoint.id, true);
+            this.playerWaitingState.set(this.localEndpoint.id, true);
+
+            let promise = this.state.waitSyncPoint(frame => {
+                this.broadcast(new p2p.Frame("state", frame).serialize());
+            }).then(result => {
+                this.onPlayerWaitingChange(this.localEndpoint.id, false);
+                this.playerWaitingState.set(this.localEndpoint.id, false);
+                return result;
+            });
+            return promise;
         }
 
         // channel
@@ -425,11 +457,11 @@ const appNet = function () {
             // shared state
             chan.send(new p2p.Frame("state", this.state.getStateFrame()).serialize());
             // meeting point
-            this.readiness.addRemote(connection.remoteEndpoint.id);
-            if (this.readiness.isWaiting()) {
-                chan.send(new p2p.Frame("readiness", this.readiness.frame()).serialize());
+            this.state.addSyncPointRemote(connection.remoteEndpoint.id);
+            if (this.state.isWaitingSyncPoint()) {
+                chan.send(new p2p.Frame("state", this.state.getSyncFrame()).serialize());
             }
-            this.onPlayersChange();
+            this.onPlayersChange(this.state.syncRemotes());
         }
 
         onmessage(connection, chan, evt) {
@@ -437,37 +469,21 @@ const appNet = function () {
             let handler = new p2p.FrameHandler()
                 .on("state", data => {
                     this.state.onFrame(connection.remoteEndpoint.id, data);
-                }).on("readiness", data => {
-                    this.readiness.onFrame(connection.remoteEndpoint.id, data);
                 }).on("turn", data => {
                     let remoteId = connection.remoteEndpoint.id;
                     let turn = data;
-                    if (this.playersOnTurn.has(remoteId)) {
-                        this.playersOnTurn.get(remoteId)(turn);
-                    } else {
-                        throw new Error("unexpected state");
-                    }
+                    this.onPlayerTurn(remoteId, turn);
                 });
             handler.handle(frame);
         }
 
         onclose(connection, chan, evt) {
             super.onclose(connection, chan, evt);
-            this.readiness.deleteRemote(connection.remoteEndpoint.id);
-            this.onPlayersChange();
+            this.state.deleteSyncPointRemote(connection.remoteEndpoint.id);
+            this.onPlayersChange(this.state.syncRemotes());
         }
     }
     const pregame = new PregameHandler(localEndpoint);
-
-    // TODO update player list when players are added / removed
-    pregame.onPlayersChange = () => {
-        for (let player of pregame.players()) {
-            let id = player.id;
-            let isLocal = player.isLocal;
-            // let playerListEl = page.elements().preGame.playerList.makeEl();
-            // playerListEl.update(lastKnownName, "", false);
-        }
-    };
 
 
     function connectionCompleted(connection) {
@@ -481,17 +497,17 @@ const appNet = function () {
         connection.registerDataChannel("names", names);
         connection.registerDataChannel("pregame", pregame);
 
-        let playerListEl = page.elements().preGame.playerList.makeEl();
+        // let playerListEl = page.elements().pregame.playerList.makeEl();
         let peerListEl = page.elements().party.list.makeEl();
 
         let lastKnownName = null;
         let update = () => {
             lastKnownName = names.getName(connection.remoteEndpoint?.id) ?? lastKnownName;
-            if (!connection.isConnected) {
-                playerListEl.delete();
-            } else {
-                playerListEl.update(lastKnownName, "", false);
-            }
+            // if (!connection.isConnected) {
+            //     playerListEl.delete();
+            // } else {
+            //     playerListEl.update(lastKnownName, "", false);
+            // }
             peerListEl.update(lastKnownName, connection.isConnected, connection.pingDelay);
         };
 
@@ -504,15 +520,16 @@ const appNet = function () {
 
     return {
         getLocalId,
+        // serverless join
         invite: invite,
         join: join,
+        // signaling join
         setupSignaling: setupSignaling,
         joinViaSignaling: joinViaSignaling,
-        channels: {
-            hub: hub,
-            names: names,
-            chat: chat,
-            pregame: pregame,
-        }
+        // channels
+        hub: hub,
+        names: names,
+        chat: chat,
+        pregame: pregame
     }
 }();

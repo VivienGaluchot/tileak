@@ -148,9 +148,10 @@ footer a {
 
 .logo {
     display: inline-block;
-    border: 1px solid white;
-    height: 2rem;
-    width: 2rem;
+    height: 3rem;
+    max-width: 3rem;
+    position: relative;
+    top: .5rem;
 }
 
 .text-center {
@@ -382,13 +383,12 @@ a:hover {
 .block-list .id {
     flex-grow: 1;
     text-align: left;
-    font-family: 'Roboto Mono', monospace;
+    font-size: .8rem;
+    line-height: 1rem;
 }
 
 .block-list input.id {
     background-color: #ffffff22;
-    font-family: 'Roboto Mono', monospace;
-    font-size: inherit;
     min-width: 5rem;
     color: #ffffff;
 }

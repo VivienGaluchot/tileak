@@ -24,19 +24,19 @@ const ccpTest = function () {
         let setA = () => {
             console.log("set value by A");
             let v = `set A ${valueCtr++}`;
-            aFrame = b.setDataAndGetFrame({ value: v });
+            a.setData({ value: v }, frame => { aFrame = frame; });
             return v;
         };
         let setB = () => {
             console.log("set value by B");
             let v = `set B ${valueCtr++}`;
-            bFrame = b.setDataAndGetFrame({ value: v });
+            b.setData({ value: v }, frame => { bFrame = frame; });
             return v;
         };
         let setC = () => {
             console.log("set value by C");
             let v = `set C ${valueCtr++}`;
-            cFrame = b.setDataAndGetFrame({ value: v });
+            c.setData({ value: v }, frame => { cFrame = frame; });
             return v;
         };
 
@@ -48,7 +48,7 @@ const ccpTest = function () {
         let cToB = () => { console.log("C -> B"); b.onFrame(cId, cFrame); };
 
         let checkX = (x, value) => {
-            if (x.getLocalData().value != value) {
+            if (x.getLocalData()?.value != value) {
                 console.error("value ko");
                 failed++;
             } else {
@@ -245,9 +245,7 @@ const ccpTest = function () {
                 peer.set = () => {
                     let v = `${peer.id} ${ctr++} ${peer.id}`;
                     // set value to state
-                    let frame = peer.state.setDataAndGetFrame(v);
-                    // broadcast frame to other peers
-                    peer.frame = frame;
+                    peer.state.setData(v, frame => { peer.frame = frame });
                     console.debug(`set ${peer.id} to '${v}'`);
                 };
                 peer.sends = Array.from(peers).filter(v => v != peer).map(other => {
