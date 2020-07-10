@@ -497,17 +497,10 @@ const appNet = function () {
         connection.registerDataChannel("names", names);
         connection.registerDataChannel("pregame", pregame);
 
-        // let playerListEl = page.elements().pregame.playerList.makeEl();
         let peerListEl = page.elements().party.list.makeEl();
-
         let lastKnownName = null;
         let update = () => {
             lastKnownName = names.getName(connection.remoteEndpoint?.id) ?? lastKnownName;
-            // if (!connection.isConnected) {
-            //     playerListEl.delete();
-            // } else {
-            //     playerListEl.update(lastKnownName, "", false);
-            // }
             peerListEl.update(lastKnownName, connection.isConnected, connection.pingDelay);
         };
 
