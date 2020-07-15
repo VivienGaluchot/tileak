@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>tileak</title>
+    <link rel="icon" href="static/icon-sm.svg">
+
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css"
+        integrity="sha256-h20CPZ0QyXlBuAw7A+KluUYx/3pK+c7lYEpqLTlxjYQ=" crossorigin="anonymous" async />
+
+    <link rel="stylesheet" href="static/style.css">
+</head>
+
+<body>
+    <header>
+        <h1>
+            <img class="logo" src="static/icon.svg">
+            tileak
+        </h1>
+        <div id="masked_error" class="alert error" style="display:none;">
+            <p>
+                An error have been encountered.<br>
+                Your browser may not be supported by the application.
+            </p>
+            <p>
+                <a href="#" onclick="window.location.reload(true);">Try to reload the page.</a>
+            </p>
+        </div>
+        <div id="messages" class="messages">
+        </div>
+    </header>
+    <content>
+        <div class="main">
+            <div id="js-content-pre_game" class="sectionstack">
+                <section>
+                    <h2>Play</h2>
+                    <p><b>Note</b><br>
+                        It's still a proof of concept for serverless multiplayer game,<br>
+                        you may encounter networking issues.</p>
+                </section>
+                <section>
+                    <h3>Multiplayer</h3>
+                    <div class="list-container">
+                        <div class="block-list">
+                            <label>Name</label>
+                            <div>
+                                <input id="local-name" class="player local" placeholder="name" value="noname">
+                            </div>
+                            <small class="btm-help">Type a name to be identified by others.</small>
+                        </div>
+                        <div class="block-list">
+                            <label>Invite</label>
+                            <div>
+                                <div id="invite-link" class="id copyable">...</div>
+                                <button class="btn btn-primary"
+                                    onclick="page.copyContent(document.getElementById('invite-link'));">
+                                    <i class="far fa-copy"></i> copy
+                                </button>
+                            </div>
+                            <small class="btm-help">To invite players to your game share this id with
+                                them.</small>
+                            <label>Join a player</label>
+                            <div>
+                                <input id="signaling-join-id" placeholder="id" class="id">
+                                <button id="signaling-join-btn" class="btn btn-primary">join</button>
+                            </div>
+                            <small class="btm-help">
+                                To join a remote player, paste its id here and click join.<br>
+                                In rare case,
+                                <a href="#" onclick="page.toggleTarget(this);return false;"
+                                    data-target="#serverless-peering">
+                                    serverless peering</a>
+                                may help.
+                            </small>
+                        </div>
+                    </div>
+                    <div id="serverless-peering" class="js-hidden">
+                        <div class="modal">
+                            <div class="modal-content">
+                                <div class="card">
+                                    <div class="header">
+                                        <button class="btn dismiss" onclick="page.hideTarget(this);"
+                                            data-target="#serverless-peering"><i class="fas fa-times"></i></button>
+                                        <div class="title">
+                                            Serverless peering
+                                        </div>
+                                    </div>
+                                    <div class="content">
+                                        <p>
+                                            Connect to a peer without the use of a signaling server
+                                        </p>
+                                        <div class="btn-group">
+                                            <button class="btn" onclick="appNet.invite();page.showTab(this);"
+                                                data-target="#tab-party-invite">Invite</button>
+                                            <button class="btn" onclick="appNet.join();page.showTab(this);"
+                                                data-target="#tab-party-join">Join</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <div id="tab-party-invite" class="tab-content js-hidden">
+                                <div class="modal">
+                                    <div class="modal-content">
+                                        <div class="card">
+                                            <div class="header">
+                                                <button class="btn dismiss" onclick="page.hideTarget(this);"
+                                                    data-target="#tab-party-invite"><i
+                                                        class="fas fa-times"></i></button>
+                                                <div class="title">
+                                                    Invite an other peer
+                                                </div>
+                                            </div>
+                                            <div class="content">
+                                                <p>
+                                                    1. Send your local TAG to the peer you want to
+                                                    invite
+                                                    <br />
+                                                </p>
+                                                <div class="b64"><a href="#" class="copy" id="local-offer"
+                                                        onclick="page.copyContent(this);return false;"></a>
+                                                </div>
+                                                <small>This TAG can be used once, an other will be
+                                                    generated
+                                                    after
+                                                    this
+                                                    connection is completed.
+                                                    <br>Before sharing it be aware that it contains data
+                                                    about
+                                                    your
+                                                    network location.</small>
+                                            </div>
+                                            <div class="content">
+                                                <p>2. Paste the peer's TAG and press "done"</p>
+                                                <p><textarea id="remote-answer" class="b64"
+                                                        spellcheck="false"></textarea>
+                                                </p>
+                                                <button id="remote-answer-btn" class="btn">done</button>
+                                            </div>
+                                            <div class="footer">
+                                                <p>
+                                                    Connection status
+                                                </p>
+                                                <p>
+                                                    <span id="invite-ok" class="con-status ok js-hidden"><i
+                                                            class="fas fa-check-circle"></i></span>
+                                                    <span id="invite-ko" class="con-status ko js-hidden"><i
+                                                            class="fas fa-times-circle"></i></span>
+                                                    <span id="invite-status" class="pending-con-status"></span>
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="tab-party-join" class="tab-content js-hidden">
+                                <div class="modal">
+                                    <div class="modal-content">
+                                        <div class="card">
+                                            <div class="header">
+                                                <button class="btn dismiss" onclick="page.hideTarget(this);"
+                                                    data-target="#tab-party-join"><i class="fas fa-times"></i></button>
+                                                <div class="title">
+                                                    Join an other peer
+                                                </div>
+                                            </div>
+                                            <div class="content">
+                                                <p>1. Paste the joined peer's TAG and press "done"</p>
+                                                <p><textarea id="remote-offer" class="b64"
+                                                        spellcheck="false"></textarea>
+                                                </p>
+                                                <button id="remote-offer-btn" class="btn">done</button>
+                                            </div>
+                                            <div class="content">
+                                                <p>2. Send your TAG back to the peer</p>
+                                                <p class="alert warning"><b>Warning</b> : on Firefox the
+                                                    time
+                                                    allowed to
+                                                    transmit back this TAG is short (5s).<br>
+                                                    Prefer using Google Chrome if you can't be that
+                                                    fast.
+                                                    See <a
+                                                        href="https://bugzilla.mozilla.org/show_bug.cgi? id=1647289">more</a>.
+                                                </p>
+                                                <div class="b64"><a href="#" class="copy" id="local-answer"
+                                                        onclick="page.copyContent(this);return false;"></a>
+                                                </div>
+                                                <small>This TAG can be used once, an other will be
+                                                    generated
+                                                    after
+                                                    this
+                                                    connection is completed.
+                                                    <br>Before sharing it be aware that it contains data
+                                                    about
+                                                    your
+                                                    network location.</small>
+                                            </div>
+                                            <div class="footer">
+                                                <p>
+                                                    Connection status
+                                                </p>
+                                                <p>
+                                                    <span id="join-ok" class="con-status ok js-hidden"><i
+                                                            class="fas fa-check-circle"></i></span>
+                                                    <span id="join-ko" class="con-status ko js-hidden"><i
+                                                            class="fas fa-times-circle"></i></span>
+                                                    <span id="join-status" class="pending-con-status"></span>
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                <section>
+                    <h3>Game</h3>
+                    <div class="list-container">
+                        <div class="block-list">
+                            <label>Grid size</label>
+                            <div id="js-grid_size" class="btn-group">
+                                <button class="btn radio" onclick="page.selectRadio(this);">8x8</button>
+                                <button class="btn radio selected" onclick="page.selectRadio(this);">6x6</button>
+                                <button class="btn radio" onclick="page.selectRadio(this);">4x4</button>
+                            </div>
+                            <small class="btm-help">Choose a smaller grid for shorter game</small>
+                            <!-- <label>Game mode</label>
+                            <div class="btn-group">
+                                <button class="btn radio selected" onclick="page.selectRadio(this);">Normal</button>
+                                <button class="btn radio" onclick="page.selectRadio(this);">Blitz</button>
+                            </div> -->
+                        </div>
+                        <div id="game-players" class="block-list">
+                            <label>Players</label>
+                        </div>
+                    </div>
+                    <p class="text-center">
+                        <button id="start-button" class="btn btn-cta"><i class="fas fa-play"></i> Ready</button>
+                    </p>
+                </section>
+            </div>
+            <div id="js-content-after_game" class="js-hidden">
+                <section>
+                    <div class="result">
+                        <h3>End of game</h3>
+                        <p><b><span id="js-winner"></span></b> was the very bestest</p>
+                        <button id="reset-button" class="btn btn-cta">Return to lobby</button>
+                    </div>
+                    <hr>
+                </section>
+            </div>
+            <div id="js-content-game" class="js-hidden">
+                <div class="game-panel">
+                    <div class="mainbar">
+                        <div class="header">
+                            <div class="game-header-grid">
+                                <div class="label">Player</div>
+                                <div id="js-game-player_name" class="js-data">noname</div>
+                                <div class="label">Turn</div>
+                                <div id="js-game-turn_count" class="js-data">0</div>
+                            </div>
+                        </div>
+                        <div class="main">
+                            <canvas id="js-sandbox" height="100" width="100"></canvas>
+                        </div>
+                        <div class="footer">
+                            <button id="js-game-surrender" class="btn" disabled>Surrender</button>
+                            <button id="js-game-skip_turn" class="btn" disabled>Skip turn</button>
+                        </div>
+                    </div>
+                    <div class="sidebar">
+                        <div id="js-game-stats" class="game-stats-grid">
+                            <div class="col-header"></div>
+                            <div class="col-header number">Production</div>
+                            <div class="col-header number">Storage</div>
+                        </div>
+                        <div>
+                            <canvas id="js-game-graph_production" class="game-graph" height="50" width="100"></canvas>
+                            <div class="graph-label">Production</div>
+                            <canvas id="js-game-graph_storage" class="game-graph" height="50" width="100"></canvas>
+                            <div class="graph-label">Storage</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="sidebar">
+            <div>
+                <section>
+                    <h3>Peers</h3>
+                    <div>
+                        <div id="peer-list" class="block-list player-list">
+                        </div>
+                    </div>
+                    <h3>Chat</h3>
+                    <div class="chat">
+                        <div id="chat-history" class="chat-history">
+                        </div>
+                        <textarea id="chat-input" placeholder="chat with other players"></textarea>
+                    </div>
+                </section>
+                <section>
+                    <div class="text-center">
+                        <a href="#" onclick="page.toggleTarget(this);return false;" data-target="#game-rules">
+                            Game rules</a>
+                    </div>
+                    <div id="game-rules" class="modal js-hidden">
+                        <div class="modal-content">
+                            <div class="card">
+                                <div class="header">
+                                    <button class="btn dismiss" onclick="page.hideTarget(this);"
+                                        data-target="#game-rules"><i class="fas fa-times"></i></button>
+                                    <div class="title">
+                                        <i class="fas fa-book"></i> Game rules
+                                    </div>
+                                </div>
+                                <div class="footer">
+                                    <div class="rules">
+                                        <h4>Goal</h4>
+                                        Be the last player having tiles on the board.
+                                        <h4>Interface</h4>
+                                        The tiles owner is designated by the tile color.
+                                        The number written on each tile is its storage, the current amount of power it
+                                        has.
+                                        <h4>Turn</h4>
+                                        1. Start of turn
+                                        <ul>
+                                            <li>Your tiles produce 10 of power each.</li>
+                                        </ul>
+                                        2. Make your move
+                                        <ul>
+                                            <li>Own a neutral tile by clicking on it.</li>
+                                            <li>Add/modify/delete one of your drains, it will last to the end of the
+                                                game if
+                                                unchanged.
+                                            </li>
+                                            <li>Skip turn.</li>
+                                            <li>Surrender. Your tiles will stay as is but you will skip turn until the
+                                                end of the game.</li>
+                                        </ul>
+                                        3. End of turn
+                                        <ul>
+                                            <li>
+                                                Your drains push half of the tile power to the destination :
+                                            </li>
+                                            <ul>
+                                                <li>if the destination is ally the tile is <u>powered</u>, the received
+                                                    power is
+                                                    added
+                                                    to its storage.</li>
+                                                <li>else the tile is <u>attacked</u>, the received power is deduced from
+                                                    its
+                                                    storage.
+                                                    If more power is received than the actual storage the cell is
+                                                    captured.
+                                                </li>
+                                            </ul>
+                                        </ul>
+                                        <h4>Notes</h4>
+                                        <ul>
+                                            <li>Drains are unchanged when a tile is captured.</li>
+                                            <li>Only one drain can output from a tile.</li>
+                                            <li>If an attacked cell power reach exactly 0 its owner is unchanged.</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </content>
+    <footer>
+        <div>
+            <a href="https://github.com/VivienGaluchot/tileak">Open-source</a> application.
+        </div>
+    </footer>
+
+    <script type="text/javascript" src="static/vendor/lz-string.js"></script>
+    <script type="text/javascript" src="static/vendor/clr.js"></script>
+
+    <script type="text/javascript" src="static/lib/mt.js"></script>
+    <script type="text/javascript" src="static/lib/ui.js"></script>
+    <script type="text/javascript" src="static/lib/cgraph.js"></script>
+    <script type="text/javascript" src="static/lib/p2p.js"></script>
+    <script type="text/javascript" src="static/lib/ccp.js"></script>
+
+    <script type="text/javascript" src="static/app/page.js"></script>
+    <script type="text/javascript" src="static/app/gm.js"></script>
+    <script type="text/javascript" src="static/app/gm-ui.js"></script>
+    <script type="text/javascript" src="static/app/app-net.js"></script>
+    <script type="text/javascript" src="static/app/app.js"></script>
+</body>
+
+</html>

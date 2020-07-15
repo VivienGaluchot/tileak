@@ -263,14 +263,11 @@ const gm = function () {
             for (var [cell, power] of nextTurnPower) {
                 if (cell.owner == currentPlayer) {
                     if (power < 0)
-                        throw new Error("cells can't have negative power");
+                        throw new Error("owned cell can't have negative power");
                     cell.power = power;
                 } else {
-                    if (power < 1) {
+                    if (power < 0) {
                         cell.owner = currentPlayer;
-                        if (cell.drainTo != null && cell.drainTo.drainTo == cell) {
-                            cell.drainTo = null;
-                        }
                         cell.power = -1 * power;
                     } else {
                         cell.power = power;

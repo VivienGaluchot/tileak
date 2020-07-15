@@ -471,7 +471,7 @@ const page = function () {
     function showTab(el) {
         selectRadio(el);
         for (let target of document.querySelectorAll(el.dataset["target"])) {
-            for (let tab of target.parentElement.querySelectorAll(`.tab - content`)) {
+            for (let tab of target.parentElement.querySelectorAll(`.tab-content`)) {
                 setEnabled(tab, false);
             }
             setEnabled(target, true);

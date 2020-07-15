@@ -117,12 +117,25 @@ content>.sidebar>* {
     top: 1rem;
 }
 
+b {
+    font-weight: 700;
+}
+
 /* components */
+
+.sectionstack {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
 
 section {
     display: block;
+    margin: 0 1.5rem 3rem 1.5rem;
+}
+
+section h1, section h2, section h3 {
     text-align: center;
-    margin: 0 1.5rem 5rem 1.5rem;
 }
 
 @media (max-width: 600px) {
@@ -161,6 +174,7 @@ footer a {
 p {
     line-height: 1.5rem;
     margin: 1.5rem 0;
+    max-width: 64ch;
 }
 
 a {
@@ -183,6 +197,7 @@ a:hover {
 }
 
 .btn {
+    text-decoration: none;
     padding: .7rem;
     border: 1px solid #ffffff88;
     background-color: #ffffff11;
@@ -198,6 +213,7 @@ a:hover {
 }
 
 .btn:hover:not(:disabled) {
+    color: inherit;
     background-color: #ffffff33;
     cursor: pointer;
 }
@@ -233,7 +249,8 @@ a:hover {
 }
 
 .btn-primary:not(:disabled):hover {
-    background-color: rgb(206, 216, 114);
+    color: #2b2b2b;
+    background-color: rgb(210, 221, 113);
 }
 
 .btn-primary:not(:disabled):active {
@@ -297,9 +314,16 @@ a:hover {
 }
 
 .card .header {
+    position: relative;
     display: flex;
     align-items: baseline;
     border-bottom: 1px solid #ffffff11;
+}
+
+.card .header .btn.dismiss {
+    position: absolute;
+    top: 0;
+    right: 0;
 }
 
 .card .header .title {
@@ -343,6 +367,7 @@ a:hover {
     color: #d3e057;
     border-bottom-width: 4px;
     border-radius: 8px;
+    display: inline-block;
 }
 
 .btn-cta:disabled {
@@ -351,6 +376,7 @@ a:hover {
 
 .btn-cta:not(:disabled):hover {
     background-color: #d3e05744;
+    color: #d3e057;
 }
 
 .btn-cta:not(:disabled):active {
@@ -812,4 +838,33 @@ textarea.b64:focus {
 .grid-2 {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
+}
+
+/* scrollroussel */
+
+.scrollroussel {
+    overflow: auto;
+    display: flex;
+    align-items: center;
+    background-color: #00000022;
+}
+
+.scrollroussel>* {
+    flex-shrink: 0;
+    padding: 1rem;
+}
+
+/* game rules */
+
+.rules {
+    max-width: 64ch;
+    padding: 1rem;
+    margin-top: -2rem;
+    font-size: .9rem;
+}
+
+.rules h4 {
+    margin-top: 2rem;
+    color: #FFFFFF88;
+    border-bottom: 1px solid #FFFFFF44;
 }
