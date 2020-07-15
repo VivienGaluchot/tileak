@@ -415,7 +415,7 @@ const gmUI = function () {
 
     function startGame(players, gridSize, sendTurn) {
         if (players.length <= 1)
-            throw new Error("a game must have at least 2 players");
+            throw new page.UserAlert("warning", "At least 2 players must be in the game to start it.");
 
         let game = new gm.Game(players, gridSize.w, gridSize.h);
 

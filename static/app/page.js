@@ -111,7 +111,7 @@ const page = function () {
 
                     let button = document.createElement("button");
                     button.classList.add("btn");
-                    button.onclick = () => { page.rmListEl(button) };
+                    button.onclick = () => { page.rmParentNode(button) };
                     button.innerHTML = `<i class="fas fa-trash-alt"></i>`;
 
                     document.getElementById("peer-list").appendChild(div);
@@ -383,6 +383,34 @@ const page = function () {
         };
     }
 
+    /* Messaging */
+
+    class UserAlert extends Error {
+        constructor(level, ...params) {
+            super(...params);
+            showMessage(level, this.message);
+        }
+    }
+
+    function showMessage(level, msg) {
+        let div = document.createElement("div");
+        div.classList.add("alert");
+        div.classList.add(level);
+
+        let btn = document.createElement("button");
+        btn.classList.add("btn");
+        btn.classList.add("dismiss");
+        btn.onclick = () => { rmParentNode(btn) };
+        btn.innerHTML = `<i class="fas fa-times"></i>`;
+        div.appendChild(btn);
+
+        let ctn = document.createElement("div");
+        ctn.innerText = msg;
+        div.appendChild(ctn);
+
+        document.getElementById("messages").appendChild(div);
+    }
+
     /* Macro controls */
 
     function showPreGame() {
@@ -411,7 +439,7 @@ const page = function () {
 
     /* list mgt */
 
-    function rmListEl(el) {
+    function rmParentNode(el) {
         el.parentNode.remove();
     }
 
@@ -477,12 +505,15 @@ const page = function () {
         showPreGame: showPreGame,
         showGame: showGame,
         showAfterGame: showAfterGame,
-        rmListEl: rmListEl,
+        rmParentNode: rmParentNode,
         selectRadio: selectRadio,
         showTab: showTab,
         toggleTarget: toggleTarget,
         toggleEnabled: toggleEnabled,
         hideTarget: hideTarget,
         copyContent: copyContent,
+        // errors
+        showMessage: showMessage,
+        UserAlert: UserAlert
     }
 }();
