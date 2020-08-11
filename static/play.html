@@ -261,9 +261,12 @@
                         <div class="header">
                             <div class="game-header-grid">
                                 <div class="label">Player</div>
-                                <div id="js-game-player_name" class="js-data">noname</div>
+                                <div>
+                                    <span id="js-game-player_name" class="js-data">-</span>
+                                    <span id="js-game-player_tag" class="js-hidden player_tag">your turn</span>
+                                </div>
                                 <div class="label">Turn</div>
-                                <div id="js-game-turn_count" class="js-data">0</div>
+                                <div id="js-game-turn_count" class="js-data">-</div>
                             </div>
                         </div>
                         <div class="main">
@@ -293,12 +296,11 @@
         <div class="sidebar">
             <div>
                 <section>
-                    <h3>Peers</h3>
+                    <h3>Players</h3>
                     <div>
                         <div id="peer-list" class="block-list player-list">
                         </div>
                     </div>
-                    <h3>Chat</h3>
                     <div class="chat">
                         <div id="chat-history" class="chat-history">
                         </div>

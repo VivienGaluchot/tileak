@@ -86,21 +86,13 @@ const page = function () {
                 }
             },
             list: {
-                makeEl: (isYou = false) => {
+                makeEl: () => {
                     let div = document.createElement("div");
 
                     let playerDiv = document.createElement("div");
                     playerDiv.classList.add("player");
-                    if (isYou) {
-                        playerDiv.classList.add("local");
-                        div.appendChild(playerDiv);
-                        let youDiv = document.createElement("div");
-                        youDiv.innerText = "you";
-                        div.appendChild(youDiv);
-                    } else {
-                        playerDiv.classList.add("remote");
-                        div.appendChild(playerDiv);
-                    }
+                    playerDiv.classList.add("remote");
+                    div.appendChild(playerDiv);
 
                     let pingDiv = document.createElement("div");
 
@@ -115,35 +107,27 @@ const page = function () {
                     button.innerHTML = `<i class="fas fa-trash-alt"></i>`;
 
                     document.getElementById("peer-list").appendChild(div);
-                    if (!isYou) {
-                        return {
-                            update: (lastName, isConnected, pingDelay) => {
-                                playerDiv.innerText = lastName ?? "?";
-                                if (isConnected) {
-                                    pingDiv.innerText = `${pingDelay ?? "-"} ms`;
-                                    if (statusDiv.parentElement == div)
-                                        div.removeChild(statusDiv);
-                                    if (button.parentElement == div)
-                                        div.removeChild(button);
-                                    div.appendChild(pingDiv);
-                                } else {
-                                    if (pingDiv.parentElement == div)
-                                        div.removeChild(pingDiv);
-                                    div.appendChild(statusDiv);
-                                    div.appendChild(button);
-                                }
-                            },
-                            delete: () => {
-                                div.remove();
+                    return {
+                        update: (lastName, isConnected, pingDelay) => {
+                            playerDiv.innerText = lastName ?? "?";
+                            if (isConnected) {
+                                pingDiv.innerText = `${pingDelay ?? "-"} ms`;
+                                if (statusDiv.parentElement == div)
+                                    div.removeChild(statusDiv);
+                                if (button.parentElement == div)
+                                    div.removeChild(button);
+                                div.appendChild(pingDiv);
+                            } else {
+                                if (pingDiv.parentElement == div)
+                                    div.removeChild(pingDiv);
+                                div.appendChild(statusDiv);
+                                div.appendChild(button);
                             }
-                        };
-                    } else {
-                        return {
-                            update: (lastName) => {
-                                playerDiv.innerText = lastName ?? "?";
-                            }
-                        };
-                    }
+                        },
+                        delete: () => {
+                            div.remove();
+                        }
+                    };
                 }
             },
             tabPartyInvite: {
@@ -193,10 +177,11 @@ const page = function () {
 
         let game = {
             playerName: {
-                set: (name, color) => {
+                set: (name, color, isYou) => {
                     let el = document.getElementById("js-game-player_name");
                     el.innerText = name;
                     el.style.color = color;
+                    setEnabled(document.getElementById("js-game-player_tag"), isYou);
                 }
             },
             turnCount: {

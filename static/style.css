@@ -840,6 +840,16 @@ textarea.b64:focus {
     grid-template-columns: repeat(2, 1fr);
 }
 
+.player_tag {
+    color: #d3e057;
+    padding: .2rem;
+    border-radius: .2rem;
+    border: 1px solid #d3e057;
+    margin-left: .5rem;
+    font-size: small;
+    vertical-align: top;
+}
+
 /* scrollroussel */
 
 .scrollroussel {

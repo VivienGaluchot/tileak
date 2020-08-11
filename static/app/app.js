@@ -81,12 +81,8 @@ const app = function () {
     function setup() {
         page.setup();
 
-        // add self player and peer object
-        let selfPeer = page.elements().party.list.makeEl(true);
-
         // name field
         let updateLocalName = name => {
-            selfPeer.update(name);
             appNet.names.setLocalName(name);
         };
         page.elements().party.localName.onChange = updateLocalName

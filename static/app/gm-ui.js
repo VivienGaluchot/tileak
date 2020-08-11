@@ -390,12 +390,14 @@ const gmUI = function () {
     }
 
     function updateOutOfCanvasElements(game, statsGridEls) {
+        let isLocal = game.getCurrentPlayer().isLocal;
+
         let playerColor;
         if (game.waitForTurn)
             playerColor = `#${game.getCurrentPlayer().color}`;
         else
             playerColor = `#${game.getCurrentPlayer().color}88`;
-        page.elements().game.playerName.set(game.getCurrentPlayer().name, playerColor);
+        page.elements().game.playerName.set(game.getCurrentPlayer().name, playerColor, isLocal);
 
         page.elements().game.turnCount.set(game.turnCounter);
 
@@ -403,7 +405,6 @@ const gmUI = function () {
             el.update();
         }
 
-        let isLocal = game.getCurrentPlayer().isLocal;
         page.elements().game.btnSurrender.disabled = !isLocal;
         page.elements().game.btnSkipTurn.disabled = !isLocal;
     }
