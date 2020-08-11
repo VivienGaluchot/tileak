@@ -5,7 +5,6 @@
 
 "use strict";
 
-
 const app = function () {
     // helpers
     function getPlayerColor(index, count) {

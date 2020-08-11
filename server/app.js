@@ -71,13 +71,10 @@ const server = http.createServer(function (request, response) {
         sendFile("static/index.html", response);
     } else if (pathname == "/play" || pathname == "/play.html") {
         sendFile("static/play.html", response);
-    } else if (pathname.startsWith("/static")) {
-        sendFile("./" + pathname, response);
     } else {
-        logInfo(`request not found ${request.url}`);
-        response.writeHead(404);
-        response.end();
+        sendFile("./static/" + pathname, response);
     }
+    logInfo(`${response.statusCode} ${request.url}`);
 });
 server.listen(port, function () {
     logInfo(`server listening on port ${port}`);
@@ -127,6 +124,8 @@ const wsServer = new WebSocketServer({
 function originIsAllowed(origin) {
     logInfo("connection origin " + origin);
     if (origin == "http://127.0.0.1:8080")
+        return true;
+    if (origin == "http://localhost:8080")
         return true;
     if (origin == "https://tileak.herokuapp.com")
         return true;
